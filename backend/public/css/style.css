@@ -2652,3 +2652,6 @@ body {
   color: var(--text-muted) !important;
   font-style: italic;
 }
+.item-desc {
+  white-space: pre-line;
+}
