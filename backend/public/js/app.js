@@ -499,38 +499,65 @@ async function deleteItem(type, id) {
   }
 }
 
-// ── BOTÓN PROHIBIDO ───────────────────────────────────────────
-const forbiddenMsgs = [
-  'Sabía que lo ibas a presionar...',
-  'Era inevitable, en realidad.',
-  'Por eso preparé esto para ti.',
-  'Gracias por ser exactamente como eres.',
-  'Te amo. Así de simple.',
-];
+// ── CAJITA ESPECIAL ───────────────────────────────────────────
+async function loadCajita() {
+  const container = $('list-cajita');
+  if (!container) return;
 
-function pressForbidden() {
-  const content = $('forbidden-content');
-  content.innerHTML = '';
+  container.innerHTML = '<div style="color:var(--text-muted);padding:20px;">Cargando cajita...</div>';
 
-  forbiddenMsgs.forEach((msg, i) => {
-    const el = document.createElement('div');
-    el.className = 'forbidden-msg';
-    el.textContent = msg;
-    el.style.animationDelay = (i * 0.5) + 's';
-    content.appendChild(el);
-  });
+  try {
+    const items = await api('GET', '/api/cajita');
 
-  const hearts = document.createElement('div');
-  hearts.className = 'forbidden-hearts';
-  hearts.textContent = '♡  ♡  ♡';
-  hearts.style.animationDelay = (forbiddenMsgs.length * 0.5) + 's';
-  hearts.style.opacity = '0';
-  hearts.style.animation = `revealMsg 0.6s ease ${forbiddenMsgs.length * 0.5}s forwards`;
-  content.appendChild(hearts);
+    if (!items.length) {
+      container.innerHTML = emptyState('🎁', 'Aún no hay detalles guardados en la cajita.');
+      return;
+    }
 
-  $('modal-forbidden').classList.add('open');
+    const iconos = {
+      carta: '💌',
+      juego: '🎮',
+      mensaje: '💬',
+      bitacora: '📖',
+      otro: '✨'
+    };
+
+    container.innerHTML = items.map(item => `
+      <div class="item-card cajita-card">
+        <div class="item-header">
+          <div>
+            <div class="item-title">${iconos[item.tipo] || '✨'} ${esc(item.titulo)}</div>
+            <div class="item-meta">
+              ${item.tipo ? esc(item.tipo) : 'otro'} ${item.fecha ? ' · ' + formatDate(item.fecha) : ''}
+            </div>
+          </div>
+        </div>
+
+        <p class="item-desc">${esc(item.descripcion || '')}</p>
+
+        <a class="btn-link-recuerdo" href="${esc(item.enlace)}" target="_blank" rel="noopener">
+          Abrir detalle especial ♡
+        </a>
+
+        <div class="item-actions">
+          <button class="btn btn-sm btn-edit" onclick="openModal(
+            'cajita',
+            ${item.id},
+            '${esc(item.titulo)}',
+            '${esc(item.tipo || 'otro')}',
+            '${esc(item.descripcion || '')}',
+            '${esc(item.enlace)}',
+            '${item.fecha ? item.fecha.split('T')[0] : ''}'
+          )">Editar</button>
+
+          <button class="btn btn-sm btn-delete" onclick="deleteItem('cajita', ${item.id})">Eliminar</button>
+        </div>
+      </div>
+    `).join('');
+  } catch {
+    container.innerHTML = '<div style="color:var(--danger);padding:20px;">Error al cargar la cajita.</div>';
+  }
 }
-
 // ── PREGUNTA FINAL ────────────────────────────────────────────
 function escapeNo(e) {
   const btn = $('btn-no');
