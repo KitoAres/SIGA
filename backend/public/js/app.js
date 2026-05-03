@@ -703,7 +703,8 @@ function escapeNo(e) {
 
   if (!btnNo || !btnSi || !zona) return;
 
-  const zonaRect = zona.getBoundingClientRect();
+  const zonaW = zona.clientWidth;
+  const zonaH = zona.clientHeight;
 
   const noW = btnNo.offsetWidth;
   const noH = btnNo.offsetHeight;
@@ -713,28 +714,35 @@ function escapeNo(e) {
   const siW = btnSi.offsetWidth;
   const siH = btnSi.offsetHeight;
 
-  let nuevoX = 0;
-  let nuevoY = 0;
-  let choca = true;
-  let intentos = 0;
+  const margen = 40;
 
-  while (choca && intentos < 40) {
-    nuevoX = Math.floor(Math.random() * Math.max(1, zonaRect.width - noW));
-    nuevoY = Math.floor(Math.random() * Math.max(1, zonaRect.height - noH));
+  const posiciones = [
+    { x: 0, y: 0 },                                                // arriba izquierda
+    { x: zonaW - noW, y: 0 },                                      // arriba derecha
+    { x: 0, y: zonaH - noH },                                      // abajo izquierda
+    { x: zonaW - noW, y: zonaH - noH },                            // abajo derecha
+    { x: Math.floor((zonaW - noW) / 2), y: 0 },                    // arriba centro
+    { x: Math.floor((zonaW - noW) / 2), y: zonaH - noH },          // abajo centro
+    { x: 0, y: Math.floor((zonaH - noH) / 2) },                    // medio izquierda
+    { x: zonaW - noW, y: Math.floor((zonaH - noH) / 2) },          // medio derecha
+    { x: Math.floor((zonaW - noW) / 2), y: Math.floor((zonaH - noH) / 2) } // centro
+  ];
 
-    const margen = 28;
+  const posicionesSeguras = posiciones.filter(pos => {
+    const choca =
+      pos.x < siX + siW + margen &&
+      pos.x + noW > siX - margen &&
+      pos.y < siY + siH + margen &&
+      pos.y + noH > siY - margen;
 
-    choca =
-      nuevoX < siX + siW + margen &&
-      nuevoX + noW > siX - margen &&
-      nuevoY < siY + siH + margen &&
-      nuevoY + noH > siY - margen;
+    return !choca;
+  });
 
-    intentos++;
-  }
+  const lista = posicionesSeguras.length ? posicionesSeguras : posiciones;
+  const destino = lista[Math.floor(Math.random() * lista.length)];
 
-  btnNo.style.left = nuevoX + 'px';
-  btnNo.style.top = nuevoY + 'px';
+  btnNo.style.left = destino.x + 'px';
+  btnNo.style.top = destino.y + 'px';
   btnNo.style.right = 'auto';
   btnNo.style.transform = 'none';
 }
