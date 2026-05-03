@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SIGA — Sistema Integral de Gestión de Amor</title>
+  <link rel="stylesheet" href="/css/style.css"/>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💜</text></svg>"/>
+</head>
+<body>
+
+<!-- ── LOGIN ─────────────────────────────────── -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">S<span>I</span>GA</div>
+    <div class="login-sub">Sistema Integral de Gestión de Amor</div>
+    <input type="text" id="login-user" placeholder="Usuario" autocomplete="off"/>
+    <input type="password" id="login-pass" placeholder="Contraseña"/>
+    <button class="btn-primary" onclick="doLogin()">Entrar ♡</button>
+    <div class="login-error" id="login-error"></div>
+  </div>
+</div>
+
+<!-- ── APP ────────────────────────────────────── -->
+<div id="app">
+
+  <!-- Hamburger móvil -->
+  <button class="hamburger" id="hamburger" onclick="toggleSidebar()" aria-label="Menú">
+    <span></span><span></span><span></span>
+  </button>
+  <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">S<span>I</span>GA</div>
+      <div class="sidebar-tagline">v1.0 · Edición especial</div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <button class="nav-item active" onclick="navigateTo('dashboard')">
+        <span class="nav-icon">✦</span> Dashboard
+      </button>
+      <button class="nav-item" onclick="navigateTo('recuerdos')">
+        <span class="nav-icon">🌸</span> Recuerdos
+      </button>
+      <button class="nav-item" onclick="navigateTo('citas')">
+        <span class="nav-icon">📅</span> Citas
+      </button>
+      <button class="nav-item" onclick="navigateTo('playlist')">
+        <span class="nav-icon">🎵</span> Playlist
+      </button>
+      <button class="nav-item" onclick="navigateTo('razones')">
+        <span class="nav-icon">💜</span> Razones
+      </button>
+      <button class="nav-item" onclick="navigateTo('promesas')">
+        <span class="nav-icon">🤍</span> Promesas
+      </button>
+      <button class="nav-item" onclick="navigateTo('carta')">
+        <span class="nav-icon">✉️</span> Carta
+      </button>
+      <button class="nav-item" onclick="navigateTo('tiempo')">
+        <span class="nav-icon">🕐</span> Nuestro Tiempo
+      </button>
+      <div class="nav-divider"></div>
+      <button class="nav-item" onclick="navigateTo('forbidden')">
+        <span class="nav-icon">🔴</span> Botón prohibido
+      </button>
+      <button class="nav-item" onclick="navigateTo('pregunta')">
+        <span class="nav-icon">✨</span> Pregunta final
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <span id="sidebar-user">—</span>
+      <button class="btn-logout" onclick="doLogout()">Salir</button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main-content">
+
+    <!-- DASHBOARD -->
+    <section class="page active" id="page-dashboard">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Panel <span>de amor</span></h1>
+          <p class="page-subtitle">Todo lo nuestro, en un solo lugar.</p>
+        </div>
+      </div>
+      <div class="welcome-banner">
+        <div class="welcome-greeting" id="welcome-msg">Bienvenida, mi persona favorita</div>
+        <div class="welcome-sub">Este sistema fue construido con cariño, para ti.</div>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon">🌙</div>
+          <div class="stat-number" id="stat-dias">—</div>
+          <div class="stat-label">Días pensándote</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">🌸</div>
+          <div class="stat-number" id="stat-recuerdos">—</div>
+          <div class="stat-label">Recuerdos guardados</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">📅</div>
+          <div class="stat-number" id="stat-citas">—</div>
+          <div class="stat-label">Citas pendientes</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">💜</div>
+          <div class="stat-number" id="stat-razones">—</div>
+          <div class="stat-label">Razones para quererte</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RECUERDOS -->
+    <section class="page" id="page-recuerdos">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Recuerdos <span>compartidos</span></h1>
+          <p class="page-subtitle">Los momentos que me gusta guardar.</p>
+        </div>
+        <button class="btn-add" onclick="openModal('recuerdos')">+ Nuevo recuerdo</button>
+      </div>
+      <div class="items-grid" id="list-recuerdos"></div>
+    </section>
+
+    <!-- CITAS -->
+    <section class="page" id="page-citas">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Nuestras <span>citas</span></h1>
+          <p class="page-subtitle">Planes que quiero cumplir contigo.</p>
+        </div>
+        <button class="btn-add" onclick="openModal('citas')">+ Nueva cita</button>
+      </div>
+      <div class="items-grid" id="list-citas"></div>
+    </section>
+
+    <!-- PLAYLIST -->
+    <section class="page" id="page-playlist">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Nuestra <span>playlist</span></h1>
+          <p class="page-subtitle">Canciones que suenan cuando pienso en ti.</p>
+        </div>
+        <button class="btn-add" onclick="openModal('playlist')">+ Agregar canción</button>
+      </div>
+      <div class="items-grid" id="list-playlist"></div>
+    </section>
+
+    <!-- RAZONES -->
+    <section class="page" id="page-razones">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Razones <span>para quererte</span></h1>
+          <p class="page-subtitle">Lista incompleta, siempre en construcción.</p>
+        </div>
+        <button class="btn-add" onclick="openModal('razones')">+ Nueva razón</button>
+      </div>
+      <div class="items-grid" id="list-razones"></div>
+    </section>
+
+    <!-- PROMESAS -->
+    <section class="page" id="page-promesas">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Mis <span>promesas</span></h1>
+          <p class="page-subtitle">Lo que te ofrezco con la intención de cumplir.</p>
+        </div>
+        <button class="btn-add" onclick="openModal('promesas')">+ Nueva promesa</button>
+      </div>
+      <div class="items-grid" id="list-promesas"></div>
+    </section>
+
+    <!-- CARTA -->
+    <section class="page" id="page-carta">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Mi <span>carta</span></h1>
+          <p class="page-subtitle">Para ti, que de alguna manera inexplicable llegaste a quedarte.</p>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn" id="btn-edit-carta" onclick="editCarta()">✎ Editar</button>
+          <button class="btn-save" id="btn-save-carta" style="display:none;" onclick="saveCarta()">Guardar</button>
+          <button class="btn-cancel" id="btn-cancel-carta" style="display:none;" onclick="cancelCarta()">Cancelar</button>
+        </div>
+      </div>
+      <div class="carta-container">
+        <div class="carta-paper" id="carta-view"></div>
+        <textarea class="carta-edit-area" id="carta-edit" style="display:none;"></textarea>
+      </div>
+    </section>
+
+    <!-- NUESTRO TIEMPO -->
+    <section class="page" id="page-tiempo">
+
+      <!-- LOGIN DEL MÓDULO -->
+      <div id="tiempo-login-wrap" class="tiempo-login-wrap">
+        <div class="tiempo-login-card">
+          <div class="tiempo-login-icon">🕐</div>
+          <div class="tiempo-login-title">Nuestro Tiempo</div>
+          <div class="tiempo-login-sub">¿Quién eres tú?</div>
+
+          <div class="tiempo-user-btns">
+            <button class="tiempo-user-btn" id="tbtn-yo"   onclick="seleccionarTiempoUser('yo')">Yo</button>
+            <button class="tiempo-user-btn" id="tbtn-ella" onclick="seleccionarTiempoUser('ella')">Ella</button>
+          </div>
+
+          <input type="password" id="t-pass" placeholder="Contraseña"/>
+          <button class="btn-tiempo-login" onclick="loginTiempo()">Entrar 🕐</button>
+          <div class="tiempo-login-error" id="t-login-error"></div>
+        </div>
+      </div>
+
+      <!-- PANEL PRINCIPAL (visible tras login de tiempo) -->
+      <div id="tiempo-panel" class="tiempo-panel">
+
+        <!-- Header dinámico -->
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Nuestro <span>tiempo</span></h1>
+            <p class="page-subtitle">Solo tú puedes ver tus disponibilidades. Las coincidencias son de ambos.</p>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <div class="tiempo-user-badge">
+              <span class="badge-dot"></span>
+              <span id="tiempo-badge-nombre">—</span>
+            </div>
+            <button class="btn-add" onclick="openModalTiempo()">+ Disponibilidad</button>
+            <button class="btn-tiempo-logout" onclick="logoutTiempo()">Salir</button>
+          </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tiempo-tabs">
+          <button class="tiempo-tab active" onclick="switchTiempoTab('mis')" id="ttab-mis">
+            📋 Mis disponibilidades
+          </button>
+          <button class="tiempo-tab" onclick="switchTiempoTab('coincidencias')" id="ttab-coin">
+            ✨ Momentos posibles
+          </button>
+        </div>
+
+        <!-- Tab: Mis disponibilidades -->
+        <div class="tiempo-tab-content active" id="tcontent-mis">
+          <div id="list-disponibilidades"></div>
+        </div>
+
+        <!-- Tab: Coincidencias -->
+        <div class="tiempo-tab-content" id="tcontent-coin">
+          <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:18px;">
+            Fechas donde tus horarios y los suyos se cruzan. No verás su disponibilidad directa, solo el resultado.
+          </p>
+          <div id="list-coincidencias"></div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- BOTÓN PROHIBIDO -->
+    <section class="page" id="page-forbidden">
+      <div class="forbidden-section">
+        <p class="forbidden-warning">⚠ Acceso restringido — Solo para personas curiosas</p>
+        <button class="btn-forbidden" onclick="pressForbidden()">NO PRESIONAR</button>
+        <p style="font-size:0.78rem;color:var(--text-muted);font-style:italic;">en serio, no lo presiones</p>
+      </div>
+    </section>
+
+    <!-- PREGUNTA FINAL -->
+    <section class="page" id="page-pregunta">
+      <div class="pregunta-section">
+        <div class="pregunta-text" id="pregunta-main">
+          ¿Quieres seguir escribiendo esta historia conmigo?
+        </div>
+        <div class="pregunta-buttons" id="pregunta-btns">
+          <button class="btn-si" onclick="responderSi()">Sí ♡</button>
+          <button class="btn-no" id="btn-no" onmouseover="escapeNo(event)" ontouchstart="escapeNo(event)">No</button>
+        </div>
+        <div class="respuesta-final" id="respuesta-final">
+          <div class="respuesta-corazon">💜</div>
+          <div class="respuesta-texto">
+            "Entonces prometo seguir eligiéndote,<br/>incluso en los días difíciles."
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ── MODALES ─────────────────────────────────── -->
+
+<!-- Modal genérico CRUD -->
+<div class="modal-overlay" id="modal-crud">
+  <div class="modal">
+    <h2 class="modal-title" id="modal-crud-title">Nuevo</h2>
+    <div class="modal-form" id="modal-crud-form"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('modal-crud')">Cancelar</button>
+      <button class="btn-save" onclick="saveModal()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal botón prohibido -->
+<div class="modal-overlay" id="modal-forbidden">
+  <div class="modal" style="max-width:440px;text-align:center;">
+    <div class="forbidden-modal-content" id="forbidden-content"></div>
+    <button class="btn-cancel" onclick="closeModal('modal-forbidden')" style="margin-top:20px;">Cerrar ♡</button>
+  </div>
+</div>
+
+<!-- Modal Nuestro Tiempo -->
+<div class="modal-overlay" id="modal-tiempo">
+  <div class="modal">
+    <h2 class="modal-title" id="modal-tiempo-title">Agregar disponibilidad</h2>
+    <div class="modal-form">
+      <label>Fecha</label>
+      <input type="date" id="t-fecha"/>
+      <label>Hora inicio</label>
+      <input type="time" id="t-inicio"/>
+      <label>Hora fin</label>
+      <input type="time" id="t-fin"/>
+      <label>Mensaje opcional</label>
+      <input type="text" id="t-mensaje" placeholder="Ej: libre después del trabajo..."/>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('modal-tiempo')">Cancelar</button>
+      <button class="btn-save" onclick="guardarDisponibilidad()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script src="/js/app.js"></script>
+</body>
+</html>
