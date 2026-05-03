@@ -22,6 +22,7 @@ app.use('/api/razones', require('./routes/razones'));
 app.use('/api/promesas', require('./routes/promesas'));
 app.use('/api/cartas', require('./routes/cartas'));
 app.use('/api/tiempo', require('./routes/tiempo'));
+app.use('/api/cajita', require('./routes/cajita'));
 
 // Ruta raíz — siempre sirve index.html desde backend/public
 app.get('/', (req, res) => {
