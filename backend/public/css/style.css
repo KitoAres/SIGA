@@ -1880,3 +1880,52 @@ body::after {
     padding: 72px 16px 24px !important;
   }
 }
+
+/* ======================================================
+   FIX URGENTE: SECCIONES VISIBLES
+   ====================================================== */
+
+#app.visible {
+  display: block !important;
+}
+
+.main-content {
+  margin-left: 260px !important;
+  width: calc(100vw - 260px) !important;
+  min-height: 100vh !important;
+  padding: 32px !important;
+  position: relative !important;
+  z-index: 1 !important;
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.page {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+.page.active {
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.page.active > * {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.sidebar {
+  width: 260px !important;
+}
+
+@media (max-width: 768px) {
+  .main-content {
+    margin-left: 0 !important;
+    width: 100vw !important;
+    padding: 72px 16px 24px !important;
+  }
+}
