@@ -1380,3 +1380,35 @@ body::before {
 }
 .tiempo-empty-icon { font-size: 2rem; margin-bottom: 10px; opacity: 0.4; }
 .tiempo-empty-text { font-size: 0.88rem; line-height: 1.6; }
+
+/* FIX LOGIN: permitir escribir y hacer clic */
+.login-screen,
+.login-container,
+.login-card,
+.login-form {
+  position: relative;
+  z-index: 1000;
+  pointer-events: auto;
+}
+
+.login-card input,
+.login-card button,
+#login-usuario,
+#login-contrasena,
+#login-btn,
+input,
+button {
+  pointer-events: auto !important;
+  user-select: auto !important;
+  position: relative;
+  z-index: 1001;
+}
+
+.login-card::before,
+.login-card::after,
+.login-screen::before,
+.login-screen::after,
+body::before,
+body::after {
+  pointer-events: none !important;
+}
