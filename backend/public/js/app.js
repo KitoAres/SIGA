@@ -71,8 +71,8 @@ async function doLogin() {
       $('login-screen').style.display = 'none';
       $('app').classList.add('visible');
 
-      renderUsuarioActual();
-      navigateTo('dashboard');
+renderUsuarioActual();
+forzarSeccion('dashboard');
       setTimeout(() => navigateTo('dashboard'), 50);
     } else {
       $('login-error').textContent = data.error || 'Credenciales incorrectas.';
