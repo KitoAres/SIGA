@@ -1622,3 +1622,87 @@ setTimeout(function() {
     }
   });
 }, 300);
+
+/* ======================================================
+   FIX DEFINITIVO: ¿NOS VEMOS? SIN MINI-LOGIN
+   Usa la sesión principal de SIGA
+   ====================================================== */
+
+var initTiempoPage = function() {
+  const loginWrap = document.getElementById('tiempo-login-wrap');
+  const panel = document.getElementById('tiempo-panel');
+
+  if (!state.currentUser || !state.currentUser.id) {
+    if (loginWrap) loginWrap.style.display = 'none';
+
+    if (panel) {
+      panel.classList.remove('active');
+      panel.style.display = 'none';
+    }
+
+    return;
+  }
+
+  tiempoState.usuarioId = state.currentUser.id;
+  tiempoState.nombre =
+    state.currentUser.display_name ||
+    state.currentUser.nombre ||
+    state.currentUser.usuario;
+
+  tiempoState.usuarioSlug = state.currentUser.usuario;
+
+  // Ocultar pantalla Yo/Ella/Contraseña
+  if (loginWrap) {
+    loginWrap.style.setProperty('display', 'none', 'important');
+    loginWrap.style.setProperty('visibility', 'hidden', 'important');
+    loginWrap.style.setProperty('opacity', '0', 'important');
+  }
+
+  // Mostrar panel real
+  if (panel) {
+    panel.classList.add('active');
+    panel.style.setProperty('display', 'block', 'important');
+    panel.style.setProperty('visibility', 'visible', 'important');
+    panel.style.setProperty('opacity', '1', 'important');
+  }
+
+  const badge = document.getElementById('tiempo-badge-nombre');
+  if (badge) {
+    badge.textContent = tiempoState.nombre;
+  }
+
+  if (typeof loadDisponibilidades === 'function') {
+    loadDisponibilidades();
+  }
+
+  if (typeof loadCoincidencias === 'function') {
+    loadCoincidencias();
+  }
+};
+
+window.initTiempoPage = initTiempoPage;
+
+window.logoutTiempo = function() {
+  navigateTo('dashboard');
+};
+
+// Refuerzo: cada vez que se haga click en ¿Nos vemos?
+document.addEventListener('click', function(e) {
+  const btn = e.target.closest('.nav-item');
+  if (!btn) return;
+
+  if (btn.textContent.includes('¿Nos vemos?')) {
+    setTimeout(function() {
+      initTiempoPage();
+    }, 80);
+  }
+});
+
+// Refuerzo: si ya estás en la página tiempo al cargar
+setTimeout(function() {
+  const pageTiempo = document.getElementById('page-tiempo');
+
+  if (pageTiempo && pageTiempo.classList.contains('active')) {
+    initTiempoPage();
+  }
+}, 500);
