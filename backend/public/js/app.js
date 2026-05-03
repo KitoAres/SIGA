@@ -72,7 +72,7 @@ async function doLogin() {
       $('app').classList.add('visible');
 
       renderUsuarioActual();
-      loadDashboard();
+      navigateTo('dashboard');
     } else {
       $('login-error').textContent = data.error || 'Credenciales incorrectas.';
     }
@@ -108,56 +108,79 @@ function renderUsuarioActual() {
   }
 }
 
-// Enter en inputs de login
+// Enter en login + Escape para modales
 document.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && $('login-screen') && $('login-screen').style.display !== 'none') {
+    doLogin();
+  }
+
   if (e.key === 'Escape') {
-    if ($('modal-crud') && $('modal-crud').classList.contains('open')) {
-      closeModal('modal-crud');
-    }
-
-    if ($('modal-tiempo') && $('modal-tiempo').classList.contains('open')) {
-      closeModal('modal-tiempo');
-    }
-
-    if ($('modal-perfil') && $('modal-perfil').classList.contains('open')) {
-      closeModal('modal-perfil');
-    }
+    if ($('modal-crud') && $('modal-crud').classList.contains('open')) closeModal('modal-crud');
+    if ($('modal-tiempo') && $('modal-tiempo').classList.contains('open')) closeModal('modal-tiempo');
+    if ($('modal-perfil') && $('modal-perfil').classList.contains('open')) closeModal('modal-perfil');
   }
 });
 
 // ── NAVEGACIÓN ─────────────────────────────────────────────────
 function navigateTo(page) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const targetPage = $('page-' + page);
 
-  $('page-' + page).classList.add('active');
+  if (!targetPage) {
+    console.error('No existe la página:', 'page-' + page);
+    toast('No existe la sección: ' + page);
+    return;
+  }
+
+  document.querySelectorAll('.page').forEach(p => {
+    p.classList.remove('active');
+    p.style.display = 'none';
+  });
 
   document.querySelectorAll('.nav-item').forEach(n => {
-    if (n.textContent.trim().toLowerCase().includes(page.toLowerCase()) ||
-        (page === 'dashboard' && n.textContent.includes('Dashboard')) ||
-        (page === 'forbidden' && n.textContent.includes('prohibido')) ||
-        (page === 'pregunta' && n.textContent.includes('Pregunta'))) {
+    n.classList.remove('active');
+  });
+
+  targetPage.classList.add('active');
+  targetPage.style.display = 'block';
+
+  document.querySelectorAll('.nav-item').forEach(n => {
+    const txt = n.textContent.trim().toLowerCase();
+
+    if (
+      (page === 'dashboard' && txt.includes('dashboard')) ||
+      (page === 'recuerdos' && txt.includes('recuerdos')) ||
+      (page === 'citas' && txt.includes('planes')) ||
+      (page === 'playlist' && txt.includes('playlist')) ||
+      (page === 'razones' && txt.includes('razones')) ||
+      (page === 'promesas' && txt.includes('promesas')) ||
+      (page === 'carta' && txt.includes('carta')) ||
+      (page === 'tiempo' && txt.includes('vemos')) ||
+      (page === 'cajita' && txt.includes('cajita')) ||
+      (page === 'pregunta' && txt.includes('pregunta'))
+    ) {
       n.classList.add('active');
     }
   });
 
   state.currentPage = page;
-
-  // Cerrar sidebar en móvil
   closeSidebar();
 
-  // Cargar datos de la sección
-const loaders = {
-  dashboard: loadDashboard,
-  recuerdos: loadRecuerdos,
-  citas:     loadCitas,
-  playlist:  loadPlaylist,
-  razones:   loadRazones,
-  promesas:  loadPromesas,
-  carta:     loadCarta,
-  cajita:    loadCajita,
-};
+  const loaders = {
+    dashboard: loadDashboard,
+    recuerdos: loadRecuerdos,
+    citas: loadCitas,
+    playlist: loadPlaylist,
+    razones: loadRazones,
+    promesas: loadPromesas,
+    carta: loadCarta,
+    cajita: loadCajita
+  };
+
   if (loaders[page]) loaders[page]();
+
+  if (page === 'tiempo' && typeof initTiempoPage === 'function') {
+    initTiempoPage();
+  }
 }
 
 // ── SIDEBAR MÓVIL ──────────────────────────────────────────────
@@ -921,13 +944,9 @@ function emptyState(icon, msg) {
 // ── CERRAR MODALES CON ESC ────────────────────────────────────
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') {
-    if ($('modal-crud') && $('modal-crud').classList.contains('open')) {
-      closeModal('modal-crud');
-    }
-
-    if ($('modal-tiempo') && $('modal-tiempo').classList.contains('open')) {
-      closeModal('modal-tiempo');
-    }
+    if ($('modal-crud') && $('modal-crud').classList.contains('open')) closeModal('modal-crud');
+    if ($('modal-tiempo') && $('modal-tiempo').classList.contains('open')) closeModal('modal-tiempo');
+    if ($('modal-perfil') && $('modal-perfil').classList.contains('open')) closeModal('modal-perfil');
   }
 });
 
@@ -936,6 +955,13 @@ const modalCrud = $('modal-crud');
 if (modalCrud) {
   modalCrud.addEventListener('click', function(e) {
     if (e.target === this) closeModal('modal-crud');
+  });
+}
+
+const modalPerfil2 = $('modal-perfil');
+if (modalPerfil2) {
+  modalPerfil2.addEventListener('click', function(e) {
+    if (e.target === this) closeModal('modal-perfil');
   });
 }
 /* ============================================================
