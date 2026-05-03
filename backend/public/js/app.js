@@ -1422,3 +1422,117 @@ if (typeof window.doLogin === 'function') {
     }
   };
 }
+
+
+/* ======================================================
+   FIX URGENTE: MOSTRAR SECCIONES AL HACER CLICK
+   ====================================================== */
+
+function mostrarPaginaForzada(page) {
+  const pagina = document.getElementById('page-' + page);
+
+  if (!pagina) {
+    console.error('No existe:', 'page-' + page);
+    return;
+  }
+
+  document.querySelectorAll('.page').forEach(p => {
+    p.classList.remove('active');
+    p.style.setProperty('display', 'none', 'important');
+    p.style.setProperty('visibility', 'hidden', 'important');
+    p.style.setProperty('opacity', '0', 'important');
+  });
+
+  pagina.classList.add('active');
+  pagina.style.setProperty('display', 'block', 'important');
+  pagina.style.setProperty('visibility', 'visible', 'important');
+  pagina.style.setProperty('opacity', '1', 'important');
+  pagina.style.setProperty('position', 'relative', 'important');
+  pagina.style.setProperty('z-index', '5', 'important');
+
+  document.querySelectorAll('.nav-item').forEach(btn => {
+    btn.classList.remove('active');
+  });
+
+  const mapa = {
+    dashboard: 'Dashboard',
+    recuerdos: 'Recuerdos',
+    citas: 'Nuestros planes',
+    playlist: 'Playlist',
+    razones: 'Razones',
+    promesas: 'Promesas',
+    carta: 'Carta',
+    tiempo: '¿Nos vemos?',
+    cajita: 'Cajita especial',
+    pregunta: 'Pregunta final'
+  };
+
+  document.querySelectorAll('.nav-item').forEach(btn => {
+    if (btn.textContent.includes(mapa[page])) {
+      btn.classList.add('active');
+    }
+  });
+
+  const loaders = {
+    dashboard: typeof loadDashboard === 'function' ? loadDashboard : null,
+    recuerdos: typeof loadRecuerdos === 'function' ? loadRecuerdos : null,
+    citas: typeof loadCitas === 'function' ? loadCitas : null,
+    playlist: typeof loadPlaylist === 'function' ? loadPlaylist : null,
+    razones: typeof loadRazones === 'function' ? loadRazones : null,
+    promesas: typeof loadPromesas === 'function' ? loadPromesas : null,
+    carta: typeof loadCarta === 'function' ? loadCarta : null,
+    cajita: typeof loadCajita === 'function' ? loadCajita : null
+  };
+
+  if (loaders[page]) {
+    loaders[page]();
+  }
+
+  if (page === 'tiempo' && typeof initTiempoPage === 'function') {
+    initTiempoPage();
+  }
+}
+
+window.navigateTo = mostrarPaginaForzada;
+navigateTo = mostrarPaginaForzada;
+
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.nav-item').forEach(btn => {
+    const texto = btn.textContent.trim();
+
+    if (texto.includes('Dashboard')) {
+      btn.onclick = () => mostrarPaginaForzada('dashboard');
+    } else if (texto.includes('Recuerdos')) {
+      btn.onclick = () => mostrarPaginaForzada('recuerdos');
+    } else if (texto.includes('Nuestros planes')) {
+      btn.onclick = () => mostrarPaginaForzada('citas');
+    } else if (texto.includes('Playlist')) {
+      btn.onclick = () => mostrarPaginaForzada('playlist');
+    } else if (texto.includes('Razones')) {
+      btn.onclick = () => mostrarPaginaForzada('razones');
+    } else if (texto.includes('Promesas')) {
+      btn.onclick = () => mostrarPaginaForzada('promesas');
+    } else if (texto.includes('Carta')) {
+      btn.onclick = () => mostrarPaginaForzada('carta');
+    } else if (texto.includes('¿Nos vemos?')) {
+      btn.onclick = () => mostrarPaginaForzada('tiempo');
+    } else if (texto.includes('Cajita especial')) {
+      btn.onclick = () => mostrarPaginaForzada('cajita');
+    } else if (texto.includes('Pregunta final')) {
+      btn.onclick = () => mostrarPaginaForzada('pregunta');
+    }
+  });
+
+  setTimeout(() => {
+    const app = document.getElementById('app');
+    const login = document.getElementById('login-screen');
+
+    if (app && app.classList.contains('visible')) {
+      mostrarPaginaForzada('dashboard');
+    }
+
+    if (login && login.style.display === 'none') {
+      mostrarPaginaForzada('dashboard');
+    }
+  }, 300);
+});
