@@ -10,24 +10,18 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Ruta absoluta al frontend.
-// Tu repo está así:
-// SIGA/
-// ├── backend/server.js
-// └── frontend/index.html
-const frontendPath = path.resolve(__dirname, '..', 'frontend');
+// Ahora el frontend se buscará dentro de backend/frontend
+// porque Railway lo copiará ahí durante el build.
+const frontendPath = path.join(__dirname, 'frontend');
 const indexPath = path.join(frontendPath, 'index.html');
 
-// Logs para verificar en Railway
 console.log('📁 __dirname:', __dirname);
 console.log('📁 frontendPath:', frontendPath);
 console.log('📄 indexPath:', indexPath);
 console.log('📄 index exists:', fs.existsSync(indexPath));
 
-// Archivos estáticos del frontend
 app.use(express.static(frontendPath));
 
-// Rutas API
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/dashboard', require('./routes/dashboard'));
 app.use('/api/recuerdos', require('./routes/recuerdos'));
@@ -37,14 +31,14 @@ app.use('/api/razones', require('./routes/razones'));
 app.use('/api/promesas', require('./routes/promesas'));
 app.use('/api/cartas', require('./routes/cartas'));
 
-// Ruta principal
 app.get('/', (req, res) => {
   if (!fs.existsSync(indexPath)) {
     return res.status(500).send(`
       <h2>No se encontró frontend/index.html</h2>
+      <p><b>__dirname:</b> ${__dirname}</p>
       <p><b>frontendPath:</b> ${frontendPath}</p>
       <p><b>indexPath:</b> ${indexPath}</p>
-      <p>Revisa que en Railway el Root Directory esté vacío.</p>
+      <p><b>index exists:</b> ${fs.existsSync(indexPath)}</p>
     `);
   }
 
