@@ -266,12 +266,76 @@ function closeSidebar() {
 async function loadDashboard() {
   try {
     const data = await api('GET', '/api/dashboard/resumen');
-    $('stat-dias').textContent     = data.dias     ?? '—';
+    $('stat-dias').textContent      = data.dias      ?? '—';
     $('stat-recuerdos').textContent = data.recuerdos ?? '—';
-    $('stat-citas').textContent    = data.citas     ?? '—';
-    $('stat-razones').textContent  = data.razones   ?? '—';
+    $('stat-citas').textContent     = data.citas     ?? '—';
+    $('stat-razones').textContent   = data.razones   ?? '—';
   } catch {
     // Silencioso si no hay DB aún
+  }
+
+  await cargarAvisoMatchDashboard();
+}
+
+async function cargarAvisoMatchDashboard() {
+  const box = $('dashboard-match-alert');
+  if (!box) return;
+
+  box.innerHTML = '';
+
+  if (!state.currentUser || !state.currentUser.id) return;
+
+  try {
+    const data = await api('GET', '/api/tiempo/coincidencias?usuario_id=' + state.currentUser.id);
+
+    if (!data || !data.coincidencias || !data.coincidencias.length) {
+      box.innerHTML = `
+        <div class="dashboard-match-card sin-match">
+          <div class="dashboard-match-icon">🌙</div>
+          <div>
+            <div class="dashboard-match-title">Aún no hay match de tiempo</div>
+            <div class="dashboard-match-text">Cuando sus horarios coincidan, aparecerá aquí sin tener que revisar a cada rato.</div>
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    const matches = data.coincidencias.filter(c => c.hay_coincidencia);
+
+    if (!matches.length) {
+      box.innerHTML = `
+        <div class="dashboard-match-card sin-match">
+          <div class="dashboard-match-icon">🌙</div>
+          <div>
+            <div class="dashboard-match-title">Sin match por ahora</div>
+            <div class="dashboard-match-text">Todavía no se cruzaron sus horarios, pero pueden intentar otra fecha.</div>
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    const m = matches[0];
+
+    box.innerHTML = `
+      <div class="dashboard-match-card hay-match">
+        <div class="dashboard-match-icon">✨</div>
+        <div>
+          <div class="dashboard-match-title">¡MATCH DE TIEMPO!</div>
+          <div class="dashboard-match-text">
+            Hay un ratito para verse:
+            <strong>${formatHora(m.inicio_coincidencia)} — ${formatHora(m.fin_coincidencia)}</strong>
+            ${m.fecha ? `<br><span>${formatFechaLarga(m.fecha)}</span>` : ''}
+          </div>
+        </div>
+        <button class="btn-ver-match" onclick="navigateTo('tiempo')">Ver detalles</button>
+      </div>
+    `;
+
+    mostrarAvisoMatch(matches);
+  } catch (err) {
+    console.warn('No se pudo cargar aviso de match en dashboard:', err);
   }
 }
 
@@ -1192,21 +1256,44 @@ function logoutTiempo() {
 }
 
 function initTiempoPage() {
-  // Si ya está logueado en el módulo, mostrar panel
-  if (tiempoState.usuarioId) {
-    const loginWrap = $('tiempo-login-wrap');
-    const panel     = $('tiempo-panel');
-    if (loginWrap) loginWrap.style.display = 'none';
-    if (panel)     panel.classList.add('active');
-    loadDisponibilidades();
-    loadCoincidencias();
-  } else {
-    // Mostrar login, ocultar panel
-    const loginWrap = $('tiempo-login-wrap');
-    const panel     = $('tiempo-panel');
+  const loginWrap = $('tiempo-login-wrap');
+  const panel = $('tiempo-panel');
+
+  if (!state.currentUser || !state.currentUser.id) {
     if (loginWrap) loginWrap.style.display = 'flex';
-    if (panel)     panel.classList.remove('active');
+    if (panel) panel.classList.remove('active');
+    return;
   }
+
+  const esAdmin = state.currentUser.rol === 'administrador';
+
+  // Si es admin, dejamos la pantalla Yo/Ella para probar o revisar.
+  if (esAdmin) {
+    if (tiempoState.usuarioId) {
+      if (loginWrap) loginWrap.style.display = 'none';
+      if (panel) panel.classList.add('active');
+      loadDisponibilidades();
+      loadCoincidencias();
+    } else {
+      if (loginWrap) loginWrap.style.display = 'flex';
+      if (panel) panel.classList.remove('active');
+    }
+    return;
+  }
+
+  // Para Franco / Francin: entra directo, sin pedir otra contraseña.
+  tiempoState.usuarioId = state.currentUser.id;
+  tiempoState.nombre = state.currentUser.display_name || state.currentUser.nombre || state.currentUser.usuario;
+  tiempoState.usuarioSlug = state.currentUser.usuario;
+
+  if (loginWrap) loginWrap.style.display = 'none';
+  if (panel) panel.classList.add('active');
+
+  const badge = $('tiempo-badge-nombre');
+  if (badge) badge.textContent = tiempoState.nombre;
+
+  loadDisponibilidades();
+  loadCoincidencias();
 }
 
 // ── Tabs ───────────────────────────────────────────────────────
