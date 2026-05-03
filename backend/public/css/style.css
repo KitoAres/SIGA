@@ -1513,3 +1513,7 @@ body::after {
     top: 120px;
   }
 }
+/* Movimiento instantáneo del botón "De a poquito" */
+.pregunta-zona .btn-no {
+  transition: none !important;
+}
