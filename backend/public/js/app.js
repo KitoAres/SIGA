@@ -449,10 +449,16 @@ async function saveModal() {
 
   const val = (sid) => { const el = $(sid); return el ? el.value.trim() : ''; };
 
-  if (type === 'recuerdos') {
-    body = { titulo: val('f-titulo'), descripcion: val('f-descripcion'), fecha: val('f-fecha') };
-    if (!body.titulo) { toast('El título es obligatorio.'); return; }
-  } else if (type === 'citas') {
+if (type === 'recuerdos') {
+  body = { 
+    titulo: val('f-titulo'), 
+    descripcion: val('f-descripcion'), 
+    fecha: val('f-fecha'),
+    imagen_url: val('f-imagen-url'),
+    enlace_url: val('f-enlace-url')
+  };
+  if (!body.titulo) { toast('El título es obligatorio.'); return; }
+} else if (type === 'citas') {
     body = { titulo: val('f-titulo'), lugar: val('f-lugar'), descripcion: val('f-descripcion'), fecha: val('f-fecha'), estado: val('f-estado') };
     if (!body.titulo) { toast('El título es obligatorio.'); return; }
   } else if (type === 'playlist') {
