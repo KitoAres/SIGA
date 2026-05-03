@@ -10,8 +10,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Ahora el frontend se buscará dentro de backend/frontend
-// porque Railway lo copiará ahí durante el build.
+// Frontend dentro de backend/frontend
 const frontendPath = path.join(__dirname, 'frontend');
 const indexPath = path.join(frontendPath, 'index.html');
 
@@ -22,6 +21,7 @@ console.log('📄 index exists:', fs.existsSync(indexPath));
 
 app.use(express.static(frontendPath));
 
+// Rutas API
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/dashboard', require('./routes/dashboard'));
 app.use('/api/recuerdos', require('./routes/recuerdos'));
@@ -31,10 +31,11 @@ app.use('/api/razones', require('./routes/razones'));
 app.use('/api/promesas', require('./routes/promesas'));
 app.use('/api/cartas', require('./routes/cartas'));
 
+// Página principal
 app.get('/', (req, res) => {
   if (!fs.existsSync(indexPath)) {
     return res.status(500).send(`
-      <h2>No se encontró frontend/index.html</h2>
+      <h2>No se encontró backend/frontend/index.html</h2>
       <p><b>__dirname:</b> ${__dirname}</p>
       <p><b>frontendPath:</b> ${frontendPath}</p>
       <p><b>indexPath:</b> ${indexPath}</p>
