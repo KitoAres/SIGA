@@ -1036,7 +1036,75 @@ if (modalPerfil2) {
 /* ============================================================
    MÓDULO: Nuestro Tiempo
    ============================================================ */
+// ── Aviso alegre cuando hay match de tiempo ───────────────────
+let ultimoMatchAvisado = '';
 
+function sonidoMatch() {
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    const ctx = new AudioContext();
+
+    const notas = [523.25, 659.25, 783.99, 1046.5]; // do, mi, sol, do alto
+
+    notas.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+
+      gain.gain.setValueAtTime(0.0001, ctx.currentTime + i * 0.12);
+      gain.gain.exponentialRampToValueAtTime(0.18, ctx.currentTime + i * 0.12 + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + i * 0.12 + 0.18);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(ctx.currentTime + i * 0.12);
+      osc.stop(ctx.currentTime + i * 0.12 + 0.2);
+    });
+  } catch (err) {
+    console.warn('No se pudo reproducir sonido:', err);
+  }
+}
+
+function mostrarAvisoMatch(coincidencias) {
+  const matches = coincidencias.filter(c => c.hay_coincidencia);
+
+  if (!matches.length) return;
+
+  const clave = matches
+    .map(m => `${normalizarFecha(m.fecha)}-${m.inicio_coincidencia}-${m.fin_coincidencia}`)
+    .join('|');
+
+  // Evita que suene mil veces por recargar la pestaña
+  if (clave === ultimoMatchAvisado) return;
+
+  ultimoMatchAvisado = clave;
+
+  sonidoMatch();
+
+  const aviso = document.createElement('div');
+  aviso.className = 'match-toast';
+  aviso.innerHTML = `
+    <div class="match-toast-icon">✨</div>
+    <div>
+      <div class="match-toast-title">¡MATCH DE TIEMPO!</div>
+      <div class="match-toast-text">Hay un ratito donde sí pueden verse 💙</div>
+    </div>
+  `;
+
+  document.body.appendChild(aviso);
+
+  setTimeout(() => {
+    aviso.classList.add('show');
+  }, 50);
+
+  setTimeout(() => {
+    aviso.classList.remove('show');
+    setTimeout(() => aviso.remove(), 400);
+  }, 4200);
+}
 // Estado del módulo tiempo (separado del estado global de SIGA)
 const tiempoState = {
   usuarioId:   null,
@@ -1217,19 +1285,25 @@ async function loadCoincidencias() {
       return;
     }
 
-    const { coincidencias } = data;
-    if (!coincidencias || !coincidencias.length) {
-      container.innerHTML = `
-        <div class="tiempo-empty">
-          <div class="tiempo-empty-icon">🌙</div>
-          <div class="tiempo-empty-text">Aún no hay fechas en común registradas.<br/>Agrega disponibilidades y revisa aquí los resultados.</div>
-        </div>`;
-      return;
-    }
+const { coincidencias } = data;
+
+if (!coincidencias || !coincidencias.length) {
+  container.innerHTML = `
+    <div class="tiempo-empty">
+      <div class="tiempo-empty-icon">🌙</div>
+      <div class="tiempo-empty-text">
+        Aún no hay match de tiempo.<br/>
+        Cuando sus horarios se crucen, aquí aparecerá el momento posible.
+      </div>
+    </div>`;
+  return;
+}
+
+// Si hay al menos un match, avisar con sonido y mensaje
+mostrarAvisoMatch(coincidencias);
 
     container.innerHTML = coincidencias.map(c => {
-      const fechaObj = new Date(c.fecha + 'T12:00:00');
-      const fechaStr = fechaObj.toLocaleDateString('es-BO', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+const fechaStr = formatFechaLarga(c.fecha);
 
       if (c.hay_coincidencia) {
         return `
@@ -1238,8 +1312,7 @@ async function loadCoincidencias() {
               <span style="font-size:1.1rem;">💙</span>
               <div class="coincidencia-fecha">${fechaStr}</div>
             </div>
-            <div class="coincidencia-resultado found">Encontramos un momento para vernos 💙</div>
-            <div class="coincidencia-horario">
+<div class="coincidencia-resultado found">✨ MATCH de tiempo 💙</div>            <div class="coincidencia-horario">
               ⏰ ${formatHora(c.inicio_coincidencia)} — ${formatHora(c.fin_coincidencia)}
             </div>
             <div class="coincidencia-mi-disp">
@@ -1254,8 +1327,7 @@ async function loadCoincidencias() {
               <span style="font-size:1.1rem;">🌙</span>
               <div class="coincidencia-fecha">${fechaStr}</div>
             </div>
-            <div class="coincidencia-resultado not-found">Esta vez nuestros tiempos no se cruzaron, pero podemos intentar otra fecha 🌙</div>
-            <div class="coincidencia-mi-disp" style="margin-top:8px;">
+<div class="coincidencia-resultado not-found">Sin match por ahora 🌙</div>            <div class="coincidencia-mi-disp" style="margin-top:8px;">
               Tu bloque: ${formatHora(c.mi_disponibilidad.hora_inicio)} – ${formatHora(c.mi_disponibilidad.hora_fin)}
             </div>
           </div>`;
