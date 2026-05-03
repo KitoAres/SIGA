@@ -100,15 +100,16 @@ function navigateTo(page) {
   closeSidebar();
 
   // Cargar datos de la sección
-  const loaders = {
-    dashboard: loadDashboard,
-    recuerdos: loadRecuerdos,
-    citas:     loadCitas,
-    playlist:  loadPlaylist,
-    razones:   loadRazones,
-    promesas:  loadPromesas,
-    carta:     loadCarta,
-  };
+const loaders = {
+  dashboard: loadDashboard,
+  recuerdos: loadRecuerdos,
+  citas:     loadCitas,
+  playlist:  loadPlaylist,
+  razones:   loadRazones,
+  promesas:  loadPromesas,
+  carta:     loadCarta,
+  cajita:    loadCajita,
+};
   if (loaders[page]) loaders[page]();
 }
 
