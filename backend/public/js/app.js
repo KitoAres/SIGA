@@ -2121,7 +2121,9 @@ async function guardarCartaCalma() {
 
     closeModal('modal-carta-calma');
     toast('Carta guardada para cuando vuelva la calma 💌');
-    loadCartasCalma();
+    if (typeof loadCartasCalma === 'function') {
+  loadCartasCalma();
+}
 
   } catch {
     toast('Error al guardar carta.');
