@@ -425,6 +425,31 @@ recuerdos: () => {
       `;
     },
   };
+   cajita: () => {
+  titleEl.textContent = isEdit ? 'Editar detalle especial' : 'Nuevo detalle especial';
+  formEl.innerHTML = `
+    <label>Título</label>
+    <input type="text" id="f-titulo" value="${isEdit ? args[0] : ''}" placeholder="Ej: Carta de aniversario"/>
+
+    <label>Tipo</label>
+    <select id="f-tipo">
+      <option value="carta" ${isEdit && args[1] === 'carta' ? 'selected' : ''}>Carta</option>
+      <option value="juego" ${isEdit && args[1] === 'juego' ? 'selected' : ''}>Juego</option>
+      <option value="mensaje" ${isEdit && args[1] === 'mensaje' ? 'selected' : ''}>Mensaje</option>
+      <option value="bitacora" ${isEdit && args[1] === 'bitacora' ? 'selected' : ''}>Bitácora</option>
+      <option value="otro" ${!isEdit || args[1] === 'otro' ? 'selected' : ''}>Otro</option>
+    </select>
+
+    <label>Descripción</label>
+    <textarea id="f-descripcion" placeholder="¿Qué es este detalle?">${isEdit ? args[2] : ''}</textarea>
+
+    <label>Enlace</label>
+    <input type="url" id="f-enlace" value="${isEdit ? args[3] : ''}" placeholder="https://..."/>
+
+    <label>Fecha</label>
+    <input type="date" id="f-fecha" value="${isEdit ? args[4] : ''}"/>
+  `;
+},
 
   if (forms[type]) forms[type]();
   $('modal-crud').classList.add('open');
@@ -469,7 +494,19 @@ if (type === 'recuerdos') {
     body = { texto: val('f-texto') };
     if (!body.texto) { toast('El campo no puede estar vacío.'); return; }
   }
+else if (type === 'cajita') {
+  body = {
+    titulo: val('f-titulo'),
+    tipo: val('f-tipo'),
+    descripcion: val('f-descripcion'),
+    enlace: val('f-enlace'),
+    fecha: val('f-fecha')
+  };
 
+  if (!body.titulo) { toast('El título es obligatorio.'); return; }
+  if (!body.enlace) { toast('El enlace es obligatorio.'); return; }
+}
+   
   const method = id ? 'PUT' : 'POST';
   const url    = '/api/' + type + (id ? '/' + id : '');
 
@@ -478,8 +515,14 @@ if (type === 'recuerdos') {
     closeModal('modal-crud');
     toast(id ? '✓ Actualizado con éxito' : '✓ Guardado con éxito');
     // Recargar la sección correspondiente
-    const reloaders = { recuerdos: loadRecuerdos, citas: loadCitas, playlist: loadPlaylist, razones: loadRazones, promesas: loadPromesas };
-    if (reloaders[type]) reloaders[type]();
+const reloaders = { 
+  recuerdos: loadRecuerdos, 
+  citas: loadCitas, 
+  playlist: loadPlaylist, 
+  razones: loadRazones, 
+  promesas: loadPromesas,
+  cajita: loadCajita
+};    if (reloaders[type]) reloaders[type]();
     if (type === 'recuerdos' || type === 'citas' || type === 'razones') loadDashboard();
   } catch {
     toast('Error al guardar. Verifica la conexión.');
@@ -491,8 +534,14 @@ async function deleteItem(type, id) {
   try {
     await api('DELETE', '/api/' + type + '/' + id);
     toast('Eliminado correctamente.');
-    const reloaders = { recuerdos: loadRecuerdos, citas: loadCitas, playlist: loadPlaylist, razones: loadRazones, promesas: loadPromesas };
-    if (reloaders[type]) reloaders[type]();
+const reloaders = { 
+  recuerdos: loadRecuerdos, 
+  citas: loadCitas, 
+  playlist: loadPlaylist, 
+  razones: loadRazones, 
+  promesas: loadPromesas,
+  cajita: loadCajita
+};    if (reloaders[type]) reloaders[type]();
     loadDashboard();
   } catch {
     toast('Error al eliminar.');
