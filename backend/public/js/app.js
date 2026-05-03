@@ -1132,19 +1132,46 @@ function sonidoMatch() {
   }
 }
 
+function matchSigueVigente(match) {
+  const fecha = normalizarFecha(match.fecha);
+  const horaFin = match.fin_coincidencia || '';
+
+  if (!fecha || !horaFin) return false;
+
+  const horaLimpia = String(horaFin).substring(0, 5);
+  const finMatch = new Date(`${fecha}T${horaLimpia}:00`);
+  const ahora = new Date();
+
+  if (isNaN(finMatch.getTime())) return false;
+
+  return finMatch >= ahora;
+}
+
+function claveMatch(match) {
+  const usuarioId = state.currentUser?.id || 'anonimo';
+  const fecha = normalizarFecha(match.fecha);
+  const inicio = match.inicio_coincidencia || '';
+  const fin = match.fin_coincidencia || '';
+
+  return `match_avisado_${usuarioId}_${fecha}_${inicio}_${fin}`;
+}
+
 function mostrarAvisoMatch(coincidencias) {
   const matches = coincidencias.filter(c => c.hay_coincidencia);
-
   if (!matches.length) return;
 
-  const clave = matches
-    .map(m => `${normalizarFecha(m.fecha)}-${m.inicio_coincidencia}-${m.fin_coincidencia}`)
-    .join('|');
+  const matchesVigentes = matches.filter(matchSigueVigente);
+  if (!matchesVigentes.length) return;
 
-  // Evita que suene mil veces por recargar la pestaña
-  if (clave === ultimoMatchAvisado) return;
+  const matchNuevo = matchesVigentes.find(m => {
+    const key = claveMatch(m);
+    return localStorage.getItem(key) !== '1';
+  });
 
-  ultimoMatchAvisado = clave;
+  if (!matchNuevo) return;
+
+  const key = claveMatch(matchNuevo);
+  localStorage.setItem(key, '1');
 
   sonidoMatch();
 
@@ -1154,15 +1181,16 @@ function mostrarAvisoMatch(coincidencias) {
     <div class="match-toast-icon">✨</div>
     <div>
       <div class="match-toast-title">¡MATCH DE TIEMPO!</div>
-      <div class="match-toast-text">Hay un ratito donde sí pueden verse 💙</div>
+      <div class="match-toast-text">
+        Hay un ratito donde sí pueden verse 💙<br>
+        <strong>${formatHora(matchNuevo.inicio_coincidencia)} — ${formatHora(matchNuevo.fin_coincidencia)}</strong>
+      </div>
     </div>
   `;
 
   document.body.appendChild(aviso);
 
-  setTimeout(() => {
-    aviso.classList.add('show');
-  }, 50);
+  setTimeout(() => aviso.classList.add('show'), 50);
 
   setTimeout(() => {
     aviso.classList.remove('show');
