@@ -1996,7 +1996,9 @@ async function loadCalma() {
       <div id="calma-cartas-box"></div>
     `;
 
-    loadCartasCalma();
+    if (typeof loadCartasCalma === 'function') {
+  loadCartasCalma();
+}
 
   } catch (err) {
     console.error(err);
@@ -2051,7 +2053,31 @@ async function guardarCheckinCalma() {
 }
 
 async function cerrarModoCalma(id) {
-   function openCartaCalma() {
+  if (!state.currentUser || !state.currentUser.id) {
+    toast('Primero inicia sesión.');
+    return;
+  }
+
+  if (!confirm('¿Cerrar Modo calma?')) return;
+
+  try {
+    const data = await api('PUT', `/api/calma/${id}/cerrar`, {
+      usuario_id: state.currentUser.id
+    });
+
+    if (data.error) {
+      toast(data.error);
+      return;
+    }
+
+    toast('Modo calma cerrado.');
+    loadCalma();
+  } catch {
+    toast('Error al cerrar Modo calma.');
+  }
+}
+
+function openCartaCalma() {
   if (!calmaActual) {
     toast('No hay Modo calma activo.');
     return;
@@ -2061,7 +2087,6 @@ async function cerrarModoCalma(id) {
   $('carta-calma-contenido').value = '';
   $('modal-carta-calma').classList.add('open');
 }
-
 async function guardarCartaCalma() {
   if (!state.currentUser || !state.currentUser.id) {
     toast('Primero inicia sesión.');
