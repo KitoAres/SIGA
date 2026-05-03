@@ -81,11 +81,13 @@
       </button>
     </nav>
 
-    <div class="sidebar-footer">
-      <span id="sidebar-user">—</span>
-      <button class="btn-logout" onclick="doLogout()">Salir</button>
-    </div>
-  </aside>
+<div class="sidebar-footer">
+  <span id="sidebar-user">—</span>
+  <div class="sidebar-actions">
+    <button class="btn-account" onclick="abrirModalPerfil()">Mi cuenta</button>
+    <button class="btn-logout" onclick="doLogout()">Salir</button>
+  </div>
+</div>
 
   <!-- MAIN -->
   <main class="main-content">
@@ -365,7 +367,34 @@
     </div>
   </div>
 </div>
+<!-- Modal Mi Cuenta -->
+<div class="modal-overlay" id="modal-perfil">
+  <div class="modal">
+    <h2 class="modal-title">Mi cuenta</h2>
 
+    <div class="modal-form">
+      <label>Nombre visible</label>
+      <input type="text" id="perfil-display-name" placeholder="Ej: Franco o Francin"/>
+
+      <label>Usuario</label>
+      <input type="text" id="perfil-usuario" placeholder="Tu usuario"/>
+
+      <label>Contraseña actual</label>
+      <input type="password" id="perfil-contrasena-actual" placeholder="Necesaria solo si cambiarás contraseña"/>
+
+      <label>Nueva contraseña</label>
+      <input type="password" id="perfil-nueva-contrasena" placeholder="Déjalo vacío si no quieres cambiarla"/>
+
+      <label>Color de perfil</label>
+      <input type="color" id="perfil-color" value="#22d3ee"/>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('modal-perfil')">Cancelar</button>
+      <button class="btn-save" onclick="guardarPerfil()">Guardar cambios</button>
+    </div>
+  </div>
+</div>
 <script src="/js/app.js"></script>
 </body>
 </html>
