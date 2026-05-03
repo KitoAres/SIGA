@@ -2178,29 +2178,6 @@ async function loadCartasCalma() {
   }
 }
    
-  if (!state.currentUser || !state.currentUser.id) {
-    toast('Primero inicia sesión.');
-    return;
-  }
-
-  if (!confirm('¿Cerrar Modo calma?')) return;
-
-  try {
-    const data = await api('PUT', `/api/calma/${id}/cerrar`, {
-      usuario_id: state.currentUser.id
-    });
-
-    if (data.error) {
-      toast(data.error);
-      return;
-    }
-
-    toast('Modo calma cerrado.');
-    loadCalma();
-  } catch {
-    toast('Error al cerrar Modo calma.');
-  }
-}
 
 /* Refuerzo para que el menú cargue Modo calma */
 document.addEventListener('click', function(e) {
