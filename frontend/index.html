@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SIGA — Sistema Integral de Gestión de Amor</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div id="login-screen">
+    <div class="login-card">
+      <div class="heart">💙</div>
+      <h1>SIGA</h1>
+      <p>Sistema Integral de Gestión de Amor</p>
+      <div id="login-alert" class="alert"></div>
+      <form id="login-form">
+        <label>Usuario secreto</label>
+        <input id="login-user" value="miamor" required />
+        <label>Contraseña</label>
+        <input id="login-pass" type="password" value="123" required />
+        <button class="btn primary" type="submit">Entrar a nuestra historia →</button>
+      </form>
+      <small>Demo: miamor / 123</small>
+    </div>
+  </div>
+
+  <aside id="sidebar" style="display:none">
+    <div class="logo"><h2>SIGA</h2><span>Centro emocional privado</span></div>
+    <nav>
+      <a data-nav="dashboard" class="active">📊 Dashboard</a>
+      <a data-nav="recuerdos">📸 Recuerdos</a>
+      <a data-nav="citas">☕ Citas pendientes</a>
+      <a data-nav="playlist">🎵 Playlist</a>
+      <a data-nav="razones">💌 Razones</a>
+      <a data-nav="promesas">🫶 Promesas</a>
+      <a data-nav="carta">📜 Carta</a>
+      <a data-nav="final">💍 Pregunta final</a>
+    </nav>
+    <div class="userbox"><b id="user-name">—</b><span id="user-role">—</span><button id="logout">Cerrar</button></div>
+  </aside>
+
+  <main id="main" style="display:none">
+    <section id="sec-dashboard" class="section active">
+      <h1>Dashboard</h1><p>Resumen operativo de lo que siento por ti.</p>
+      <div class="stats">
+        <div class="card"><b id="stat-recuerdos">—</b><span>Recuerdos guardados</span></div>
+        <div class="card"><b id="stat-citas">—</b><span>Citas planeadas</span></div>
+        <div class="card"><b id="stat-canciones">—</b><span>Canciones</span></div>
+        <div class="card"><b id="stat-razones">—</b><span>Razones</span></div>
+        <div class="card"><b id="stat-promesas">—</b><span>Promesas</span></div>
+      </div>
+      <div class="panel"><h3>Próximas citas</h3><div id="dash-proximas"></div></div>
+    </section>
+
+    <section id="sec-recuerdos" class="section"><div class="top"><div><h1>Recuerdos</h1><p>Momentos que no quiero olvidar.</p></div><button class="btn primary" onclick="openModal('modal-recuerdo')">+ Recuerdo</button></div><div id="recuerdos-list" class="grid"></div></section>
+    <section id="sec-citas" class="section"><div class="top"><div><h1>Citas pendientes</h1><p>Planes que quiero vivir contigo.</p></div><button class="btn primary" onclick="openModal('modal-cita')">+ Cita</button></div><div id="citas-list" class="grid"></div></section>
+    <section id="sec-playlist" class="section"><div class="top"><div><h1>Playlist</h1><p>Canciones que me recuerdan a ti.</p></div><button class="btn primary" onclick="openModal('modal-cancion')">+ Canción</button></div><div id="playlist-list" class="grid"></div></section>
+    <section id="sec-razones" class="section"><div class="top"><div><h1>Razones</h1><p>Motivos pequeños y grandes.</p></div><button class="btn primary" onclick="openModal('modal-razon')">+ Razón</button></div><div id="razones-list" class="grid"></div></section>
+    <section id="sec-promesas" class="section"><div class="top"><div><h1>Promesas</h1><p>Lo que quiero cuidar contigo.</p></div><button class="btn primary" onclick="openModal('modal-promesa')">+ Promesa</button></div><div id="promesas-list" class="grid"></div></section>
+    <section id="sec-carta" class="section"><h1>Carta</h1><div id="carta-box" class="letter"></div><button id="btn-prohibido" class="danger">No presiones este botón</button><div id="prohibido-msg"></div></section>
+    <section id="sec-final" class="section final"><h1>¿Quieres seguir escribiendo esta historia conmigo?</h1><p>No te prometo perfección. Te prometo intención, cuidado y ganas de hacerlo bonito.</p><button class="btn yes" onclick="finalSi()">Sí 💙</button><button id="no-btn" class="btn no">No</button><div id="final-msg"></div></section>
+  </main>
+
+  <div class="modal" id="modal-recuerdo"><form id="form-recuerdo"><h2>Nuevo recuerdo</h2><input id="r-titulo" placeholder="Título" required><input id="r-fecha" type="date"><input id="r-lugar" placeholder="Lugar"><textarea id="r-desc" placeholder="Qué pasó y qué sentí" required></textarea><input id="r-sent" placeholder="Sentimiento"><button class="btn primary">Guardar</button><button type="button" onclick="closeModals()">Cancelar</button></form></div>
+  <div class="modal" id="modal-cita"><form id="form-cita"><h2>Nueva cita</h2><input id="c-titulo" placeholder="Título" required><input id="c-lugar" placeholder="Lugar"><input id="c-fecha" type="datetime-local"><textarea id="c-desc" placeholder="Descripción"></textarea><button class="btn primary">Guardar</button><button type="button" onclick="closeModals()">Cancelar</button></form></div>
+  <div class="modal" id="modal-cancion"><form id="form-cancion"><h2>Nueva canción</h2><input id="p-titulo" placeholder="Canción" required><input id="p-artista" placeholder="Artista"><input id="p-link" placeholder="Link"><textarea id="p-motivo" placeholder="Por qué me recuerda a ti"></textarea><button class="btn primary">Guardar</button><button type="button" onclick="closeModals()">Cancelar</button></form></div>
+  <div class="modal" id="modal-razon"><form id="form-razon"><h2>Nueva razón</h2><textarea id="z-texto" placeholder="Porque..." required></textarea><button class="btn primary">Guardar</button><button type="button" onclick="closeModals()">Cancelar</button></form></div>
+  <div class="modal" id="modal-promesa"><form id="form-promesa"><h2>Nueva promesa</h2><textarea id="m-texto" placeholder="Prometo..." required></textarea><button class="btn primary">Guardar</button><button type="button" onclick="closeModals()">Cancelar</button></form></div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
