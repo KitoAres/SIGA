@@ -44,9 +44,9 @@
       <button class="nav-item" onclick="navigateTo('recuerdos')">
         <span class="nav-icon">🌸</span> Recuerdos
       </button>
-      <button class="nav-item" onclick="navigateTo('citas')">
-        <span class="nav-icon">📅</span> Citas
-      </button>
+    <button class="nav-item" onclick="navigateTo('citas')">
+  <span class="nav-icon">📅</span> Nuestros planes
+</button>
       <button class="nav-item" onclick="navigateTo('playlist')">
         <span class="nav-icon">🎵</span> Playlist
       </button>
@@ -59,9 +59,9 @@
       <button class="nav-item" onclick="navigateTo('carta')">
         <span class="nav-icon">✉️</span> Carta
       </button>
-      <button class="nav-item" onclick="navigateTo('tiempo')">
-        <span class="nav-icon">🕐</span> Nuestro Tiempo
-      </button>
+<button class="nav-item" onclick="navigateTo('tiempo')">
+  <span class="nav-icon">🕐</span> ¿Nos vemos?
+</button>
       <div class="nav-divider"></div>
       <button class="nav-item" onclick="navigateTo('forbidden')">
         <span class="nav-icon">🔴</span> Botón prohibido
@@ -129,16 +129,16 @@
     </section>
 
     <!-- CITAS -->
-    <section class="page" id="page-citas">
-      <div class="page-header">
-        <div>
-          <h1 class="page-title">Nuestras <span>citas</span></h1>
-          <p class="page-subtitle">Planes que quiero cumplir contigo.</p>
-        </div>
-        <button class="btn-add" onclick="openModal('citas')">+ Nueva cita</button>
-      </div>
-      <div class="items-grid" id="list-citas"></div>
-    </section>
+<section class="page" id="page-citas">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Nuestros <span>planes</span></h1>
+      <p class="page-subtitle">Cosas que me gustaría vivir contigo, sin presión y a nuestro ritmo.</p>
+    </div>
+    <button class="btn-add" onclick="openModal('citas')">+ Nuevo plan</button>
+  </div>
+  <div class="items-grid" id="list-citas"></div>
+</section>
 
     <!-- PLAYLIST -->
     <section class="page" id="page-playlist">
@@ -202,8 +202,8 @@
       <div id="tiempo-login-wrap" class="tiempo-login-wrap">
         <div class="tiempo-login-card">
           <div class="tiempo-login-icon">🕐</div>
-          <div class="tiempo-login-title">Nuestro Tiempo</div>
-          <div class="tiempo-login-sub">¿Quién eres tú?</div>
+<div class="tiempo-login-title">¿Nos vemos?</div>
+<div class="tiempo-login-sub">Un espacio para coincidir sin presión</div>
 
           <div class="tiempo-user-btns">
             <button class="tiempo-user-btn" id="tbtn-yo"   onclick="seleccionarTiempoUser('yo')">Yo</button>
@@ -222,8 +222,8 @@
         <!-- Header dinámico -->
         <div class="page-header">
           <div>
-            <h1 class="page-title">Nuestro <span>tiempo</span></h1>
-            <p class="page-subtitle">Solo tú puedes ver tus disponibilidades. Las coincidencias son de ambos.</p>
+<h1 class="page-title">¿Nos <span>vemos?</span></h1>
+<p class="page-subtitle">Pon cuándo puedes. Si nuestros horarios coinciden, la app encuentra un ratito para vernos sin presionar a nadie.</p>
           </div>
           <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
             <div class="tiempo-user-badge">
@@ -253,7 +253,7 @@
         <!-- Tab: Coincidencias -->
         <div class="tiempo-tab-content" id="tcontent-coin">
           <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:18px;">
-            Fechas donde tus horarios y los suyos se cruzan. No verás su disponibilidad directa, solo el resultado.
+            Aquí solo aparecerán los momentos donde nuestros horarios hacen match. No verás su horario exacto, solo el ratito en el que coincidimos.
           </p>
           <div id="list-coincidencias"></div>
         </div>
