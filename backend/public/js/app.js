@@ -349,6 +349,7 @@ async function loadRecuerdos() {
       container.innerHTML = emptyState('🌸', 'Aún no hay recuerdos guardados.');
       return;
     }
+     window.recuerdosCache = items;
 container.innerHTML = items.map(r => `
   <div class="item-card recuerdo-card">
     ${r.imagen_url ? `
@@ -370,16 +371,7 @@ container.innerHTML = items.map(r => `
       </a>
     ` : ''}
 
-    <div class="item-actions">
-      <button class="btn btn-sm btn-edit" onclick="openModal(
-        'recuerdos', 
-        ${r.id}, 
-        '${esc(r.titulo)}', 
-        '${esc(r.descripcion)}', 
-        '${r.fecha ? r.fecha.split('T')[0] : ''}',
-        '${esc(r.imagen_url || '')}',
-        '${esc(r.enlace_url || '')}'
-      )">Editar</button>
+<button class="btn btn-sm btn-edit" onclick="editarRecuerdoSeguro(${r.id})">Editar</button>
       <button class="btn btn-sm btn-delete" onclick="deleteItem('recuerdos', ${r.id})">Eliminar</button>
     </div>
   </div>
