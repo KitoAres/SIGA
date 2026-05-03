@@ -2475,3 +2475,45 @@ body {
     justify-content: flex-start;
   }
 }
+
+/* ======================================================
+   MODO CALMA - AUTOR Y PERMISOS
+   ====================================================== */
+
+.calma-readonly {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.035);
+  border: 1px solid rgba(180,130,220,0.16);
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  line-height: 1.3;
+}
+
+.calma-checkin-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.calma-checkin-author {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid;
+  font-size: 0.76rem;
+  font-weight: 600;
+}
+
+.calma-checkin-date {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+
