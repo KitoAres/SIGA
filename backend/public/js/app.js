@@ -71,8 +71,9 @@ async function doLogin() {
       $('login-screen').style.display = 'none';
       $('app').classList.add('visible');
 
-renderUsuarioActual();
-navigateTo('dashboard');
+      renderUsuarioActual();
+      navigateTo('dashboard');
+      setTimeout(() => navigateTo('dashboard'), 50);
     } else {
       $('login-error').textContent = data.error || 'Credenciales incorrectas.';
     }
@@ -131,68 +132,66 @@ function navigateTo(page) {
     return;
   }
 
-  // Ocultar todas las páginas
+  // Ocultar todas las páginas con !important para ganarle al CSS
   document.querySelectorAll('.page').forEach(p => {
     p.classList.remove('active');
-    p.style.display = 'none';
-    p.style.visibility = 'hidden';
-    p.style.opacity = '0';
+    p.style.setProperty('display', 'none', 'important');
+    p.style.setProperty('visibility', 'hidden', 'important');
+    p.style.setProperty('opacity', '0', 'important');
+    p.style.setProperty('position', 'relative', 'important');
   });
 
-  // Quitar activo del menú
-  document.querySelectorAll('.nav-item').forEach(n => {
-    n.classList.remove('active');
-  });
-
-  // Mostrar página actual
+  // Mostrar la página elegida
   targetPage.classList.add('active');
-  targetPage.style.display = 'block';
-  targetPage.style.visibility = 'visible';
-  targetPage.style.opacity = '1';
+  targetPage.style.setProperty('display', 'block', 'important');
+  targetPage.style.setProperty('visibility', 'visible', 'important');
+  targetPage.style.setProperty('opacity', '1', 'important');
+  targetPage.style.setProperty('position', 'relative', 'important');
+  targetPage.style.setProperty('z-index', '5', 'important');
 
   // Activar botón correcto del menú
-  document.querySelectorAll('.nav-item').forEach(n => {
-    const txt = n.textContent.trim().toLowerCase();
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
 
-    if (
-      (page === 'dashboard' && txt.includes('dashboard')) ||
-      (page === 'recuerdos' && txt.includes('recuerdos')) ||
-      (page === 'citas' && txt.includes('planes')) ||
-      (page === 'playlist' && txt.includes('playlist')) ||
-      (page === 'razones' && txt.includes('razones')) ||
-      (page === 'promesas' && txt.includes('promesas')) ||
-      (page === 'carta' && txt.includes('carta')) ||
-      (page === 'tiempo' && txt.includes('vemos')) ||
-      (page === 'cajita' && txt.includes('cajita')) ||
-      (page === 'pregunta' && txt.includes('pregunta'))
-    ) {
-      n.classList.add('active');
-    }
+  const mapa = {
+    dashboard: 'Dashboard',
+    recuerdos: 'Recuerdos',
+    citas: 'Nuestros planes',
+    playlist: 'Playlist',
+    razones: 'Razones',
+    promesas: 'Promesas',
+    carta: 'Carta',
+    tiempo: '¿Nos vemos?',
+    cajita: 'Cajita especial',
+    pregunta: 'Pregunta final'
+  };
+
+  document.querySelectorAll('.nav-item').forEach(n => {
+    if (n.textContent.includes(mapa[page])) n.classList.add('active');
   });
 
   state.currentPage = page;
 
-  closeSidebar();
+  if (typeof closeSidebar === 'function') closeSidebar();
 
   const loaders = {
-    dashboard: loadDashboard,
-    recuerdos: loadRecuerdos,
-    citas: loadCitas,
-    playlist: loadPlaylist,
-    razones: loadRazones,
-    promesas: loadPromesas,
-    carta: loadCarta,
-    cajita: loadCajita
+    dashboard: typeof loadDashboard === 'function' ? loadDashboard : null,
+    recuerdos: typeof loadRecuerdos === 'function' ? loadRecuerdos : null,
+    citas: typeof loadCitas === 'function' ? loadCitas : null,
+    playlist: typeof loadPlaylist === 'function' ? loadPlaylist : null,
+    razones: typeof loadRazones === 'function' ? loadRazones : null,
+    promesas: typeof loadPromesas === 'function' ? loadPromesas : null,
+    carta: typeof loadCarta === 'function' ? loadCarta : null,
+    cajita: typeof loadCajita === 'function' ? loadCajita : null
   };
 
-  if (loaders[page]) {
-    loaders[page]();
-  }
+  if (loaders[page]) loaders[page]();
 
   if (page === 'tiempo' && typeof initTiempoPage === 'function') {
     initTiempoPage();
   }
 }
+
+window.navigateTo = navigateTo;
 
 // ── SIDEBAR MÓVIL ──────────────────────────────────────────────
 function toggleSidebar() {
@@ -1065,18 +1064,6 @@ function logoutTiempo() {
   if ($('t-login-error')) $('t-login-error').textContent = '';
 }
 
-// Al navegar a tiempo, si ya hay sesión activa no muestra login
-const _origNavigateTo = window.navigateTo || null;
-
-// Hook en la navegación para inicializar el módulo
-const originalNavigateTo = navigateTo;
-window.navigateTo = function(page) {
-  originalNavigateTo(page);
-  if (page === 'tiempo') {
-    initTiempoPage();
-  }
-};
-
 function initTiempoPage() {
   // Si ya está logueado en el módulo, mostrar panel
   if (tiempoState.usuarioId) {
@@ -1317,222 +1304,3 @@ if (mTiempo) {
     if (e.target === this) closeModal('modal-tiempo');
   });
 }
-
-/* ======================================================
-   FIX FINAL: FORZAR VISUALIZACIÓN DE PÁGINAS
-   ====================================================== */
-
-window.navigateTo = function(page) {
-  const targetPage = document.getElementById('page-' + page);
-
-  if (!targetPage) {
-    console.error('No existe la página:', 'page-' + page);
-    alert('No existe la sección: ' + page);
-    return;
-  }
-
-  document.querySelectorAll('.page').forEach(p => {
-    p.classList.remove('active');
-    p.style.display = 'none';
-    p.style.visibility = 'hidden';
-    p.style.opacity = '0';
-  });
-
-  targetPage.classList.add('active');
-  targetPage.style.display = 'block';
-  targetPage.style.visibility = 'visible';
-  targetPage.style.opacity = '1';
-
-  document.querySelectorAll('.nav-item').forEach(n => {
-    n.classList.remove('active');
-
-    const txt = n.textContent.trim().toLowerCase();
-
-    if (
-      (page === 'dashboard' && txt.includes('dashboard')) ||
-      (page === 'recuerdos' && txt.includes('recuerdos')) ||
-      (page === 'citas' && txt.includes('planes')) ||
-      (page === 'playlist' && txt.includes('playlist')) ||
-      (page === 'razones' && txt.includes('razones')) ||
-      (page === 'promesas' && txt.includes('promesas')) ||
-      (page === 'carta' && txt.includes('carta')) ||
-      (page === 'tiempo' && txt.includes('vemos')) ||
-      (page === 'cajita' && txt.includes('cajita')) ||
-      (page === 'pregunta' && txt.includes('pregunta'))
-    ) {
-      n.classList.add('active');
-    }
-  });
-
-  if (typeof state !== 'undefined') {
-    state.currentPage = page;
-  }
-
-  if (typeof closeSidebar === 'function') {
-    closeSidebar();
-  }
-
-  const loaders = {
-    dashboard: typeof loadDashboard === 'function' ? loadDashboard : null,
-    recuerdos: typeof loadRecuerdos === 'function' ? loadRecuerdos : null,
-    citas: typeof loadCitas === 'function' ? loadCitas : null,
-    playlist: typeof loadPlaylist === 'function' ? loadPlaylist : null,
-    razones: typeof loadRazones === 'function' ? loadRazones : null,
-    promesas: typeof loadPromesas === 'function' ? loadPromesas : null,
-    carta: typeof loadCarta === 'function' ? loadCarta : null,
-    cajita: typeof loadCajita === 'function' ? loadCajita : null
-  };
-
-  if (loaders[page]) {
-    loaders[page]();
-  }
-
-  if (page === 'tiempo' && typeof initTiempoPage === 'function') {
-    initTiempoPage();
-  }
-};
-
-/* Si el login ya pasó, fuerza dashboard */
-window.addEventListener('load', function() {
-  const app = document.getElementById('app');
-  const login = document.getElementById('login-screen');
-
-  if (app && app.classList.contains('visible')) {
-    window.navigateTo('dashboard');
-  }
-
-  if (login && login.style.display === 'none') {
-    window.navigateTo('dashboard');
-  }
-});
-
-/* Reforzar después de iniciar sesión */
-if (typeof window.doLogin === 'function') {
-  const sigaOriginalLogin = window.doLogin;
-
-  window.doLogin = async function() {
-    await sigaOriginalLogin();
-
-    const app = document.getElementById('app');
-
-    if (app && app.classList.contains('visible')) {
-      setTimeout(() => {
-        window.navigateTo('dashboard');
-      }, 100);
-    }
-  };
-}
-
-
-/* ======================================================
-   FIX URGENTE: MOSTRAR SECCIONES AL HACER CLICK
-   ====================================================== */
-
-function mostrarPaginaForzada(page) {
-  const pagina = document.getElementById('page-' + page);
-
-  if (!pagina) {
-    console.error('No existe:', 'page-' + page);
-    return;
-  }
-
-  document.querySelectorAll('.page').forEach(p => {
-    p.classList.remove('active');
-    p.style.setProperty('display', 'none', 'important');
-    p.style.setProperty('visibility', 'hidden', 'important');
-    p.style.setProperty('opacity', '0', 'important');
-  });
-
-  pagina.classList.add('active');
-  pagina.style.setProperty('display', 'block', 'important');
-  pagina.style.setProperty('visibility', 'visible', 'important');
-  pagina.style.setProperty('opacity', '1', 'important');
-  pagina.style.setProperty('position', 'relative', 'important');
-  pagina.style.setProperty('z-index', '5', 'important');
-
-  document.querySelectorAll('.nav-item').forEach(btn => {
-    btn.classList.remove('active');
-  });
-
-  const mapa = {
-    dashboard: 'Dashboard',
-    recuerdos: 'Recuerdos',
-    citas: 'Nuestros planes',
-    playlist: 'Playlist',
-    razones: 'Razones',
-    promesas: 'Promesas',
-    carta: 'Carta',
-    tiempo: '¿Nos vemos?',
-    cajita: 'Cajita especial',
-    pregunta: 'Pregunta final'
-  };
-
-  document.querySelectorAll('.nav-item').forEach(btn => {
-    if (btn.textContent.includes(mapa[page])) {
-      btn.classList.add('active');
-    }
-  });
-
-  const loaders = {
-    dashboard: typeof loadDashboard === 'function' ? loadDashboard : null,
-    recuerdos: typeof loadRecuerdos === 'function' ? loadRecuerdos : null,
-    citas: typeof loadCitas === 'function' ? loadCitas : null,
-    playlist: typeof loadPlaylist === 'function' ? loadPlaylist : null,
-    razones: typeof loadRazones === 'function' ? loadRazones : null,
-    promesas: typeof loadPromesas === 'function' ? loadPromesas : null,
-    carta: typeof loadCarta === 'function' ? loadCarta : null,
-    cajita: typeof loadCajita === 'function' ? loadCajita : null
-  };
-
-  if (loaders[page]) {
-    loaders[page]();
-  }
-
-  if (page === 'tiempo' && typeof initTiempoPage === 'function') {
-    initTiempoPage();
-  }
-}
-
-window.navigateTo = mostrarPaginaForzada;
-navigateTo = mostrarPaginaForzada;
-
-document.addEventListener('DOMContentLoaded', function() {
-  document.querySelectorAll('.nav-item').forEach(btn => {
-    const texto = btn.textContent.trim();
-
-    if (texto.includes('Dashboard')) {
-      btn.onclick = () => mostrarPaginaForzada('dashboard');
-    } else if (texto.includes('Recuerdos')) {
-      btn.onclick = () => mostrarPaginaForzada('recuerdos');
-    } else if (texto.includes('Nuestros planes')) {
-      btn.onclick = () => mostrarPaginaForzada('citas');
-    } else if (texto.includes('Playlist')) {
-      btn.onclick = () => mostrarPaginaForzada('playlist');
-    } else if (texto.includes('Razones')) {
-      btn.onclick = () => mostrarPaginaForzada('razones');
-    } else if (texto.includes('Promesas')) {
-      btn.onclick = () => mostrarPaginaForzada('promesas');
-    } else if (texto.includes('Carta')) {
-      btn.onclick = () => mostrarPaginaForzada('carta');
-    } else if (texto.includes('¿Nos vemos?')) {
-      btn.onclick = () => mostrarPaginaForzada('tiempo');
-    } else if (texto.includes('Cajita especial')) {
-      btn.onclick = () => mostrarPaginaForzada('cajita');
-    } else if (texto.includes('Pregunta final')) {
-      btn.onclick = () => mostrarPaginaForzada('pregunta');
-    }
-  });
-
-  setTimeout(() => {
-    const app = document.getElementById('app');
-    const login = document.getElementById('login-screen');
-
-    if (app && app.classList.contains('visible')) {
-      mostrarPaginaForzada('dashboard');
-    }
-
-    if (login && login.style.display === 'none') {
-      mostrarPaginaForzada('dashboard');
-    }
-  }, 300);
-});
