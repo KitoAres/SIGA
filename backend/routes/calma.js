@@ -120,13 +120,16 @@ router.get('/activa', async (req, res) => {
 
 // POST /api/calma
 router.post('/', async (req, res) => {
-  const {
-    usuario_id,
-    fecha_inicio,
-    fecha_fin,
-    estado_animo,
-    mensaje
-  } = req.body;
+const {
+  usuario_id,
+  fecha_inicio,
+  fecha_fin,
+  estado_animo,
+  mensaje,
+  contacto_permitido,
+  evitar,
+  energia
+} = req.body;
 
   if (!usuario_id || !fecha_inicio || !fecha_fin) {
     return res.status(400).json({
@@ -160,18 +163,22 @@ router.post('/', async (req, res) => {
       'UPDATE modo_calma SET activo = 0 WHERE activo = 1'
     );
 
-    const [result] = await pool.query(
-      `INSERT INTO modo_calma
-       (usuario_id, fecha_inicio, fecha_fin, estado_animo, mensaje, activo)
-       VALUES (?, ?, ?, ?, ?, 1)`,
-      [
-        usuario_id,
-        fechaSQL(fecha_inicio),
-        fechaSQL(fecha_fin),
-        estado_animo || 'necesito calma',
-        mensaje || null
-      ]
-    );
+const [result] = await pool.query(
+  `INSERT INTO modo_calma
+   (usuario_id, fecha_inicio, fecha_fin, estado_animo, mensaje, contacto_permitido, evitar, energia, activo)
+   VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)`,
+  [
+    usuario_id,
+    fechaSQL(fecha_inicio),
+    fechaSQL(fecha_fin),
+    estado_animo || 'necesito calma',
+    mensaje || null,
+    contacto_permitido || 'Señales cortas en la app',
+    evitar || 'Preguntas largas o presión',
+    energia || '40% - Puedo leer, responder poquito'
+  ]
+);
+    
 
     res.json({
       ok: true,
@@ -292,6 +299,81 @@ router.put('/:id/cerrar', async (req, res) => {
     console.error('Error PUT /api/calma/:id/cerrar:', err);
     res.status(500).json({
       error: 'Error al cerrar Modo calma'
+    });
+  }
+});
+// POST /api/calma/:id/carta
+router.post('/:id/carta', async (req, res) => {
+  const { usuario_id, titulo, contenido, visible_desde } = req.body;
+
+  if (!usuario_id || !contenido || !visible_desde) {
+    return res.status(400).json({
+      error: 'Faltan datos para guardar la carta'
+    });
+  }
+
+  try {
+    const [calmas] = await pool.query(
+      'SELECT * FROM modo_calma WHERE id = ? AND activo = 1',
+      [req.params.id]
+    );
+
+    if (!calmas.length) {
+      return res.status(404).json({
+        error: 'Modo calma no encontrado o ya cerrado'
+      });
+    }
+
+    const [result] = await pool.query(
+      `INSERT INTO calma_cartas
+       (calma_id, usuario_id, titulo, contenido, visible_desde)
+       VALUES (?, ?, ?, ?, ?)`,
+      [
+        req.params.id,
+        usuario_id,
+        titulo || 'Carta para después',
+        contenido.trim(),
+        fechaSQL(visible_desde)
+      ]
+    );
+
+    res.json({
+      ok: true,
+      id: result.insertId,
+      message: 'Carta guardada para después'
+    });
+
+  } catch (err) {
+    console.error('Error POST /api/calma/:id/carta:', err);
+    res.status(500).json({
+      error: 'Error al guardar la carta'
+    });
+  }
+});
+
+// GET /api/calma/:id/cartas
+router.get('/:id/cartas', async (req, res) => {
+  try {
+    const [cartas] = await pool.query(
+      `SELECT 
+          cc.*,
+          u.nombre,
+          u.usuario,
+          COALESCE(u.display_name, u.nombre, u.usuario) AS display_name,
+          COALESCE(u.color_perfil, '#22d3ee') AS color_perfil
+       FROM calma_cartas cc
+       JOIN usuarios u ON u.id = cc.usuario_id
+       WHERE cc.calma_id = ?
+       ORDER BY cc.creado_en DESC`,
+      [req.params.id]
+    );
+
+    res.json(cartas);
+
+  } catch (err) {
+    console.error('Error GET /api/calma/:id/cartas:', err);
+    res.status(500).json({
+      error: 'Error al cargar cartas de calma'
     });
   }
 });
