@@ -8,8 +8,14 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, '..', 'frontend')));
 
+// Ruta absoluta al frontend.
+// Funciona cuando Railway ejecuta: cd backend && node server.js
+const frontendPath = path.resolve(__dirname, '..', 'frontend');
+
+app.use(express.static(frontendPath));
+
+// Rutas API
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/dashboard', require('./routes/dashboard'));
 app.use('/api/recuerdos', require('./routes/recuerdos'));
@@ -19,12 +25,20 @@ app.use('/api/razones', require('./routes/razones'));
 app.use('/api/promesas', require('./routes/promesas'));
 app.use('/api/cartas', require('./routes/cartas'));
 
+// Ruta principal
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, '..', 'frontend', 'index.html'));
+  res.sendFile(path.join(frontendPath, 'index.html'));
+});
+
+// Para que al recargar cualquier ruta del frontend no dé error
+app.get('*', (req, res) => {
+  res.sendFile(path.join(frontendPath, 'index.html'));
 });
 
 const PORT = process.env.PORT || 3000;
+
 app.listen(PORT, () => {
   console.log(`💙 SIGA corriendo en http://localhost:${PORT}`);
-  console.log('   Demo: miamor / 123');
+  console.log(`📁 Frontend servido desde: ${frontendPath}`);
+  console.log('Demo: miamor / 123');
 });
