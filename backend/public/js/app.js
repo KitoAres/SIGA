@@ -1906,15 +1906,22 @@ ${
       <div class="calma-checkins">
         <h3>Señales de cuidado</h3>
         ${
-          checkins.length
-            ? checkins.map(ch => `
-              <div class="calma-checkin-item">
-                <div class="calma-checkin-date">${formatDate(ch.creado_en)}</div>
-                <div class="calma-checkin-text">${esc(ch.mensaje)}</div>
-              </div>
-            `).join('')
-            : `<div class="calma-empty-small">Aún no hay señales. Una frase corta basta.</div>`
-        }
+${
+  checkins.length
+    ? checkins.map(ch => `
+      <div class="calma-checkin-item">
+        <div class="calma-checkin-top">
+          <span class="calma-checkin-author" style="border-color:${esc(ch.color_perfil || '#22d3ee')}; color:${esc(ch.color_perfil || '#22d3ee')};">
+            ● ${esc(ch.display_name || ch.nombre || ch.usuario || 'Alguien')}
+          </span>
+          <span class="calma-checkin-date">${formatDate(ch.creado_en)}</span>
+        </div>
+
+        <div class="calma-checkin-text">${esc(ch.mensaje)}</div>
+      </div>
+    `).join('')
+    : `<div class="calma-empty-small">Aún no hay señales. Una frase corta basta.</div>`
+}
       </div>
     `;
   } catch {
@@ -1970,10 +1977,23 @@ async function guardarCheckinCalma() {
 }
 
 async function cerrarModoCalma(id) {
+  if (!state.currentUser || !state.currentUser.id) {
+    toast('Primero inicia sesión.');
+    return;
+  }
+
   if (!confirm('¿Cerrar Modo calma?')) return;
 
   try {
-    await api('PUT', `/api/calma/${id}/cerrar`);
+    const data = await api('PUT', `/api/calma/${id}/cerrar`, {
+      usuario_id: state.currentUser.id
+    });
+
+    if (data.error) {
+      toast(data.error);
+      return;
+    }
+
     toast('Modo calma cerrado.');
     loadCalma();
   } catch {
