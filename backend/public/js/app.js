@@ -697,28 +697,57 @@ async function loadCajita() {
 }
 // ── PREGUNTA FINAL ────────────────────────────────────────────
 function escapeNo(e) {
-  const btn = $('btn-no');
-  const parent = btn.parentElement;
-  const rect = parent.getBoundingClientRect();
+  const btnNo = $('btn-no');
+  const btnSi = $('btn-si');
+  const zona = $('pregunta-zona');
 
-  const maxX = rect.width  - btn.offsetWidth  - 20;
-  const maxY = rect.height - btn.offsetHeight - 20;
+  if (!btnNo || !btnSi || !zona) return;
 
-  const x = Math.floor(Math.random() * maxX) + 10;
-  const y = Math.floor(Math.random() * maxY) + 10;
+  const zonaRect = zona.getBoundingClientRect();
 
-  btn.style.left = x + 'px';
-  btn.style.top  = y + 'px';
+  const noW = btnNo.offsetWidth;
+  const noH = btnNo.offsetHeight;
 
-  // Asegurar que el contenedor tenga posición relativa
-  parent.style.position = 'relative';
-  parent.style.minHeight = '80px';
-  parent.style.minWidth  = '280px';
+  const siX = btnSi.offsetLeft;
+  const siY = btnSi.offsetTop;
+  const siW = btnSi.offsetWidth;
+  const siH = btnSi.offsetHeight;
+
+  let nuevoX = 0;
+  let nuevoY = 0;
+  let choca = true;
+  let intentos = 0;
+
+  while (choca && intentos < 40) {
+    nuevoX = Math.floor(Math.random() * Math.max(1, zonaRect.width - noW));
+    nuevoY = Math.floor(Math.random() * Math.max(1, zonaRect.height - noH));
+
+    const margen = 28;
+
+    choca =
+      nuevoX < siX + siW + margen &&
+      nuevoX + noW > siX - margen &&
+      nuevoY < siY + siH + margen &&
+      nuevoY + noH > siY - margen;
+
+    intentos++;
+  }
+
+  btnNo.style.left = nuevoX + 'px';
+  btnNo.style.top = nuevoY + 'px';
+  btnNo.style.right = 'auto';
+  btnNo.style.transform = 'none';
 }
 
 function responderSi() {
   $('pregunta-main').style.display = 'none';
-  $('pregunta-btns').style.display = 'none';
+
+  const zona = $('pregunta-zona');
+  if (zona) zona.style.display = 'none';
+
+  const btns = $('pregunta-btns');
+  if (btns) btns.style.display = 'none';
+
   $('respuesta-final').classList.add('show');
 }
 
