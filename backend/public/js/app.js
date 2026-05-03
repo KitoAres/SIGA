@@ -1242,10 +1242,10 @@ async function loadDisponibilidades() {
     }
 
     container.innerHTML = items.map(d => {
-      const fechaObj = new Date(d.fecha + 'T12:00:00');
-      const dia = fechaObj.getDate();
-      const mes = fechaObj.toLocaleDateString('es-BO', { month: 'short' }).toUpperCase();
-      const dow = fechaObj.toLocaleDateString('es-BO', { weekday: 'long' });
+      const fechaInfo = formatFechaCorta(d.fecha);
+      const dia = fechaInfo.dia;
+      const mes = fechaInfo.mes;
+      const dow = fechaInfo.texto;
       return `
         <div class="disp-item">
           <div class="disp-fecha-block">
@@ -1254,7 +1254,10 @@ async function loadDisponibilidades() {
           </div>
           <div class="disp-info">
             <div class="disp-horas">${formatHora(d.hora_inicio)} — ${formatHora(d.hora_fin)}</div>
-            <div class="disp-msg">${dow}${d.mensaje ? ' · ' + esc(d.mensaje) : ''}</div>
+            <div class="disp-msg">
+  ${dow === 'Fecha por revisar' ? 'Fecha pendiente de revisar' : dow}
+  ${d.mensaje ? ' · ' + esc(d.mensaje) : ''}
+</div>
           </div>
           <div class="disp-actions">
             <button class="btn btn-sm btn-edit" onclick="editarDisponibilidad(${d.id}, '${d.fecha.split('T')[0]}', '${d.hora_inicio}', '${d.hora_fin}', '${esc(d.mensaje || '')}')">✎</button>
