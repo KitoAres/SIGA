@@ -12,6 +12,7 @@ const state = {
   modal: { type: null, id: null },
   cartaId: null,
   cartaOriginal: '',
+  currentUser: null,
 };
 
 // ── HELPERS ────────────────────────────────────────────────────
@@ -42,8 +43,9 @@ function formatDate(d) {
 
 // ── LOGIN / LOGOUT ─────────────────────────────────────────────
 async function doLogin() {
-  const usuario   = $('login-user').value.trim();
+  const usuario = $('login-user').value.trim();
   const contrasena = $('login-pass').value.trim();
+
   $('login-error').textContent = '';
 
   if (!usuario || !contrasena) {
@@ -53,24 +55,57 @@ async function doLogin() {
 
   try {
     const data = await api('POST', '/api/auth/login', { usuario, contrasena });
+
     if (data.ok) {
+      state.currentUser = {
+        id: data.id || data.usuario_id,
+        usuario: data.usuario,
+        nombre: data.nombre,
+        display_name: data.display_name || data.nombre || data.usuario,
+        color_perfil: data.color_perfil || '#22d3ee',
+        rol: data.rol
+      };
+
+      sessionStorage.setItem('siga_user', JSON.stringify(state.currentUser));
+
       $('login-screen').style.display = 'none';
       $('app').classList.add('visible');
-      $('sidebar-user').textContent = data.nombre || usuario;
+
+      renderUsuarioActual();
       loadDashboard();
     } else {
       $('login-error').textContent = data.error || 'Credenciales incorrectas.';
     }
-  } catch {
+  } catch (err) {
+    console.error(err);
     $('login-error').textContent = 'No se pudo conectar con el servidor.';
   }
 }
 
 function doLogout() {
+  state.currentUser = null;
+  sessionStorage.removeItem('siga_user');
+
   $('login-screen').style.display = 'flex';
   $('app').classList.remove('visible');
+
   $('login-user').value = '';
   $('login-pass').value = '';
+}
+function renderUsuarioActual() {
+  if (!state.currentUser) return;
+
+  const nombre = state.currentUser.display_name || state.currentUser.nombre || state.currentUser.usuario;
+  const color = state.currentUser.color_perfil || '#22d3ee';
+
+  const sidebarUser = $('sidebar-user');
+
+  if (sidebarUser) {
+    sidebarUser.innerHTML = `
+      <span class="user-dot" style="background:${color};"></span>
+      <span>${esc(nombre)}</span>
+    `;
+  }
 }
 
 // Enter en inputs de login
