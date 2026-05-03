@@ -1816,3 +1816,67 @@ body::after {
     top: 135px !important;
   }
 }
+
+/* ======================================================
+   FIX FUERTE: CONTENIDO PRINCIPAL VISIBLE
+   ====================================================== */
+
+#app.visible {
+  display: block !important;
+}
+
+.main-content {
+  position: relative !important;
+  margin-left: 260px !important;
+  width: calc(100vw - 260px) !important;
+  min-height: 100vh !important;
+  padding: 32px !important;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  z-index: 1 !important;
+}
+
+.page {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  width: 100% !important;
+  min-height: calc(100vh - 64px) !important;
+}
+
+.page.active {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+#page-dashboard.active,
+#page-recuerdos.active,
+#page-citas.active,
+#page-playlist.active,
+#page-razones.active,
+#page-promesas.active,
+#page-carta.active,
+#page-tiempo.active,
+#page-cajita.active,
+#page-pregunta.active {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* Por si algo quedó corrido debajo del sidebar */
+.sidebar {
+  width: 260px !important;
+  min-width: 260px !important;
+  max-width: 260px !important;
+}
+
+@media (max-width: 768px) {
+  .main-content {
+    margin-left: 0 !important;
+    width: 100vw !important;
+    padding: 72px 16px 24px !important;
+  }
+}
