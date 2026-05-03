@@ -110,7 +110,19 @@ function renderUsuarioActual() {
 
 // Enter en inputs de login
 document.addEventListener('keydown', function(e) {
-  if (e.key === 'Enter' && $('login-screen').style.display !== 'none') doLogin();
+  if (e.key === 'Escape') {
+    if ($('modal-crud') && $('modal-crud').classList.contains('open')) {
+      closeModal('modal-crud');
+    }
+
+    if ($('modal-tiempo') && $('modal-tiempo').classList.contains('open')) {
+      closeModal('modal-tiempo');
+    }
+
+    if ($('modal-perfil') && $('modal-perfil').classList.contains('open')) {
+      closeModal('modal-perfil');
+    }
+  }
 });
 
 // ── NAVEGACIÓN ─────────────────────────────────────────────────
@@ -670,6 +682,12 @@ async function deleteItem(type, id) {
   } catch {
     toast('Error al eliminar.');
   }
+}
+const modalPerfil = $('modal-perfil');
+if (modalPerfil) {
+  modalPerfil.addEventListener('click', function(e) {
+    if (e.target === this) closeModal('modal-perfil');
+  });
 }
 // ── CAJITA ESPECIAL ───────────────────────────────────────────
 async function loadCajita() {
