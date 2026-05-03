@@ -36,11 +36,70 @@ async function api(method, url, body) {
   return res.json();
 }
 
-function formatDate(d) {
-  if (!d) return '';
-  return new Date(d).toLocaleDateString('es-BO', { year: 'numeric', month: 'long', day: 'numeric' });
+function normalizarFecha(fecha) {
+  if (!fecha) return '';
+
+  if (typeof fecha === 'string' && fecha.includes('T')) {
+    return fecha.split('T')[0];
+  }
+
+  if (typeof fecha === 'string') {
+    return fecha.substring(0, 10);
+  }
+
+  return '';
 }
 
+function formatDate(d) {
+  const fecha = normalizarFecha(d);
+  if (!fecha) return '';
+
+  const date = new Date(fecha + 'T12:00:00');
+  if (isNaN(date.getTime())) return 'Fecha por revisar';
+
+  return date.toLocaleDateString('es-BO', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+}
+
+function formatFechaCorta(d) {
+  const fecha = normalizarFecha(d);
+
+  if (!fecha) {
+    return { dia: '♡', mes: 'MATCH', texto: 'Fecha por revisar' };
+  }
+
+  const date = new Date(fecha + 'T12:00:00');
+
+  if (isNaN(date.getTime())) {
+    return { dia: '♡', mes: 'MATCH', texto: 'Fecha por revisar' };
+  }
+
+  return {
+    dia: date.getDate(),
+    mes: date.toLocaleDateString('es-BO', { month: 'short' }).toUpperCase(),
+    texto: date.toLocaleDateString('es-BO', { weekday: 'long' })
+  };
+}
+
+function formatFechaLarga(d) {
+  const fecha = normalizarFecha(d);
+
+  if (!fecha) return 'Fecha por revisar';
+
+  const date = new Date(fecha + 'T12:00:00');
+
+  if (isNaN(date.getTime())) return 'Fecha por revisar';
+
+  return date.toLocaleDateString('es-BO', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+}
 // ── LOGIN / LOGOUT ─────────────────────────────────────────────
 async function doLogin() {
   const usuario = $('login-user').value.trim();
