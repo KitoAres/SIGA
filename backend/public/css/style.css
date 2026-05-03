@@ -2082,3 +2082,76 @@ body {
     transform: translateX(0);
   }
 }
+
+
+/* ======================================================
+   AVISO MATCH DE TIEMPO
+   ====================================================== */
+
+.match-toast {
+  position: fixed;
+  right: 28px;
+  top: 28px;
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 300px;
+  max-width: 390px;
+  padding: 16px 18px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(34,211,238,0.18), rgba(180,130,220,0.22));
+  border: 1px solid rgba(122,174,240,0.45);
+  box-shadow: 0 18px 50px rgba(34,211,238,0.16), 0 0 40px rgba(180,130,220,0.12);
+  color: var(--text-primary);
+  opacity: 0;
+  transform: translateY(-18px) scale(0.96);
+  transition: opacity 0.35s ease, transform 0.35s ease;
+  backdrop-filter: blur(10px);
+}
+
+.match-toast.show {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.match-toast-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(122,174,240,0.16);
+  border: 1px solid rgba(122,174,240,0.35);
+  font-size: 1.35rem;
+  flex-shrink: 0;
+  animation: matchPulse 1.2s ease infinite;
+}
+
+.match-toast-title {
+  font-weight: 700;
+  font-size: 0.95rem;
+  letter-spacing: 0.08em;
+  color: #dff7ff;
+}
+
+.match-toast-text {
+  font-size: 0.86rem;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+@keyframes matchPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.12); }
+}
+
+@media (max-width: 768px) {
+  .match-toast {
+    left: 16px;
+    right: 16px;
+    top: 18px;
+    min-width: auto;
+  }
+}
