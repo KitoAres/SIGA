@@ -1854,44 +1854,79 @@ async function loadCalma() {
     const c = data.calma;
     const checkins = data.checkins || [];
 
+    const puedeCerrar =
+      Number(c.usuario_id) === Number(state.currentUser?.id) ||
+      state.currentUser?.rol === 'administrador';
+
+    const cerrarHTML = puedeCerrar
+      ? `
+        <button class="btn btn-sm btn-delete" onclick="cerrarModoCalma(${c.id})">
+          Cerrar modo
+        </button>
+      `
+      : `
+        <span class="calma-readonly">
+          Solo ${esc(c.display_name || c.nombre || c.usuario)} puede cerrar este modo
+        </span>
+      `;
+
+    const checkinsHTML = checkins.length
+      ? checkins.map(ch => `
+        <div class="calma-checkin-item">
+          <div class="calma-checkin-top">
+            <span class="calma-checkin-author" style="border-color:${esc(ch.color_perfil || '#22d3ee')}; color:${esc(ch.color_perfil || '#22d3ee')};">
+              ● ${esc(ch.display_name || ch.nombre || ch.usuario || 'Alguien')}
+            </span>
+
+            <span class="calma-checkin-date">${formatDate(ch.creado_en)}</span>
+          </div>
+
+          <div class="calma-checkin-text">${esc(ch.mensaje)}</div>
+        </div>
+      `).join('')
+      : `<div class="calma-empty-small">Aún no hay señales. Una frase corta basta.</div>`;
+
     box.innerHTML = `
       <div class="calma-card-activa">
         <div class="calma-card-header">
           <div>
-            <div class="calma-chip" style="border-color:${esc(c.color_perfil)}; color:${esc(c.color_perfil)};">
+            <div class="calma-chip" style="border-color:${esc(c.color_perfil || '#22d3ee')}; color:${esc(c.color_perfil || '#22d3ee')};">
               ● ${esc(c.display_name || c.nombre || c.usuario)}
             </div>
+
             <h2>Modo calma activo 🌙</h2>
             <p>${esc(c.estado_animo || 'necesita calma')}</p>
           </div>
 
-${
-  Number(c.usuario_id) === Number(state.currentUser?.id) || state.currentUser?.rol === 'administrador'
-    ? `<button class="btn btn-sm btn-delete" onclick="cerrarModoCalma(${c.id})">Cerrar modo</button>`
-    : `<span class="calma-readonly">Solo ${esc(c.display_name || c.nombre || c.usuario)} puede cerrar este modo</span>`
-}
-</div>
+          ${cerrarHTML}
+        </div>
 
         <div class="calma-dates">
           <div>
             <span>Desde</span>
             <strong>${formatDate(c.fecha_inicio)}</strong>
           </div>
+
           <div>
             <span>Hasta</span>
             <strong>${formatDate(c.fecha_fin)}</strong>
           </div>
+
           <div>
             <span>Próxima señal</span>
             <strong>${formatDate(data.proximo_checkin)}</strong>
           </div>
         </div>
 
-        ${c.mensaje ? `
-          <div class="calma-message">
-            “${esc(c.mensaje)}”
-          </div>
-        ` : ''}
+        ${
+          c.mensaje
+            ? `
+              <div class="calma-message">
+                “${esc(c.mensaje)}”
+              </div>
+            `
+            : ''
+        }
 
         <div class="calma-note">
           Si esta persona activó Modo calma, no significa rechazo.
@@ -1905,30 +1940,14 @@ ${
 
       <div class="calma-checkins">
         <h3>Señales de cuidado</h3>
-        ${
-${
-  checkins.length
-    ? checkins.map(ch => `
-      <div class="calma-checkin-item">
-        <div class="calma-checkin-top">
-          <span class="calma-checkin-author" style="border-color:${esc(ch.color_perfil || '#22d3ee')}; color:${esc(ch.color_perfil || '#22d3ee')};">
-            ● ${esc(ch.display_name || ch.nombre || ch.usuario || 'Alguien')}
-          </span>
-          <span class="calma-checkin-date">${formatDate(ch.creado_en)}</span>
-        </div>
-
-        <div class="calma-checkin-text">${esc(ch.mensaje)}</div>
-      </div>
-    `).join('')
-    : `<div class="calma-empty-small">Aún no hay señales. Una frase corta basta.</div>`
-}
+        ${checkinsHTML}
       </div>
     `;
-  } catch {
+  } catch (err) {
+    console.error(err);
     box.innerHTML = '<div style="color:var(--danger);padding:20px;">Error al cargar Modo calma.</div>';
   }
 }
-
 function openCheckinCalma() {
   if (!calmaActual) {
     toast('No hay Modo calma activo.');
