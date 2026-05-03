@@ -1237,63 +1237,30 @@ async function loginTiempo() {
   }
 }
 
-// ── Logout del módulo ──────────────────────────────────────────
 function logoutTiempo() {
-  tiempoState.usuarioId   = null;
-  tiempoState.nombre      = null;
+  // Si es usuario normal, no lo mandamos al mini-login.
+  // Solo lo sacamos de la sección.
+  if (state.currentUser && state.currentUser.rol !== 'administrador') {
+    navigateTo('dashboard');
+    return;
+  }
+
+  // Si es admin, sí puede salir del modo Yo/Ella.
+  tiempoState.usuarioId = null;
+  tiempoState.nombre = null;
   tiempoState.usuarioSlug = null;
-  tiempoState.editandoId  = null;
+  tiempoState.editandoId = null;
 
-  const loginWrap = $('tiempo-login-wrap');
-  const panel     = $('tiempo-panel');
-  if (loginWrap) loginWrap.style.display = 'flex';
-  if (panel)     panel.classList.remove('active');
-
-  // Resetear selección
-  document.querySelectorAll('.tiempo-user-btn').forEach(b => b.classList.remove('selected'));
-  if ($('t-pass')) $('t-pass').value = '';
-  if ($('t-login-error')) $('t-login-error').textContent = '';
-}
-
-function initTiempoPage() {
   const loginWrap = $('tiempo-login-wrap');
   const panel = $('tiempo-panel');
 
-  if (!state.currentUser || !state.currentUser.id) {
-    if (loginWrap) loginWrap.style.display = 'flex';
-    if (panel) panel.classList.remove('active');
-    return;
-  }
+  if (loginWrap) loginWrap.style.display = 'flex';
+  if (panel) panel.classList.remove('active');
 
-  const esAdmin = state.currentUser.rol === 'administrador';
+  document.querySelectorAll('.tiempo-user-btn').forEach(b => b.classList.remove('selected'));
 
-  // Si es admin, dejamos la pantalla Yo/Ella para probar o revisar.
-  if (esAdmin) {
-    if (tiempoState.usuarioId) {
-      if (loginWrap) loginWrap.style.display = 'none';
-      if (panel) panel.classList.add('active');
-      loadDisponibilidades();
-      loadCoincidencias();
-    } else {
-      if (loginWrap) loginWrap.style.display = 'flex';
-      if (panel) panel.classList.remove('active');
-    }
-    return;
-  }
-
-  // Para Franco / Francin: entra directo, sin pedir otra contraseña.
-  tiempoState.usuarioId = state.currentUser.id;
-  tiempoState.nombre = state.currentUser.display_name || state.currentUser.nombre || state.currentUser.usuario;
-  tiempoState.usuarioSlug = state.currentUser.usuario;
-
-  if (loginWrap) loginWrap.style.display = 'none';
-  if (panel) panel.classList.add('active');
-
-  const badge = $('tiempo-badge-nombre');
-  if (badge) badge.textContent = tiempoState.nombre;
-
-  loadDisponibilidades();
-  loadCoincidencias();
+  if ($('t-pass')) $('t-pass').value = '';
+  if ($('t-login-error')) $('t-login-error').textContent = '';
 }
 
 // ── Tabs ───────────────────────────────────────────────────────
