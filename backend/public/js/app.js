@@ -2184,3 +2184,23 @@ document.addEventListener('click', function(e) {
 });
 
 window.loadCalma = loadCalma;
+
+
+function editarRecuerdoSeguro(id) {
+  const r = (window.recuerdosCache || []).find(x => Number(x.id) === Number(id));
+
+  if (!r) {
+    toast('No se encontró el recuerdo.');
+    return;
+  }
+
+  openModal(
+    'recuerdos',
+    r.id,
+    r.titulo || '',
+    r.descripcion || '',
+    r.fecha ? normalizarFecha(r.fecha) : '',
+    r.imagen_url || '',
+    r.enlace_url || ''
+  );
+}
