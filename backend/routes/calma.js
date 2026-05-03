@@ -235,7 +235,49 @@ router.post('/:id/checkin', async (req, res) => {
 
 // PUT /api/calma/:id/cerrar
 router.put('/:id/cerrar', async (req, res) => {
+  const { usuario_id } = req.body;
+
+  if (!usuario_id) {
+    return res.status(400).json({
+      error: 'Falta usuario_id'
+    });
+  }
+
   try {
+    const [calmas] = await pool.query(
+      'SELECT * FROM modo_calma WHERE id = ? AND activo = 1',
+      [req.params.id]
+    );
+
+    if (!calmas.length) {
+      return res.status(404).json({
+        error: 'Modo calma no encontrado o ya cerrado'
+      });
+    }
+
+    const calma = calmas[0];
+
+    const [usuarios] = await pool.query(
+      'SELECT id, rol FROM usuarios WHERE id = ?',
+      [usuario_id]
+    );
+
+    if (!usuarios.length) {
+      return res.status(404).json({
+        error: 'Usuario no encontrado'
+      });
+    }
+
+    const usuario = usuarios[0];
+    const esDueno = Number(calma.usuario_id) === Number(usuario_id);
+    const esAdmin = usuario.rol === 'administrador';
+
+    if (!esDueno && !esAdmin) {
+      return res.status(403).json({
+        error: 'Solo quien activó Modo calma puede cerrarlo'
+      });
+    }
+
     await pool.query(
       'UPDATE modo_calma SET activo = 0 WHERE id = ?',
       [req.params.id]
