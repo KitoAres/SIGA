@@ -395,6 +395,141 @@
     </div>
   </div>
 </div>
-<script src="/js/app.js"></script>
+
+
+
+  
+<script src="/js/app.js?v=99"></script>
+
+<script>
+/* ======================================================
+   FIX DEFINITIVO DE NAVEGACIÓN SIGA
+   Fuerza que cada sección se muestre al hacer clic
+   ====================================================== */
+
+(function () {
+  const mapa = {
+    'Dashboard': 'dashboard',
+    'Recuerdos': 'recuerdos',
+    'Nuestros planes': 'citas',
+    'Playlist': 'playlist',
+    'Razones': 'razones',
+    'Promesas': 'promesas',
+    'Carta': 'carta',
+    '¿Nos vemos?': 'tiempo',
+    'Cajita especial': 'cajita',
+    'Pregunta final': 'pregunta'
+  };
+
+  window.mostrarSeccionSIGA = function (page) {
+    const pagina = document.getElementById('page-' + page);
+
+    if (!pagina) {
+      console.error('No existe la sección:', 'page-' + page);
+      return;
+    }
+
+    document.querySelectorAll('.page').forEach(p => {
+      p.classList.remove('active');
+      p.style.setProperty('display', 'none', 'important');
+      p.style.setProperty('visibility', 'hidden', 'important');
+      p.style.setProperty('opacity', '0', 'important');
+    });
+
+    pagina.classList.add('active');
+    pagina.style.setProperty('display', 'block', 'important');
+    pagina.style.setProperty('visibility', 'visible', 'important');
+    pagina.style.setProperty('opacity', '1', 'important');
+    pagina.style.setProperty('position', 'relative', 'important');
+    pagina.style.setProperty('z-index', '10', 'important');
+
+    document.querySelectorAll('.nav-item').forEach(btn => {
+      btn.classList.remove('active');
+      const texto = btn.textContent.trim();
+
+      for (const label in mapa) {
+        if (mapa[label] === page && texto.includes(label)) {
+          btn.classList.add('active');
+        }
+      }
+    });
+
+    const loaders = {
+      dashboard: window.loadDashboard,
+      recuerdos: window.loadRecuerdos,
+      citas: window.loadCitas,
+      playlist: window.loadPlaylist,
+      razones: window.loadRazones,
+      promesas: window.loadPromesas,
+      carta: window.loadCarta,
+      cajita: window.loadCajita
+    };
+
+    if (typeof loaders[page] === 'function') {
+      loaders[page]();
+    }
+
+    if (page === 'tiempo' && typeof window.initTiempoPage === 'function') {
+      window.initTiempoPage();
+    }
+  };
+
+  window.navigateTo = window.mostrarSeccionSIGA;
+
+  function conectarMenu() {
+    document.querySelectorAll('.nav-item').forEach(btn => {
+      const texto = btn.textContent.trim();
+
+      for (const label in mapa) {
+        if (texto.includes(label)) {
+          const page = mapa[label];
+          btn.onclick = function () {
+            window.mostrarSeccionSIGA(page);
+          };
+        }
+      }
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    conectarMenu();
+
+    setTimeout(function () {
+      const app = document.getElementById('app');
+      const login = document.getElementById('login-screen');
+
+      if (app && app.classList.contains('visible')) {
+        window.mostrarSeccionSIGA('dashboard');
+      }
+
+      if (login && login.style.display === 'none') {
+        window.mostrarSeccionSIGA('dashboard');
+      }
+    }, 500);
+  });
+
+  const viejoLogin = window.doLogin;
+
+  window.doLogin = async function () {
+    if (typeof viejoLogin === 'function') {
+      await viejoLogin();
+    }
+
+    setTimeout(function () {
+      const app = document.getElementById('app');
+      const login = document.getElementById('login-screen');
+
+      if (app && app.classList.contains('visible')) {
+        window.mostrarSeccionSIGA('dashboard');
+      }
+
+      if (login && login.style.display === 'none') {
+        window.mostrarSeccionSIGA('dashboard');
+      }
+    }, 300);
+  };
+})();
+</script>
+
 </body>
 </html>
