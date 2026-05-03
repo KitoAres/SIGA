@@ -730,6 +730,91 @@ async function loadCajita() {
     container.innerHTML = '<div style="color:var(--danger);padding:20px;">Error al cargar la cajita.</div>';
   }
 }
+// ── MI CUENTA / PERFIL ─────────────────────────────────────────
+async function abrirModalPerfil() {
+  if (!state.currentUser || !state.currentUser.id) {
+    toast('Primero inicia sesión.');
+    return;
+  }
+
+  try {
+    const data = await api('GET', '/api/auth/perfil/' + state.currentUser.id);
+
+    if (!data.ok) {
+      toast(data.error || 'No se pudo cargar el perfil.');
+      return;
+    }
+
+    const u = data.usuario;
+
+    $('perfil-display-name').value = u.display_name || u.nombre || u.usuario || '';
+    $('perfil-usuario').value = u.usuario || '';
+    $('perfil-contrasena-actual').value = '';
+    $('perfil-nueva-contrasena').value = '';
+    $('perfil-color').value = u.color_perfil || '#22d3ee';
+
+    $('modal-perfil').classList.add('open');
+  } catch (err) {
+    console.error(err);
+    toast('Error al cargar perfil.');
+  }
+}
+
+async function guardarPerfil() {
+  if (!state.currentUser || !state.currentUser.id) {
+    toast('No hay usuario activo.');
+    return;
+  }
+
+  const body = {
+    display_name: $('perfil-display-name').value.trim(),
+    nombre: $('perfil-display-name').value.trim(),
+    usuario: $('perfil-usuario').value.trim(),
+    contrasena_actual: $('perfil-contrasena-actual').value.trim(),
+    nueva_contrasena: $('perfil-nueva-contrasena').value.trim(),
+    color_perfil: $('perfil-color').value
+  };
+
+  if (!body.display_name) {
+    toast('El nombre visible no puede estar vacío.');
+    return;
+  }
+
+  if (!body.usuario) {
+    toast('El usuario no puede estar vacío.');
+    return;
+  }
+
+  try {
+    const data = await api('PUT', '/api/auth/perfil/' + state.currentUser.id, body);
+
+    if (!data.ok) {
+      toast(data.error || 'No se pudo actualizar.');
+      return;
+    }
+
+    const u = data.usuario;
+
+    state.currentUser = {
+      id: u.id,
+      usuario: u.usuario,
+      nombre: u.nombre,
+      display_name: u.display_name,
+      color_perfil: u.color_perfil,
+      rol: u.rol
+    };
+
+    sessionStorage.setItem('siga_user', JSON.stringify(state.currentUser));
+
+    renderUsuarioActual();
+    closeModal('modal-perfil');
+
+    toast('Perfil actualizado ♡');
+  } catch (err) {
+    console.error(err);
+    toast('Error al guardar perfil.');
+  }
+}
 // ── PREGUNTA FINAL ────────────────────────────────────────────
 function escapeNo(e) {
   const btnNo = $('btn-no');
