@@ -411,7 +411,30 @@
 
       <label>Mensaje corto</label>
       <textarea id="calma-mensaje" placeholder="Ej: Estoy bien, solo necesito calma. No es contra ti."></textarea>
+<label>Qué contacto puedo recibir</label>
+<select id="calma-contacto">
+  <option value="Señales cortas en la app">Señales cortas en la app</option>
+  <option value="Mensajes cortitos y suaves">Mensajes cortitos y suaves</option>
+  <option value="Solo señales, sin conversación larga">Solo señales, sin conversación larga</option>
+  <option value="Puedo leer, pero quizá no responder">Puedo leer, pero quizá no responder</option>
+  <option value="Podemos hablar, pero despacio">Podemos hablar, pero despacio</option>
+</select>
 
+<label>Evitar por ahora</label>
+<select id="calma-evitar">
+  <option value="Preguntas largas o presión">Preguntas largas o presión</option>
+  <option value="Insistir si no respondo rápido">Insistir si no respondo rápido</option>
+  <option value="Hablar de temas difíciles por ahora">Hablar de temas difíciles por ahora</option>
+  <option value="Pedir explicaciones inmediatas">Pedir explicaciones inmediatas</option>
+</select>
+
+<label>Nivel de energía</label>
+<select id="calma-energia">
+  <option value="20% - No puedo hablar mucho">20% - No puedo hablar mucho</option>
+  <option value="40% - Puedo leer, responder poquito">40% - Puedo leer, responder poquito</option>
+  <option value="60% - Puedo responder corto">60% - Puedo responder corto</option>
+  <option value="80% - Podemos hablar suave">80% - Podemos hablar suave</option>
+</select>
       <div class="calma-quick-options">
         <button type="button" onclick="setCalmaMensaje('Estoy bien, solo necesito calma. No es contra ti.')">Estoy bien, solo necesito calma.</button>
         <button type="button" onclick="setCalmaMensaje('Sigo aquí, aunque hoy no pueda hablar mucho.')">Sigo aquí.</button>
@@ -451,7 +474,26 @@
     </div>
   </div>
 </div>
+<!-- Modal Carta de Calma -->
+<div class="modal-overlay" id="modal-carta-calma">
+  <div class="modal">
+    <h2 class="modal-title">Carta para cuando vuelva la calma 💌</h2>
 
+    <div class="modal-form">
+      <label>Título</label>
+      <input type="text" id="carta-calma-titulo" placeholder="Ej: Para cuando estés lista"/>
+
+      <label>Contenido</label>
+      <textarea id="carta-calma-contenido" placeholder="Escribe aquí. La carta queda guardada para después, sin presionar ahora."></textarea>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('modal-carta-calma')">Cancelar</button>
+      <button class="btn-save" onclick="guardarCartaCalma()">Guardar carta</button>
+    </div>
+  </div>
+</div>
+    
   <script src="/js/app.js?v=calma-4"></script>
 
 <script>
