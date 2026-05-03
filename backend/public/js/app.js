@@ -1266,13 +1266,17 @@ async function loginTiempo() {
 }
 
 function logoutTiempo() {
-   function initTiempoPage() {
+  // Ya no usamos mini-login. Salir de "¿Nos vemos?" vuelve al dashboard.
+  navigateTo('dashboard');
+}
+
+function initTiempoPage() {
   const loginWrap = $('tiempo-login-wrap');
   const panel = $('tiempo-panel');
 
-  // Si no hay sesión principal, no mostramos el módulo
   if (!state.currentUser || !state.currentUser.id) {
     if (loginWrap) loginWrap.style.display = 'none';
+
     if (panel) {
       panel.classList.remove('active');
       panel.style.display = 'none';
@@ -1282,7 +1286,6 @@ function logoutTiempo() {
     return;
   }
 
-  // Usar directamente el usuario que ya inició sesión en SIGA
   tiempoState.usuarioId = state.currentUser.id;
   tiempoState.nombre =
     state.currentUser.display_name ||
@@ -1291,30 +1294,25 @@ function logoutTiempo() {
 
   tiempoState.usuarioSlug = state.currentUser.usuario;
 
-  // Ocultar pantalla Yo/Ella/Contraseña
   if (loginWrap) {
     loginWrap.style.display = 'none';
   }
 
-  // Mostrar panel real de disponibilidades
   if (panel) {
     panel.classList.add('active');
     panel.style.display = 'block';
   }
 
-  // Nombre arriba del módulo
   const badge = $('tiempo-badge-nombre');
   if (badge) {
     badge.textContent = tiempoState.nombre;
   }
 
-  // Cargar datos del usuario actual
   loadDisponibilidades();
   loadCoincidencias();
 }
-  // Ya no usamos mini-login. Salir de "¿Nos vemos?" vuelve al dashboard.
-  navigateTo('dashboard');
-}
+
+window.initTiempoPage = initTiempoPage;
 // ── Tabs ───────────────────────────────────────────────────────
 function switchTiempoTab(tab) {
   tiempoState.tabActual = tab;
