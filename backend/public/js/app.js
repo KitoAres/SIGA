@@ -1865,8 +1865,12 @@ async function loadCalma() {
             <p>${esc(c.estado_animo || 'necesita calma')}</p>
           </div>
 
-          <button class="btn btn-sm btn-delete" onclick="cerrarModoCalma(${c.id})">Cerrar modo</button>
-        </div>
+${
+  Number(c.usuario_id) === Number(state.currentUser?.id) || state.currentUser?.rol === 'administrador'
+    ? `<button class="btn btn-sm btn-delete" onclick="cerrarModoCalma(${c.id})">Cerrar modo</button>`
+    : `<span class="calma-readonly">Solo ${esc(c.display_name || c.nombre || c.usuario)} puede cerrar este modo</span>`
+}
+</div>
 
         <div class="calma-dates">
           <div>
