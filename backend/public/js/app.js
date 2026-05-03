@@ -1317,3 +1317,108 @@ if (mTiempo) {
     if (e.target === this) closeModal('modal-tiempo');
   });
 }
+
+/* ======================================================
+   FIX FINAL: FORZAR VISUALIZACIÓN DE PÁGINAS
+   ====================================================== */
+
+window.navigateTo = function(page) {
+  const targetPage = document.getElementById('page-' + page);
+
+  if (!targetPage) {
+    console.error('No existe la página:', 'page-' + page);
+    alert('No existe la sección: ' + page);
+    return;
+  }
+
+  document.querySelectorAll('.page').forEach(p => {
+    p.classList.remove('active');
+    p.style.display = 'none';
+    p.style.visibility = 'hidden';
+    p.style.opacity = '0';
+  });
+
+  targetPage.classList.add('active');
+  targetPage.style.display = 'block';
+  targetPage.style.visibility = 'visible';
+  targetPage.style.opacity = '1';
+
+  document.querySelectorAll('.nav-item').forEach(n => {
+    n.classList.remove('active');
+
+    const txt = n.textContent.trim().toLowerCase();
+
+    if (
+      (page === 'dashboard' && txt.includes('dashboard')) ||
+      (page === 'recuerdos' && txt.includes('recuerdos')) ||
+      (page === 'citas' && txt.includes('planes')) ||
+      (page === 'playlist' && txt.includes('playlist')) ||
+      (page === 'razones' && txt.includes('razones')) ||
+      (page === 'promesas' && txt.includes('promesas')) ||
+      (page === 'carta' && txt.includes('carta')) ||
+      (page === 'tiempo' && txt.includes('vemos')) ||
+      (page === 'cajita' && txt.includes('cajita')) ||
+      (page === 'pregunta' && txt.includes('pregunta'))
+    ) {
+      n.classList.add('active');
+    }
+  });
+
+  if (typeof state !== 'undefined') {
+    state.currentPage = page;
+  }
+
+  if (typeof closeSidebar === 'function') {
+    closeSidebar();
+  }
+
+  const loaders = {
+    dashboard: typeof loadDashboard === 'function' ? loadDashboard : null,
+    recuerdos: typeof loadRecuerdos === 'function' ? loadRecuerdos : null,
+    citas: typeof loadCitas === 'function' ? loadCitas : null,
+    playlist: typeof loadPlaylist === 'function' ? loadPlaylist : null,
+    razones: typeof loadRazones === 'function' ? loadRazones : null,
+    promesas: typeof loadPromesas === 'function' ? loadPromesas : null,
+    carta: typeof loadCarta === 'function' ? loadCarta : null,
+    cajita: typeof loadCajita === 'function' ? loadCajita : null
+  };
+
+  if (loaders[page]) {
+    loaders[page]();
+  }
+
+  if (page === 'tiempo' && typeof initTiempoPage === 'function') {
+    initTiempoPage();
+  }
+};
+
+/* Si el login ya pasó, fuerza dashboard */
+window.addEventListener('load', function() {
+  const app = document.getElementById('app');
+  const login = document.getElementById('login-screen');
+
+  if (app && app.classList.contains('visible')) {
+    window.navigateTo('dashboard');
+  }
+
+  if (login && login.style.display === 'none') {
+    window.navigateTo('dashboard');
+  }
+});
+
+/* Reforzar después de iniciar sesión */
+if (typeof window.doLogin === 'function') {
+  const sigaOriginalLogin = window.doLogin;
+
+  window.doLogin = async function() {
+    await sigaOriginalLogin();
+
+    const app = document.getElementById('app');
+
+    if (app && app.classList.contains('visible')) {
+      setTimeout(() => {
+        window.navigateTo('dashboard');
+      }, 100);
+    }
+  };
+}
