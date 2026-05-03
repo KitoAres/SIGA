@@ -2516,4 +2516,139 @@ body {
   font-size: 0.75rem;
 }
 
+/* ======================================================
+   CAJA DE CALMA DESBLOQUEADA
+   ====================================================== */
 
+.calma-unlocked {
+  margin-top: 22px;
+  border: 1px solid rgba(34,211,238,0.20);
+  background: linear-gradient(135deg, rgba(34,211,238,0.06), rgba(180,130,220,0.08));
+  border-radius: 20px;
+  padding: 22px;
+}
+
+.calma-unlocked-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.calma-unlocked-head > span {
+  width: 46px;
+  height: 46px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(34,211,238,0.12);
+  border: 1px solid rgba(34,211,238,0.26);
+  font-size: 1.35rem;
+}
+
+.calma-unlocked-head h3 {
+  color: var(--text-primary);
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.5rem;
+  font-weight: 400;
+}
+
+.calma-unlocked-head p {
+  color: var(--text-muted);
+  font-size: 0.86rem;
+}
+
+.calma-tools-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.calma-tool-card {
+  background: rgba(255,255,255,0.025);
+  border: 1px solid rgba(180,130,220,0.16);
+  border-radius: 16px;
+  padding: 15px;
+}
+
+.calma-tool-card h4 {
+  color: var(--text-primary);
+  font-size: 0.86rem;
+  margin-bottom: 6px;
+}
+
+.calma-tool-card p {
+  color: var(--text-secondary);
+  font-size: 0.84rem;
+  line-height: 1.5;
+}
+
+.calma-tool-card.espera {
+  border-color: rgba(34,211,238,0.22);
+}
+
+.calma-acuerdo {
+  background: rgba(0,0,0,0.12);
+  border: 1px solid rgba(180,130,220,0.12);
+  border-radius: 16px;
+  padding: 16px 18px;
+  margin-bottom: 18px;
+}
+
+.calma-acuerdo h4 {
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.calma-acuerdo ul {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  font-size: 0.86rem;
+}
+
+.btn-soft {
+  background: rgba(180,130,220,0.13) !important;
+  border-color: rgba(180,130,220,0.28) !important;
+}
+
+.calma-cartas {
+  margin-top: 22px;
+  background: rgba(255,255,255,0.018);
+  border: 1px solid rgba(180,130,220,0.13);
+  border-radius: 18px;
+  padding: 22px;
+}
+
+.calma-cartas h3 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.35rem;
+  font-weight: 400;
+  margin-bottom: 14px;
+}
+
+.calma-carta-card {
+  border: 1px solid rgba(180,130,220,0.16);
+  background: rgba(255,255,255,0.025);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+.calma-carta-card h4 {
+  color: var(--text-primary);
+  margin: 8px 0;
+}
+
+.calma-carta-card p {
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.calma-carta-bloqueada {
+  color: var(--text-muted) !important;
+  font-style: italic;
+}
