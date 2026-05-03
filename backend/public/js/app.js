@@ -145,19 +145,41 @@ async function loadRecuerdos() {
       container.innerHTML = emptyState('🌸', 'Aún no hay recuerdos guardados.');
       return;
     }
-    container.innerHTML = items.map(r => `
-      <div class="item-card">
-        <div class="item-header">
-          <div class="item-title">${esc(r.titulo)}</div>
-          <div class="item-meta">${formatDate(r.fecha)}</div>
-        </div>
-        <p class="item-desc">${esc(r.descripcion)}</p>
-        <div class="item-actions">
-          <button class="btn btn-sm btn-edit" onclick="openModal('recuerdos', ${r.id}, '${esc(r.titulo)}', '${esc(r.descripcion)}', '${r.fecha ? r.fecha.split('T')[0] : ''}')">Editar</button>
-          <button class="btn btn-sm btn-delete" onclick="deleteItem('recuerdos', ${r.id})">Eliminar</button>
-        </div>
+container.innerHTML = items.map(r => `
+  <div class="item-card recuerdo-card">
+    ${r.imagen_url ? `
+      <div class="recuerdo-img-wrap">
+        <img src="${esc(r.imagen_url)}" alt="${esc(r.titulo)}" class="recuerdo-img">
       </div>
-    `).join('');
+    ` : ''}
+
+    <div class="item-header">
+      <div class="item-title">${esc(r.titulo)}</div>
+      <div class="item-meta">${formatDate(r.fecha)}</div>
+    </div>
+
+    <p class="item-desc">${esc(r.descripcion)}</p>
+
+    ${r.enlace_url ? `
+      <a class="btn-link-recuerdo" href="${esc(r.enlace_url)}" target="_blank" rel="noopener">
+        Abrir algo especial ♡
+      </a>
+    ` : ''}
+
+    <div class="item-actions">
+      <button class="btn btn-sm btn-edit" onclick="openModal(
+        'recuerdos', 
+        ${r.id}, 
+        '${esc(r.titulo)}', 
+        '${esc(r.descripcion)}', 
+        '${r.fecha ? r.fecha.split('T')[0] : ''}',
+        '${esc(r.imagen_url || '')}',
+        '${esc(r.enlace_url || '')}'
+      )">Editar</button>
+      <button class="btn btn-sm btn-delete" onclick="deleteItem('recuerdos', ${r.id})">Eliminar</button>
+    </div>
+  </div>
+`).join('');
   } catch {
     container.innerHTML = '<div style="color:var(--danger);padding:20px;">Error al cargar recuerdos.</div>';
   }
@@ -336,17 +358,25 @@ function openModal(type, id, ...args) {
   const isEdit = !!id;
 
   const forms = {
-    recuerdos: () => {
-      titleEl.textContent = isEdit ? 'Editar recuerdo' : 'Nuevo recuerdo';
-      formEl.innerHTML = `
-        <label>Título</label>
-        <input type="text" id="f-titulo" value="${isEdit ? args[0] : ''}" placeholder="¿Qué fue lo que pasó?"/>
-        <label>Fecha</label>
-        <input type="date" id="f-fecha" value="${isEdit ? args[2] : ''}"/>
-        <label>Descripción</label>
-        <textarea id="f-descripcion" placeholder="Cuéntame más...">${isEdit ? args[1] : ''}</textarea>
-      `;
-    },
+recuerdos: () => {
+  titleEl.textContent = isEdit ? 'Editar recuerdo' : 'Nuevo recuerdo';
+  formEl.innerHTML = `
+    <label>Título</label>
+    <input type="text" id="f-titulo" value="${isEdit ? args[0] : ''}" placeholder="¿Qué fue lo que pasó?"/>
+
+    <label>Fecha</label>
+    <input type="date" id="f-fecha" value="${isEdit ? args[2] : ''}"/>
+
+    <label>Descripción</label>
+    <textarea id="f-descripcion" placeholder="Cuéntame más...">${isEdit ? args[1] : ''}</textarea>
+
+    <label>URL de imagen opcional</label>
+    <input type="url" id="f-imagen-url" value="${isEdit ? args[3] || '' : ''}" placeholder="https://..."/>
+
+    <label>URL especial opcional</label>
+    <input type="url" id="f-enlace-url" value="${isEdit ? args[4] || '' : ''}" placeholder="Carta, juego, bitácora, Drive, etc."/>
+  `;
+},
     citas: () => {
       titleEl.textContent = isEdit ? 'Editar cita' : 'Nueva cita';
       formEl.innerHTML = `
