@@ -1457,3 +1457,59 @@ body::after {
   transform: translateY(-1px);
   opacity: 0.9;
 }
+
+/* ======================================================
+   FIX PREGUNTA FINAL
+   ====================================================== */
+
+.pregunta-subtexto {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  max-width: 520px;
+  line-height: 1.6;
+  margin-top: -12px;
+}
+
+.pregunta-zona {
+  position: relative;
+  width: 560px;
+  max-width: 95vw;
+  height: 180px;
+  margin-top: 8px;
+}
+
+.pregunta-zona .btn-si {
+  position: absolute;
+  left: 70px;
+  top: 60px;
+  z-index: 2;
+  min-width: 180px;
+}
+
+.pregunta-zona .btn-no {
+  position: absolute;
+  right: 70px;
+  top: 60px;
+  left: auto;
+  z-index: 1;
+  min-width: 180px;
+}
+
+@media (max-width: 600px) {
+  .pregunta-zona {
+    height: 220px;
+  }
+
+  .pregunta-zona .btn-si {
+    left: 50%;
+    transform: translateX(-50%);
+    top: 35px;
+  }
+
+  .pregunta-zona .btn-no {
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    top: 120px;
+  }
+}
