@@ -1304,3 +1304,90 @@ if (mTiempo) {
     if (e.target === this) closeModal('modal-tiempo');
   });
 }
+/* ======================================================
+   FIX DEFINITIVO SIGA - MOSTRAR SECCIONES
+   ====================================================== */
+
+function forzarSeccion(page) {
+  const pagina = document.getElementById('page-' + page);
+
+  if (!pagina) {
+    console.error('No existe page-' + page);
+    return;
+  }
+
+  document.querySelectorAll('.page').forEach(p => {
+    p.classList.remove('active');
+    p.style.setProperty('display', 'none', 'important');
+    p.style.setProperty('visibility', 'hidden', 'important');
+    p.style.setProperty('opacity', '0', 'important');
+  });
+
+  pagina.classList.add('active');
+  pagina.style.setProperty('display', 'block', 'important');
+  pagina.style.setProperty('visibility', 'visible', 'important');
+  pagina.style.setProperty('opacity', '1', 'important');
+
+  document.querySelectorAll('.nav-item').forEach(btn => {
+    btn.classList.remove('active');
+  });
+
+  const textos = {
+    dashboard: 'Dashboard',
+    recuerdos: 'Recuerdos',
+    citas: 'Nuestros planes',
+    playlist: 'Playlist',
+    razones: 'Razones',
+    promesas: 'Promesas',
+    carta: 'Carta',
+    tiempo: '¿Nos vemos?',
+    cajita: 'Cajita especial',
+    pregunta: 'Pregunta final'
+  };
+
+  document.querySelectorAll('.nav-item').forEach(btn => {
+    if (btn.textContent.includes(textos[page])) {
+      btn.classList.add('active');
+    }
+  });
+
+  if (page === 'dashboard' && typeof loadDashboard === 'function') loadDashboard();
+  if (page === 'recuerdos' && typeof loadRecuerdos === 'function') loadRecuerdos();
+  if (page === 'citas' && typeof loadCitas === 'function') loadCitas();
+  if (page === 'playlist' && typeof loadPlaylist === 'function') loadPlaylist();
+  if (page === 'razones' && typeof loadRazones === 'function') loadRazones();
+  if (page === 'promesas' && typeof loadPromesas === 'function') loadPromesas();
+  if (page === 'carta' && typeof loadCarta === 'function') loadCarta();
+  if (page === 'cajita' && typeof loadCajita === 'function') loadCajita();
+  if (page === 'tiempo' && typeof initTiempoPage === 'function') initTiempoPage();
+}
+
+window.forzarSeccion = forzarSeccion;
+window.navigateTo = forzarSeccion;
+
+document.addEventListener('click', function(e) {
+  const btn = e.target.closest('.nav-item');
+  if (!btn) return;
+
+  const texto = btn.textContent.trim();
+
+  if (texto.includes('Dashboard')) forzarSeccion('dashboard');
+  else if (texto.includes('Recuerdos')) forzarSeccion('recuerdos');
+  else if (texto.includes('Nuestros planes')) forzarSeccion('citas');
+  else if (texto.includes('Playlist')) forzarSeccion('playlist');
+  else if (texto.includes('Razones')) forzarSeccion('razones');
+  else if (texto.includes('Promesas')) forzarSeccion('promesas');
+  else if (texto.includes('Carta')) forzarSeccion('carta');
+  else if (texto.includes('¿Nos vemos?')) forzarSeccion('tiempo');
+  else if (texto.includes('Cajita especial')) forzarSeccion('cajita');
+  else if (texto.includes('Pregunta final')) forzarSeccion('pregunta');
+});
+
+setTimeout(function() {
+  const login = document.getElementById('login-screen');
+  const app = document.getElementById('app');
+
+  if ((login && login.style.display === 'none') || (app && app.classList.contains('visible'))) {
+    forzarSeccion('dashboard');
+  }
+}, 500);
