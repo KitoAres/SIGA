@@ -71,8 +71,8 @@ async function doLogin() {
       $('login-screen').style.display = 'none';
       $('app').classList.add('visible');
 
-      renderUsuarioActual();
-      navigateTo('dashboard');
+renderUsuarioActual();
+navigateTo('dashboard');
     } else {
       $('login-error').textContent = data.error || 'Credenciales incorrectas.';
     }
@@ -126,23 +126,31 @@ function navigateTo(page) {
   const targetPage = $('page-' + page);
 
   if (!targetPage) {
-    console.error('No existe la página:', 'page-' + page);
+    console.error('No existe la sección:', 'page-' + page);
     toast('No existe la sección: ' + page);
     return;
   }
 
+  // Ocultar todas las páginas
   document.querySelectorAll('.page').forEach(p => {
     p.classList.remove('active');
     p.style.display = 'none';
+    p.style.visibility = 'hidden';
+    p.style.opacity = '0';
   });
 
+  // Quitar activo del menú
   document.querySelectorAll('.nav-item').forEach(n => {
     n.classList.remove('active');
   });
 
+  // Mostrar página actual
   targetPage.classList.add('active');
   targetPage.style.display = 'block';
+  targetPage.style.visibility = 'visible';
+  targetPage.style.opacity = '1';
 
+  // Activar botón correcto del menú
   document.querySelectorAll('.nav-item').forEach(n => {
     const txt = n.textContent.trim().toLowerCase();
 
@@ -163,6 +171,7 @@ function navigateTo(page) {
   });
 
   state.currentPage = page;
+
   closeSidebar();
 
   const loaders = {
@@ -176,7 +185,9 @@ function navigateTo(page) {
     cajita: loadCajita
   };
 
-  if (loaders[page]) loaders[page]();
+  if (loaders[page]) {
+    loaders[page]();
+  }
 
   if (page === 'tiempo' && typeof initTiempoPage === 'function') {
     initTiempoPage();
