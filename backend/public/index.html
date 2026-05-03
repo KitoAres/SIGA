@@ -76,9 +76,10 @@
 
       <div class="nav-divider"></div>
 
-      <button class="nav-item" onclick="navigateTo('pregunta')">
-        <span class="nav-icon">✨</span> Pregunta final
-      </button>
+<button class="nav-item" onclick="navigateTo('calma')">
+  <span class="nav-icon">🌙</span>
+  <span>Modo calma</span>
+</button>
     </nav>
 
 <div class="sidebar-footer">
@@ -296,40 +297,30 @@
       <div class="items-grid" id="list-cajita"></div>
     </section>
 
-<!-- PREGUNTA FINAL -->
-<section class="page" id="page-pregunta">
-  <div class="pregunta-section">
-    <div class="pregunta-text" id="pregunta-main">
-      ¿Nos damos la oportunidad de seguir coincidiendo?
+<!-- MODO CALMA -->
+<section class="page" id="page-calma">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Modo <span>calma</span></h1>
+      <p class="page-subtitle">Un espacio para respirar sin desaparecer.</p>
     </div>
 
-    <p class="pregunta-subtexto">
-      No tiene que ser perfecto. Puede ser paso a paso, sin presión y a nuestro ritmo.
-    </p>
+    <button class="btn-add" onclick="openModalCalma()">+ Necesito calma</button>
+  </div>
 
-<div class="pregunta-zona" id="pregunta-zona">
-  <button class="btn-si" id="btn-si" onclick="responderSi()">
-    Sí, sin presión ♡
-  </button>
-
-  <button class="btn-no" id="btn-no" onmouseover="escapeNo(event)" ontouchstart="escapeNo(event)">
-    De a poquito
-  </button>
-</div>
-
-    <div class="respuesta-final" id="respuesta-final">
-      <div class="respuesta-corazon">💜</div>
-      <div class="respuesta-texto">
-        "Entonces no prometo perfección.<br/>
-        Prometo intención, paciencia y ganas de seguir aprendiendo cómo quererte mejor."
-      </div>
+  <div class="calma-intro-card">
+    <div class="calma-intro-icon">🌙</div>
+    <div>
+      <h3>A veces no hace falta explicar todo.</h3>
+      <p>
+        Este espacio sirve para decir: “Estoy aquí, solo necesito calma”.
+        Sin desaparecer. Sin presión. Sin miedo.
+      </p>
     </div>
   </div>
+
+  <div id="calma-activa-box"></div>
 </section>
-
-  </main>
-</div>
-
 <!-- ── MODALES ─────────────────────────────────── -->
 
 <!-- Modal genérico CRUD -->
@@ -397,7 +388,69 @@
   </div>
 </div>
 
+<!-- Modal Modo Calma -->
+<div class="modal-overlay" id="modal-calma">
+  <div class="modal">
+    <h2 class="modal-title">Activar Modo calma 🌙</h2>
 
+    <div class="modal-form">
+      <label>Desde</label>
+      <input type="date" id="calma-fecha-inicio"/>
+
+      <label>Hasta</label>
+      <input type="date" id="calma-fecha-fin"/>
+
+      <label>Cómo estoy</label>
+      <select id="calma-estado">
+        <option value="necesito calma">Necesito calma</option>
+        <option value="estoy saturada/o">Estoy saturada/o</option>
+        <option value="necesito regularme">Necesito regularme</option>
+        <option value="necesito silencio">Necesito silencio</option>
+        <option value="necesito ir despacio">Necesito ir despacio</option>
+      </select>
+
+      <label>Mensaje corto</label>
+      <textarea id="calma-mensaje" placeholder="Ej: Estoy bien, solo necesito calma. No es contra ti."></textarea>
+
+      <div class="calma-quick-options">
+        <button type="button" onclick="setCalmaMensaje('Estoy bien, solo necesito calma. No es contra ti.')">Estoy bien, solo necesito calma.</button>
+        <button type="button" onclick="setCalmaMensaje('Sigo aquí, aunque hoy no pueda hablar mucho.')">Sigo aquí.</button>
+        <button type="button" onclick="setCalmaMensaje('Te quiero, solo estoy procesando.')">Te quiero, estoy procesando.</button>
+        <button type="button" onclick="setCalmaMensaje('Podemos hablar pronto, pero despacio.')">Hablemos despacio.</button>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('modal-calma')">Cancelar</button>
+      <button class="btn-save" onclick="guardarModoCalma()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Check-in Calma -->
+<div class="modal-overlay" id="modal-checkin-calma">
+  <div class="modal">
+    <h2 class="modal-title">Dejar una señal ♡</h2>
+
+    <div class="modal-form">
+      <label>Mensaje</label>
+      <textarea id="checkin-calma-mensaje" placeholder="Una señal pequeña basta..."></textarea>
+
+      <div class="calma-quick-options">
+        <button type="button" onclick="setCheckinMensaje('Estoy bien.')">Estoy bien.</button>
+        <button type="button" onclick="setCheckinMensaje('Sigo con calma.')">Sigo con calma.</button>
+        <button type="button" onclick="setCheckinMensaje('Te quiero, solo necesito más tiempo.')">Te quiero, necesito más tiempo.</button>
+        <button type="button" onclick="setCheckinMensaje('Hoy no puedo hablar mucho, pero sigo aquí.')">Sigo aquí.</button>
+        <button type="button" onclick="setCheckinMensaje('Gracias por esperarme.')">Gracias por esperarme.</button>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('modal-checkin-calma')">Cancelar</button>
+      <button class="btn-save" onclick="guardarCheckinCalma()">Guardar señal</button>
+    </div>
+  </div>
+</div>
 
   <script src="/js/app.js?v=tiempo-fix-3"></script>
 
