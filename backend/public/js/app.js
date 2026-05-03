@@ -351,65 +351,74 @@ function cancelCarta() {
 // ── MODAL CRUD ────────────────────────────────────────────────
 function openModal(type, id, ...args) {
   state.modal.type = type;
-  state.modal.id   = id || null;
+  state.modal.id = id || null;
 
   const formEl = $('modal-crud-form');
   const titleEl = $('modal-crud-title');
-
   const isEdit = !!id;
 
   const forms = {
-recuerdos: () => {
-  titleEl.textContent = isEdit ? 'Editar recuerdo' : 'Nuevo recuerdo';
-  formEl.innerHTML = `
-    <label>Título</label>
-    <input type="text" id="f-titulo" value="${isEdit ? args[0] : ''}" placeholder="¿Qué fue lo que pasó?"/>
+    recuerdos: () => {
+      titleEl.textContent = isEdit ? 'Editar recuerdo' : 'Nuevo recuerdo';
+      formEl.innerHTML = `
+        <label>Título</label>
+        <input type="text" id="f-titulo" value="${isEdit ? args[0] : ''}" placeholder="¿Qué fue lo que pasó?"/>
 
-    <label>Fecha</label>
-    <input type="date" id="f-fecha" value="${isEdit ? args[2] : ''}"/>
+        <label>Fecha</label>
+        <input type="date" id="f-fecha" value="${isEdit ? args[2] : ''}"/>
 
-    <label>Descripción</label>
-    <textarea id="f-descripcion" placeholder="Cuéntame más...">${isEdit ? args[1] : ''}</textarea>
+        <label>Descripción</label>
+        <textarea id="f-descripcion" placeholder="Cuéntame más...">${isEdit ? args[1] : ''}</textarea>
 
-    <label>URL de imagen opcional</label>
-    <input type="url" id="f-imagen-url" value="${isEdit ? args[3] || '' : ''}" placeholder="https://..."/>
+        <label>URL de imagen opcional</label>
+        <input type="url" id="f-imagen-url" value="${isEdit ? args[3] || '' : ''}" placeholder="https://..."/>
 
-    <label>URL especial opcional</label>
-    <input type="url" id="f-enlace-url" value="${isEdit ? args[4] || '' : ''}" placeholder="Carta, juego, bitácora, Drive, etc."/>
-  `;
-},
+        <label>URL especial opcional</label>
+        <input type="url" id="f-enlace-url" value="${isEdit ? args[4] || '' : ''}" placeholder="Carta, juego, bitácora, Drive, etc."/>
+      `;
+    },
+
     citas: () => {
-      titleEl.textContent = isEdit ? 'Editar cita' : 'Nueva cita';
+      titleEl.textContent = isEdit ? 'Editar plan' : 'Nuevo plan';
       formEl.innerHTML = `
         <label>Título</label>
         <input type="text" id="f-titulo" value="${isEdit ? args[0] : ''}" placeholder="¿Qué vamos a hacer?"/>
+
         <label>Lugar</label>
         <input type="text" id="f-lugar" value="${isEdit ? args[1] : ''}" placeholder="¿Dónde?"/>
+
         <label>Fecha</label>
         <input type="date" id="f-fecha" value="${isEdit ? args[3] : ''}"/>
+
         <label>Estado</label>
         <select id="f-estado">
-          <option value="pendiente" ${(!isEdit || args[4]==='pendiente') ? 'selected':''}>Pendiente</option>
-          <option value="cumplida"  ${(isEdit && args[4]==='cumplida')  ? 'selected':''}>Cumplida</option>
-          <option value="cancelada" ${(isEdit && args[4]==='cancelada') ? 'selected':''}>Cancelada</option>
+          <option value="pendiente" ${(!isEdit || args[4] === 'pendiente') ? 'selected' : ''}>Pendiente</option>
+          <option value="cumplida" ${(isEdit && args[4] === 'cumplida') ? 'selected' : ''}>Cumplida</option>
+          <option value="cancelada" ${(isEdit && args[4] === 'cancelada') ? 'selected' : ''}>Cancelada</option>
         </select>
+
         <label>Descripción</label>
         <textarea id="f-descripcion" placeholder="Detalles...">${isEdit ? args[2] : ''}</textarea>
       `;
     },
+
     playlist: () => {
       titleEl.textContent = isEdit ? 'Editar canción' : 'Nueva canción';
       formEl.innerHTML = `
         <label>Título</label>
         <input type="text" id="f-titulo" value="${isEdit ? args[0] : ''}" placeholder="Nombre de la canción"/>
+
         <label>Artista</label>
         <input type="text" id="f-artista" value="${isEdit ? args[1] : ''}" placeholder="Artista"/>
-        <label>Enlace (Spotify, YouTube...)</label>
+
+        <label>Enlace</label>
         <input type="url" id="f-enlace" value="${isEdit ? args[2] : ''}" placeholder="https://..."/>
+
         <label>Frase favorita</label>
         <textarea id="f-frase" placeholder="La parte que más me gusta...">${isEdit ? args[3] : ''}</textarea>
       `;
     },
+
     razones: () => {
       titleEl.textContent = isEdit ? 'Editar razón' : 'Nueva razón';
       formEl.innerHTML = `
@@ -418,7 +427,6 @@ recuerdos: () => {
       `;
     },
 
-     
     promesas: () => {
       titleEl.textContent = isEdit ? 'Editar promesa' : 'Nueva promesa';
       formEl.innerHTML = `
@@ -451,51 +459,33 @@ recuerdos: () => {
         <label>Fecha</label>
         <input type="date" id="f-fecha" value="${isEdit ? args[4] : ''}"/>
       `;
-    },
+    }
   };
 
-   
-   cajita: () => {
-  titleEl.textContent = isEdit ? 'Editar detalle especial' : 'Nuevo detalle especial';
-  formEl.innerHTML = `
-    <label>Título</label>
-    <input type="text" id="f-titulo" value="${isEdit ? args[0] : ''}" placeholder="Ej: Carta de aniversario"/>
+  if (forms[type]) {
+    forms[type]();
+  } else {
+    titleEl.textContent = 'Nuevo';
+    formEl.innerHTML = '<p style="color:var(--danger);">Formulario no encontrado.</p>';
+  }
 
-    <label>Tipo</label>
-    <select id="f-tipo">
-      <option value="carta" ${isEdit && args[1] === 'carta' ? 'selected' : ''}>Carta</option>
-      <option value="juego" ${isEdit && args[1] === 'juego' ? 'selected' : ''}>Juego</option>
-      <option value="mensaje" ${isEdit && args[1] === 'mensaje' ? 'selected' : ''}>Mensaje</option>
-      <option value="bitacora" ${isEdit && args[1] === 'bitacora' ? 'selected' : ''}>Bitácora</option>
-      <option value="otro" ${!isEdit || args[1] === 'otro' ? 'selected' : ''}>Otro</option>
-    </select>
-
-    <label>Descripción</label>
-    <textarea id="f-descripcion" placeholder="¿Qué es este detalle?">${isEdit ? args[2] : ''}</textarea>
-
-    <label>Enlace</label>
-    <input type="url" id="f-enlace" value="${isEdit ? args[3] : ''}" placeholder="https://..."/>
-
-    <label>Fecha</label>
-    <input type="date" id="f-fecha" value="${isEdit ? args[4] : ''}"/>
-  `;
-},
-
-  if (forms[type]) forms[type]();
   $('modal-crud').classList.add('open');
 
-  // Foco en primer input
   setTimeout(() => {
-    const first = formEl.querySelector('input, textarea');
+    const first = formEl.querySelector('input, textarea, select');
     if (first) first.focus();
   }, 100);
 }
 
 function closeModal(id) {
-  $(id).classList.remove('open');
+  const modal = $(id);
+  if (!modal) return;
+
+  modal.classList.remove('open');
+
   if (id === 'modal-crud') {
     state.modal.type = null;
-    state.modal.id   = null;
+    state.modal.id = null;
   }
 }
 
@@ -503,26 +493,62 @@ async function saveModal() {
   const { type, id } = state.modal;
   let body = {};
 
-  const val = (sid) => { const el = $(sid); return el ? el.value.trim() : ''; };
-
-if (type === 'recuerdos') {
-  body = { 
-    titulo: val('f-titulo'), 
-    descripcion: val('f-descripcion'), 
-    fecha: val('f-fecha'),
-    imagen_url: val('f-imagen-url'),
-    enlace_url: val('f-enlace-url')
+  const val = (sid) => {
+    const el = $(sid);
+    return el ? el.value.trim() : '';
   };
-  if (!body.titulo) { toast('El título es obligatorio.'); return; }
-} else if (type === 'citas') {
-    body = { titulo: val('f-titulo'), lugar: val('f-lugar'), descripcion: val('f-descripcion'), fecha: val('f-fecha'), estado: val('f-estado') };
-    if (!body.titulo) { toast('El título es obligatorio.'); return; }
+
+  if (type === 'recuerdos') {
+    body = {
+      titulo: val('f-titulo'),
+      descripcion: val('f-descripcion'),
+      fecha: val('f-fecha'),
+      imagen_url: val('f-imagen-url'),
+      enlace_url: val('f-enlace-url')
+    };
+
+    if (!body.titulo) {
+      toast('El título es obligatorio.');
+      return;
+    }
+
+  } else if (type === 'citas') {
+    body = {
+      titulo: val('f-titulo'),
+      lugar: val('f-lugar'),
+      descripcion: val('f-descripcion'),
+      fecha: val('f-fecha'),
+      estado: val('f-estado')
+    };
+
+    if (!body.titulo) {
+      toast('El título es obligatorio.');
+      return;
+    }
+
   } else if (type === 'playlist') {
-    body = { titulo: val('f-titulo'), artista: val('f-artista'), enlace: val('f-enlace'), frase: val('f-frase') };
-    if (!body.titulo) { toast('El título es obligatorio.'); return; }
+    body = {
+      titulo: val('f-titulo'),
+      artista: val('f-artista'),
+      enlace: val('f-enlace'),
+      frase: val('f-frase')
+    };
+
+    if (!body.titulo) {
+      toast('El título es obligatorio.');
+      return;
+    }
+
   } else if (type === 'razones' || type === 'promesas') {
-    body = { texto: val('f-texto') };
-    if (!body.texto) { toast('El campo no puede estar vacío.'); return; }
+    body = {
+      texto: val('f-texto')
+    };
+
+    if (!body.texto) {
+      toast('El campo no puede estar vacío.');
+      return;
+    }
+
   } else if (type === 'cajita') {
     body = {
       titulo: val('f-titulo'),
@@ -532,39 +558,50 @@ if (type === 'recuerdos') {
       fecha: val('f-fecha')
     };
 
-    if (!body.titulo) { toast('El título es obligatorio.'); return; }
-    if (!body.enlace) { toast('El enlace es obligatorio.'); return; }
-  }
-else if (type === 'cajita') {
-  body = {
-    titulo: val('f-titulo'),
-    tipo: val('f-tipo'),
-    descripcion: val('f-descripcion'),
-    enlace: val('f-enlace'),
-    fecha: val('f-fecha')
-  };
+    if (!body.titulo) {
+      toast('El título es obligatorio.');
+      return;
+    }
 
-  if (!body.titulo) { toast('El título es obligatorio.'); return; }
-  if (!body.enlace) { toast('El enlace es obligatorio.'); return; }
-}
-   
+    if (!body.enlace) {
+      toast('El enlace es obligatorio.');
+      return;
+    }
+
+  } else {
+    toast('Tipo de formulario no válido.');
+    return;
+  }
+
   const method = id ? 'PUT' : 'POST';
-  const url    = '/api/' + type + (id ? '/' + id : '');
+  const url = '/api/' + type + (id ? '/' + id : '');
 
   try {
-    await api(method, url, body);
+    const data = await api(method, url, body);
+
+    if (data && data.error) {
+      toast(data.error);
+      return;
+    }
+
     closeModal('modal-crud');
     toast(id ? '✓ Actualizado con éxito' : '✓ Guardado con éxito');
-    // Recargar la sección correspondiente
-const reloaders = { 
-  recuerdos: loadRecuerdos, 
-  citas: loadCitas, 
-  playlist: loadPlaylist, 
-  razones: loadRazones, 
-  promesas: loadPromesas,
-  cajita: loadCajita
-};    if (reloaders[type]) reloaders[type]();
-    if (type === 'recuerdos' || type === 'citas' || type === 'razones') loadDashboard();
+
+    const reloaders = {
+      recuerdos: loadRecuerdos,
+      citas: loadCitas,
+      playlist: loadPlaylist,
+      razones: loadRazones,
+      promesas: loadPromesas,
+      cajita: loadCajita
+    };
+
+    if (reloaders[type]) reloaders[type]();
+
+    if (type === 'recuerdos' || type === 'citas' || type === 'razones') {
+      loadDashboard();
+    }
+
   } catch {
     toast('Error al guardar. Verifica la conexión.');
   }
@@ -572,23 +609,33 @@ const reloaders = {
 
 async function deleteItem(type, id) {
   if (!confirm('¿Eliminar este elemento? Esta acción no se puede deshacer.')) return;
+
   try {
-    await api('DELETE', '/api/' + type + '/' + id);
+    const data = await api('DELETE', '/api/' + type + '/' + id);
+
+    if (data && data.error) {
+      toast(data.error);
+      return;
+    }
+
     toast('Eliminado correctamente.');
-const reloaders = { 
-  recuerdos: loadRecuerdos, 
-  citas: loadCitas, 
-  playlist: loadPlaylist, 
-  razones: loadRazones, 
-  promesas: loadPromesas,
-  cajita: loadCajita
-};    if (reloaders[type]) reloaders[type]();
+
+    const reloaders = {
+      recuerdos: loadRecuerdos,
+      citas: loadCitas,
+      playlist: loadPlaylist,
+      razones: loadRazones,
+      promesas: loadPromesas,
+      cajita: loadCajita
+    };
+
+    if (reloaders[type]) reloaders[type]();
     loadDashboard();
+
   } catch {
     toast('Error al eliminar.');
   }
 }
-
 // ── CAJITA ESPECIAL ───────────────────────────────────────────
 async function loadCajita() {
   const container = $('list-cajita');
@@ -699,20 +746,23 @@ function emptyState(icon, msg) {
 // ── CERRAR MODALES CON ESC ────────────────────────────────────
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') {
-    if ($('modal-crud').classList.contains('open')) closeModal('modal-crud');
-    if ($('modal-forbidden').classList.contains('open')) closeModal('modal-forbidden');
+    if ($('modal-crud') && $('modal-crud').classList.contains('open')) {
+      closeModal('modal-crud');
+    }
+
+    if ($('modal-tiempo') && $('modal-tiempo').classList.contains('open')) {
+      closeModal('modal-tiempo');
+    }
   }
 });
 
 // Cerrar modal al click fuera
-$('modal-crud').addEventListener('click', function(e) {
-  if (e.target === this) closeModal('modal-crud');
-});
-$('modal-forbidden').addEventListener('click', function(e) {
-  if (e.target === this) closeModal('modal-forbidden');
-});
-
-
+const modalCrud = $('modal-crud');
+if (modalCrud) {
+  modalCrud.addEventListener('click', function(e) {
+    if (e.target === this) closeModal('modal-crud');
+  });
+}
 /* ============================================================
    MÓDULO: Nuestro Tiempo
    ============================================================ */
