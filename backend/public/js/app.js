@@ -1768,7 +1768,9 @@ function openModalCalma() {
   $('calma-fecha-fin').setAttribute('max', maxFecha);
   $('calma-estado').value = 'necesito calma';
   $('calma-mensaje').value = '';
-
+if ($('calma-contacto')) $('calma-contacto').value = 'Señales cortas en la app';
+if ($('calma-evitar')) $('calma-evitar').value = 'Preguntas largas o presión';
+if ($('calma-energia')) $('calma-energia').value = '40% - Puedo leer, responder poquito';
   $('modal-calma').classList.add('open');
 }
 
@@ -1782,6 +1784,9 @@ async function guardarModoCalma() {
   const fechaFin = $('calma-fecha-fin').value;
   const estado = $('calma-estado').value;
   const mensaje = $('calma-mensaje').value.trim();
+   const contacto = $('calma-contacto') ? $('calma-contacto').value : 'Señales cortas en la app';
+const evitar = $('calma-evitar') ? $('calma-evitar').value : 'Preguntas largas o presión';
+const energia = $('calma-energia') ? $('calma-energia').value : '40% - Puedo leer, responder poquito';
 
   if (!fechaInicio || !fechaFin) {
     toast('Elige fecha de inicio y fin.');
@@ -1803,13 +1808,16 @@ async function guardarModoCalma() {
   }
 
   try {
-    const data = await api('POST', '/api/calma', {
-      usuario_id: state.currentUser.id,
-      fecha_inicio: fechaInicio,
-      fecha_fin: fechaFin,
-      estado_animo: estado,
-      mensaje
-    });
+const data = await api('POST', '/api/calma', {
+  usuario_id: state.currentUser.id,
+  fecha_inicio: fechaInicio,
+  fecha_fin: fechaFin,
+  estado_animo: estado,
+  mensaje,
+  contacto_permitido: contacto,
+  evitar,
+  energia
+});
 
     if (data.error) {
       toast(data.error);
@@ -1928,13 +1936,55 @@ async function loadCalma() {
             : ''
         }
 
-        <div class="calma-note">
-          Si esta persona activó Modo calma, no significa rechazo.
-          Significa que necesita regularse sin romper el vínculo.
-        </div>
+        <div class="calma-unlocked">
+          <div class="calma-unlocked-head">
+            <span>🌙</span>
+            <div>
+              <h3>Caja de calma desbloqueada</h3>
+              <p>Herramientas pequeñas para cuidar el vínculo sin presionar.</p>
+            </div>
+          </div>
 
-        <div class="calma-actions">
-          <button class="btn-add" onclick="openCheckinCalma()">Dejar señal ♡</button>
+          <div class="calma-tools-grid">
+            <div class="calma-tool-card">
+              <h4>Contacto permitido</h4>
+              <p>${esc(c.contacto_permitido || 'Señales cortas en la app')}</p>
+            </div>
+
+            <div class="calma-tool-card">
+              <h4>Evitar por ahora</h4>
+              <p>${esc(c.evitar || 'Preguntas largas o presión')}</p>
+            </div>
+
+            <div class="calma-tool-card">
+              <h4>Energía emocional</h4>
+              <p>${esc(c.energia || '40% - Puedo leer, responder poquito')}</p>
+            </div>
+
+            <div class="calma-tool-card espera">
+              <h4>Modo espera segura</h4>
+              <p>
+                No tienes que perseguir para no perder.
+                Si hay una señal, hay vínculo.
+              </p>
+            </div>
+          </div>
+
+          <div class="calma-acuerdo">
+            <h4>Acuerdo de cuidado</h4>
+            <ul>
+              <li>No desaparecer sin una señal mínima.</li>
+              <li>No exigir explicación inmediata.</li>
+              <li>Una frase corta cada cierto tiempo puede bastar.</li>
+              <li>La calma no significa rechazo.</li>
+              <li>Volvemos a hablar cuando ambos puedan hacerlo bien.</li>
+            </ul>
+          </div>
+
+          <div class="calma-actions">
+            <button class="btn-add" onclick="openCheckinCalma()">Dejar señal rápida ♡</button>
+            <button class="btn-add btn-soft" onclick="openCartaCalma()">Escribir carta para después 💌</button>
+          </div>
         </div>
       </div>
 
@@ -1942,7 +1992,12 @@ async function loadCalma() {
         <h3>Señales de cuidado</h3>
         ${checkinsHTML}
       </div>
+
+      <div id="calma-cartas-box"></div>
     `;
+
+    loadCartasCalma();
+
   } catch (err) {
     console.error(err);
     box.innerHTML = '<div style="color:var(--danger);padding:20px;">Error al cargar Modo calma.</div>';
@@ -1996,6 +2051,106 @@ async function guardarCheckinCalma() {
 }
 
 async function cerrarModoCalma(id) {
+   function openCartaCalma() {
+  if (!calmaActual) {
+    toast('No hay Modo calma activo.');
+    return;
+  }
+
+  $('carta-calma-titulo').value = '';
+  $('carta-calma-contenido').value = '';
+  $('modal-carta-calma').classList.add('open');
+}
+
+async function guardarCartaCalma() {
+  if (!state.currentUser || !state.currentUser.id) {
+    toast('Primero inicia sesión.');
+    return;
+  }
+
+  if (!calmaActual) {
+    toast('No hay Modo calma activo.');
+    return;
+  }
+
+  const titulo = $('carta-calma-titulo').value.trim() || 'Carta para después';
+  const contenido = $('carta-calma-contenido').value.trim();
+
+  if (!contenido) {
+    toast('Escribe algo en la carta.');
+    return;
+  }
+
+  try {
+    const data = await api('POST', `/api/calma/${calmaActual.id}/carta`, {
+      usuario_id: state.currentUser.id,
+      titulo,
+      contenido,
+      visible_desde: normalizarFecha(calmaActual.fecha_fin)
+    });
+
+    if (data.error) {
+      toast(data.error);
+      return;
+    }
+
+    closeModal('modal-carta-calma');
+    toast('Carta guardada para cuando vuelva la calma 💌');
+    loadCartasCalma();
+
+  } catch {
+    toast('Error al guardar carta.');
+  }
+}
+
+async function loadCartasCalma() {
+  const box = $('calma-cartas-box');
+  if (!box || !calmaActual) return;
+
+  try {
+    const cartas = await api('GET', `/api/calma/${calmaActual.id}/cartas`);
+
+    if (!cartas.length) {
+      box.innerHTML = '';
+      return;
+    }
+
+    const hoy = new Date();
+    const html = cartas.map(carta => {
+      const visibleDesde = new Date(normalizarFecha(carta.visible_desde) + 'T00:00:00');
+      const yaVisible = hoy >= visibleDesde;
+
+      return `
+        <div class="calma-carta-card">
+          <div class="calma-checkin-top">
+            <span class="calma-checkin-author" style="border-color:${esc(carta.color_perfil || '#22d3ee')}; color:${esc(carta.color_perfil || '#22d3ee')};">
+              ● ${esc(carta.display_name || carta.nombre || carta.usuario || 'Alguien')}
+            </span>
+            <span class="calma-checkin-date">${formatDate(carta.creado_en)}</span>
+          </div>
+
+          <h4>${esc(carta.titulo || 'Carta para después')}</h4>
+
+          ${
+            yaVisible
+              ? `<p>${esc(carta.contenido)}</p>`
+              : `<p class="calma-carta-bloqueada">Esta carta se abrirá cuando vuelva la calma: ${formatDate(carta.visible_desde)} 💌</p>`
+          }
+        </div>
+      `;
+    }).join('');
+
+    box.innerHTML = `
+      <div class="calma-cartas">
+        <h3>Cartas para después</h3>
+        ${html}
+      </div>
+    `;
+  } catch {
+    box.innerHTML = '';
+  }
+}
+   
   if (!state.currentUser || !state.currentUser.id) {
     toast('Primero inicia sesión.');
     return;
