@@ -1580,6 +1580,7 @@ function forzarSeccion(page) {
     carta: 'Carta',
     tiempo: '¿Nos vemos?',
     cajita: 'Cajita especial',
+    calma: 'Modo calma',
     pregunta: 'Pregunta final'
   };
 
@@ -1598,6 +1599,7 @@ function forzarSeccion(page) {
   if (page === 'carta' && typeof loadCarta === 'function') loadCarta();
   if (page === 'cajita' && typeof loadCajita === 'function') loadCajita();
   if (page === 'tiempo' && typeof initTiempoPage === 'function') initTiempoPage();
+  if (page === 'calma' && typeof loadCalma === 'function') loadCalma();
 }
 
 window.forzarSeccion = forzarSeccion;
@@ -1618,7 +1620,7 @@ document.addEventListener('click', function(e) {
   else if (texto.includes('Carta')) forzarSeccion('carta');
   else if (texto.includes('¿Nos vemos?')) forzarSeccion('tiempo');
   else if (texto.includes('Cajita especial')) forzarSeccion('cajita');
-  else if (texto.includes('Pregunta final')) forzarSeccion('pregunta');
+  else if (texto.includes('Modo calma')) forzarSeccion('calma');
 });
 
 setTimeout(function() {
@@ -1732,3 +1734,259 @@ setTimeout(function() {
     initTiempoPage();
   }
 }, 500);
+
+/* ======================================================
+   MODO CALMA
+   ====================================================== */
+
+let calmaActual = null;
+
+function setCalmaMensaje(texto) {
+  const el = $('calma-mensaje');
+  if (el) el.value = texto;
+}
+
+function setCheckinMensaje(texto) {
+  const el = $('checkin-calma-mensaje');
+  if (el) el.value = texto;
+}
+
+function openModalCalma() {
+  if (!state.currentUser || !state.currentUser.id) {
+    toast('Primero inicia sesión.');
+    return;
+  }
+
+  const hoy = new Date().toISOString().split('T')[0];
+  const max = new Date();
+  max.setDate(max.getDate() + 14);
+  const maxFecha = max.toISOString().split('T')[0];
+
+  $('calma-fecha-inicio').value = hoy;
+  $('calma-fecha-fin').value = '';
+  $('calma-fecha-fin').setAttribute('min', hoy);
+  $('calma-fecha-fin').setAttribute('max', maxFecha);
+  $('calma-estado').value = 'necesito calma';
+  $('calma-mensaje').value = '';
+
+  $('modal-calma').classList.add('open');
+}
+
+async function guardarModoCalma() {
+  if (!state.currentUser || !state.currentUser.id) {
+    toast('Primero inicia sesión.');
+    return;
+  }
+
+  const fechaInicio = $('calma-fecha-inicio').value;
+  const fechaFin = $('calma-fecha-fin').value;
+  const estado = $('calma-estado').value;
+  const mensaje = $('calma-mensaje').value.trim();
+
+  if (!fechaInicio || !fechaFin) {
+    toast('Elige fecha de inicio y fin.');
+    return;
+  }
+
+  const inicio = new Date(fechaInicio + 'T12:00:00');
+  const fin = new Date(fechaFin + 'T12:00:00');
+  const diffDias = Math.ceil((fin - inicio) / (1000 * 60 * 60 * 24));
+
+  if (diffDias < 0) {
+    toast('La fecha final no puede ser anterior.');
+    return;
+  }
+
+  if (diffDias > 14) {
+    toast('Máximo 14 días de Modo calma.');
+    return;
+  }
+
+  try {
+    const data = await api('POST', '/api/calma', {
+      usuario_id: state.currentUser.id,
+      fecha_inicio: fechaInicio,
+      fecha_fin: fechaFin,
+      estado_animo: estado,
+      mensaje
+    });
+
+    if (data.error) {
+      toast(data.error);
+      return;
+    }
+
+    closeModal('modal-calma');
+    toast('Modo calma activado 🌙');
+    loadCalma();
+  } catch {
+    toast('Error al activar Modo calma.');
+  }
+}
+
+async function loadCalma() {
+  const box = $('calma-activa-box');
+  if (!box) return;
+
+  box.innerHTML = '<div style="color:var(--text-muted);padding:20px;">Cargando Modo calma...</div>';
+
+  try {
+    const data = await api('GET', '/api/calma/activa');
+
+    if (!data.activa) {
+      calmaActual = null;
+
+      box.innerHTML = `
+        <div class="calma-empty">
+          <div class="calma-empty-icon">🌙</div>
+          <h3>No hay Modo calma activo</h3>
+          <p>
+            Cuando alguno necesite respirar, puede dejar una señal aquí.
+            No es una despedida. Es una forma de cuidar el vínculo.
+          </p>
+        </div>
+      `;
+      return;
+    }
+
+    calmaActual = data.calma;
+
+    const c = data.calma;
+    const checkins = data.checkins || [];
+
+    box.innerHTML = `
+      <div class="calma-card-activa">
+        <div class="calma-card-header">
+          <div>
+            <div class="calma-chip" style="border-color:${esc(c.color_perfil)}; color:${esc(c.color_perfil)};">
+              ● ${esc(c.display_name || c.nombre || c.usuario)}
+            </div>
+            <h2>Modo calma activo 🌙</h2>
+            <p>${esc(c.estado_animo || 'necesita calma')}</p>
+          </div>
+
+          <button class="btn btn-sm btn-delete" onclick="cerrarModoCalma(${c.id})">Cerrar modo</button>
+        </div>
+
+        <div class="calma-dates">
+          <div>
+            <span>Desde</span>
+            <strong>${formatDate(c.fecha_inicio)}</strong>
+          </div>
+          <div>
+            <span>Hasta</span>
+            <strong>${formatDate(c.fecha_fin)}</strong>
+          </div>
+          <div>
+            <span>Próxima señal</span>
+            <strong>${formatDate(data.proximo_checkin)}</strong>
+          </div>
+        </div>
+
+        ${c.mensaje ? `
+          <div class="calma-message">
+            “${esc(c.mensaje)}”
+          </div>
+        ` : ''}
+
+        <div class="calma-note">
+          Si esta persona activó Modo calma, no significa rechazo.
+          Significa que necesita regularse sin romper el vínculo.
+        </div>
+
+        <div class="calma-actions">
+          <button class="btn-add" onclick="openCheckinCalma()">Dejar señal ♡</button>
+        </div>
+      </div>
+
+      <div class="calma-checkins">
+        <h3>Señales de cuidado</h3>
+        ${
+          checkins.length
+            ? checkins.map(ch => `
+              <div class="calma-checkin-item">
+                <div class="calma-checkin-date">${formatDate(ch.creado_en)}</div>
+                <div class="calma-checkin-text">${esc(ch.mensaje)}</div>
+              </div>
+            `).join('')
+            : `<div class="calma-empty-small">Aún no hay señales. Una frase corta basta.</div>`
+        }
+      </div>
+    `;
+  } catch {
+    box.innerHTML = '<div style="color:var(--danger);padding:20px;">Error al cargar Modo calma.</div>';
+  }
+}
+
+function openCheckinCalma() {
+  if (!calmaActual) {
+    toast('No hay Modo calma activo.');
+    return;
+  }
+
+  $('checkin-calma-mensaje').value = '';
+  $('modal-checkin-calma').classList.add('open');
+}
+
+async function guardarCheckinCalma() {
+  if (!state.currentUser || !state.currentUser.id) {
+    toast('Primero inicia sesión.');
+    return;
+  }
+
+  if (!calmaActual) {
+    toast('No hay Modo calma activo.');
+    return;
+  }
+
+  const mensaje = $('checkin-calma-mensaje').value.trim();
+
+  if (!mensaje) {
+    toast('Escribe una señal corta.');
+    return;
+  }
+
+  try {
+    const data = await api('POST', `/api/calma/${calmaActual.id}/checkin`, {
+      usuario_id: state.currentUser.id,
+      mensaje
+    });
+
+    if (data.error) {
+      toast(data.error);
+      return;
+    }
+
+    closeModal('modal-checkin-calma');
+    toast('Señal guardada ♡');
+    loadCalma();
+  } catch {
+    toast('Error al guardar la señal.');
+  }
+}
+
+async function cerrarModoCalma(id) {
+  if (!confirm('¿Cerrar Modo calma?')) return;
+
+  try {
+    await api('PUT', `/api/calma/${id}/cerrar`);
+    toast('Modo calma cerrado.');
+    loadCalma();
+  } catch {
+    toast('Error al cerrar Modo calma.');
+  }
+}
+
+/* Refuerzo para que el menú cargue Modo calma */
+document.addEventListener('click', function(e) {
+  const btn = e.target.closest('.nav-item');
+  if (!btn) return;
+
+  if (btn.textContent.includes('Modo calma')) {
+    setTimeout(() => {
+      if (typeof loadCalma === 'function') loadCalma();
+    }, 100);
+  }
+});
+
+window.loadCalma = loadCalma;
