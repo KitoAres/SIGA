@@ -45,7 +45,7 @@ function sumarDias(fecha, dias) {
 // GET /api/calma/activa
 router.get('/activa', async (req, res) => {
   try {
-    const [rows] = await pool.query(
+    const result = await pool.query(
       `SELECT 
           mc.*,
           u.nombre,
@@ -54,31 +54,30 @@ router.get('/activa', async (req, res) => {
           COALESCE(u.color_perfil, '#22d3ee') AS color_perfil
        FROM modo_calma mc
        JOIN usuarios u ON u.id = mc.usuario_id
-       WHERE mc.activo = 1
+       WHERE mc.activo = true
        ORDER BY mc.creado_en DESC
        LIMIT 1`
     );
 
-    if (!rows.length) {
+    if (!result.rows.length) {
       return res.json({ activa: false });
     }
 
-    const calma = rows[0];
+    const calma = result.rows[0];
 
     const hoy = new Date();
     const fechaFin = new Date(fechaSQL(calma.fecha_fin) + 'T23:59:59');
 
-    // Si el Modo calma ya terminó, lo cerramos automático
     if (!isNaN(fechaFin.getTime()) && fechaFin < hoy) {
       await pool.query(
-        'UPDATE modo_calma SET activo = 0 WHERE id = ?',
+        'UPDATE modo_calma SET activo = false WHERE id = $1',
         [calma.id]
       );
 
       return res.json({ activa: false });
     }
 
-    const [checkins] = await pool.query(
+    const checkinsResult = await pool.query(
       `SELECT 
           mcc.*,
           u.nombre,
@@ -87,11 +86,12 @@ router.get('/activa', async (req, res) => {
           COALESCE(u.color_perfil, '#22d3ee') AS color_perfil
        FROM modo_calma_checkins mcc
        JOIN usuarios u ON u.id = mcc.usuario_id
-       WHERE mcc.calma_id = ?
+       WHERE mcc.calma_id = $1
        ORDER BY mcc.creado_en DESC`,
       [calma.id]
     );
 
+    const checkins = checkinsResult.rows;
     const ultimoCheckin = checkins.length ? checkins[0] : null;
 
     let baseFecha = calma.fecha_inicio;
@@ -120,16 +120,16 @@ router.get('/activa', async (req, res) => {
 
 // POST /api/calma
 router.post('/', async (req, res) => {
-const {
-  usuario_id,
-  fecha_inicio,
-  fecha_fin,
-  estado_animo,
-  mensaje,
-  contacto_permitido,
-  evitar,
-  energia
-} = req.body;
+  const {
+    usuario_id,
+    fecha_inicio,
+    fecha_fin,
+    estado_animo,
+    mensaje,
+    contacto_permitido,
+    evitar,
+    energia
+  } = req.body;
 
   if (!usuario_id || !fecha_inicio || !fecha_fin) {
     return res.status(400).json({
@@ -158,31 +158,30 @@ const {
   }
 
   try {
-    // Solo permitimos un Modo calma activo a la vez
     await pool.query(
-      'UPDATE modo_calma SET activo = 0 WHERE activo = 1'
+      'UPDATE modo_calma SET activo = false WHERE activo = true'
     );
 
-const [result] = await pool.query(
-  `INSERT INTO modo_calma
-   (usuario_id, fecha_inicio, fecha_fin, estado_animo, mensaje, contacto_permitido, evitar, energia, activo)
-   VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)`,
-  [
-    usuario_id,
-    fechaSQL(fecha_inicio),
-    fechaSQL(fecha_fin),
-    estado_animo || 'necesito calma',
-    mensaje || null,
-    contacto_permitido || 'Señales cortas en la app',
-    evitar || 'Preguntas largas o presión',
-    energia || '40% - Puedo leer, responder poquito'
-  ]
-);
-    
+    const result = await pool.query(
+      `INSERT INTO modo_calma
+       (usuario_id, fecha_inicio, fecha_fin, estado_animo, mensaje, contacto_permitido, evitar, energia, activo)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, true)
+       RETURNING id`,
+      [
+        usuario_id,
+        fechaSQL(fecha_inicio),
+        fechaSQL(fecha_fin),
+        estado_animo || 'necesito calma',
+        mensaje || null,
+        contacto_permitido || 'Señales cortas en la app',
+        evitar || 'Preguntas largas o presión',
+        energia || '40% - Puedo leer, responder poquito'
+      ]
+    );
 
     res.json({
       ok: true,
-      id: result.insertId,
+      id: result.rows[0].id,
       message: 'Modo calma activado'
     });
 
@@ -205,12 +204,12 @@ router.post('/:id/checkin', async (req, res) => {
   }
 
   try {
-    const [calmas] = await pool.query(
-      'SELECT * FROM modo_calma WHERE id = ? AND activo = 1',
+    const calmasResult = await pool.query(
+      'SELECT * FROM modo_calma WHERE id = $1 AND activo = true',
       [req.params.id]
     );
 
-    if (!calmas.length) {
+    if (!calmasResult.rows.length) {
       return res.status(404).json({
         error: 'Modo calma no encontrado o ya cerrado'
       });
@@ -219,7 +218,7 @@ router.post('/:id/checkin', async (req, res) => {
     await pool.query(
       `INSERT INTO modo_calma_checkins
        (calma_id, usuario_id, mensaje)
-       VALUES (?, ?, ?)`,
+       VALUES ($1, $2, $3)`,
       [
         req.params.id,
         usuario_id,
@@ -251,33 +250,33 @@ router.put('/:id/cerrar', async (req, res) => {
   }
 
   try {
-    const [calmas] = await pool.query(
-      'SELECT * FROM modo_calma WHERE id = ? AND activo = 1',
+    const calmasResult = await pool.query(
+      'SELECT * FROM modo_calma WHERE id = $1 AND activo = true',
       [req.params.id]
     );
 
-    if (!calmas.length) {
+    if (!calmasResult.rows.length) {
       return res.status(404).json({
         error: 'Modo calma no encontrado o ya cerrado'
       });
     }
 
-    const calma = calmas[0];
+    const calma = calmasResult.rows[0];
 
-    const [usuarios] = await pool.query(
-      'SELECT id, rol FROM usuarios WHERE id = ?',
+    const usuariosResult = await pool.query(
+      'SELECT id, rol FROM usuarios WHERE id = $1',
       [usuario_id]
     );
 
-    if (!usuarios.length) {
+    if (!usuariosResult.rows.length) {
       return res.status(404).json({
         error: 'Usuario no encontrado'
       });
     }
 
-    const usuario = usuarios[0];
+    const usuario = usuariosResult.rows[0];
     const esDueno = Number(calma.usuario_id) === Number(usuario_id);
-    const esAdmin = usuario.rol === 'administrador';
+    const esAdmin = usuario.rol === 'admin';
 
     if (!esDueno && !esAdmin) {
       return res.status(403).json({
@@ -286,7 +285,7 @@ router.put('/:id/cerrar', async (req, res) => {
     }
 
     await pool.query(
-      'UPDATE modo_calma SET activo = 0 WHERE id = ?',
+      'UPDATE modo_calma SET activo = false WHERE id = $1',
       [req.params.id]
     );
 
@@ -302,6 +301,7 @@ router.put('/:id/cerrar', async (req, res) => {
     });
   }
 });
+
 // POST /api/calma/:id/carta
 router.post('/:id/carta', async (req, res) => {
   const { usuario_id, titulo, contenido, visible_desde } = req.body;
@@ -313,21 +313,22 @@ router.post('/:id/carta', async (req, res) => {
   }
 
   try {
-    const [calmas] = await pool.query(
-      'SELECT * FROM modo_calma WHERE id = ? AND activo = 1',
+    const calmasResult = await pool.query(
+      'SELECT * FROM modo_calma WHERE id = $1 AND activo = true',
       [req.params.id]
     );
 
-    if (!calmas.length) {
+    if (!calmasResult.rows.length) {
       return res.status(404).json({
         error: 'Modo calma no encontrado o ya cerrado'
       });
     }
 
-    const [result] = await pool.query(
+    const result = await pool.query(
       `INSERT INTO calma_cartas
        (calma_id, usuario_id, titulo, contenido, visible_desde)
-       VALUES (?, ?, ?, ?, ?)`,
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING id`,
       [
         req.params.id,
         usuario_id,
@@ -339,7 +340,7 @@ router.post('/:id/carta', async (req, res) => {
 
     res.json({
       ok: true,
-      id: result.insertId,
+      id: result.rows[0].id,
       message: 'Carta guardada para después'
     });
 
@@ -354,7 +355,7 @@ router.post('/:id/carta', async (req, res) => {
 // GET /api/calma/:id/cartas
 router.get('/:id/cartas', async (req, res) => {
   try {
-    const [cartas] = await pool.query(
+    const cartasResult = await pool.query(
       `SELECT 
           cc.*,
           u.nombre,
@@ -363,12 +364,12 @@ router.get('/:id/cartas', async (req, res) => {
           COALESCE(u.color_perfil, '#22d3ee') AS color_perfil
        FROM calma_cartas cc
        JOIN usuarios u ON u.id = cc.usuario_id
-       WHERE cc.calma_id = ?
+       WHERE cc.calma_id = $1
        ORDER BY cc.creado_en DESC`,
       [req.params.id]
     );
 
-    res.json(cartas);
+    res.json(cartasResult.rows);
 
   } catch (err) {
     console.error('Error GET /api/calma/:id/cartas:', err);
