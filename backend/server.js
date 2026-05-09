@@ -25,7 +25,7 @@ app.use('/api/tiempo', require('./routes/tiempo'));
 app.use('/api/calma', require('./routes/calma'));
 app.use('/api/cajita', require('./routes/cajita'));
 
-// Ruta raíz — siempre sirve index.html desde backend/public
+// Ruta raíz
 app.get('/', (req, res) => {
   res.sendFile(path.join(publicPath, 'index.html'));
 });
@@ -36,6 +36,12 @@ app.get('*', (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`💜 SIGA corriendo en puerto ${PORT}`);
-});
+
+// Solo escuchar puerto cuando corre localmente
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`💜 SIGA corriendo en puerto ${PORT}`);
+  });
+}
+
+module.exports = app;
