@@ -14,7 +14,7 @@ router.post('/login', async (req, res) => {
   }
 
   try {
-    const [rows] = await pool.query(
+    const result = await pool.query(
       `SELECT 
         id, 
         usuario, 
@@ -23,18 +23,18 @@ router.post('/login', async (req, res) => {
         COALESCE(display_name, nombre, usuario) AS display_name,
         COALESCE(color_perfil, '#22d3ee') AS color_perfil
        FROM usuarios 
-       WHERE usuario = ? AND contrasena = ?`,
+       WHERE usuario = $1 AND contrasena = $2`,
       [usuario, contrasena]
     );
 
-    if (rows.length === 0) {
+    if (result.rows.length === 0) {
       return res.status(401).json({ 
         ok: false,
         error: 'Credenciales incorrectas' 
       });
     }
 
-    const u = rows[0];
+    const u = result.rows[0];
 
     res.json({ 
       ok: true, 
@@ -59,7 +59,7 @@ router.post('/login', async (req, res) => {
 // GET /api/auth/perfil/:id
 router.get('/perfil/:id', async (req, res) => {
   try {
-    const [rows] = await pool.query(
+    const result = await pool.query(
       `SELECT 
         id,
         usuario,
@@ -68,11 +68,11 @@ router.get('/perfil/:id', async (req, res) => {
         COALESCE(display_name, nombre, usuario) AS display_name,
         COALESCE(color_perfil, '#22d3ee') AS color_perfil
        FROM usuarios
-       WHERE id = ?`,
+       WHERE id = $1`,
       [req.params.id]
     );
 
-    if (rows.length === 0) {
+    if (result.rows.length === 0) {
       return res.status(404).json({
         ok: false,
         error: 'Usuario no encontrado'
@@ -81,7 +81,7 @@ router.get('/perfil/:id', async (req, res) => {
 
     res.json({
       ok: true,
-      usuario: rows[0]
+      usuario: result.rows[0]
     });
 
   } catch (err) {
@@ -112,19 +112,19 @@ router.put('/perfil/:id', async (req, res) => {
   }
 
   try {
-    const [actualRows] = await pool.query(
-      'SELECT id, contrasena FROM usuarios WHERE id = ?',
+    const actualResult = await pool.query(
+      'SELECT id, contrasena FROM usuarios WHERE id = $1',
       [req.params.id]
     );
 
-    if (actualRows.length === 0) {
+    if (actualResult.rows.length === 0) {
       return res.status(404).json({
         ok: false,
         error: 'Usuario no encontrado'
       });
     }
 
-    const actual = actualRows[0];
+    const actual = actualResult.rows[0];
 
     if (nueva_contrasena && nueva_contrasena.trim() !== '') {
       if (!contrasena_actual || contrasena_actual.trim() === '') {
@@ -142,12 +142,12 @@ router.put('/perfil/:id', async (req, res) => {
       }
     }
 
-    const [duplicado] = await pool.query(
-      'SELECT id FROM usuarios WHERE usuario = ? AND id <> ?',
+    const duplicadoResult = await pool.query(
+      'SELECT id FROM usuarios WHERE usuario = $1 AND id <> $2',
       [usuario.trim(), req.params.id]
     );
 
-    if (duplicado.length > 0) {
+    if (duplicadoResult.rows.length > 0) {
       return res.status(409).json({
         ok: false,
         error: 'Ese usuario ya está en uso'
@@ -157,12 +157,12 @@ router.put('/perfil/:id', async (req, res) => {
     if (nueva_contrasena && nueva_contrasena.trim() !== '') {
       await pool.query(
         `UPDATE usuarios
-         SET usuario = ?,
-             nombre = ?,
-             display_name = ?,
-             color_perfil = ?,
-             contrasena = ?
-         WHERE id = ?`,
+         SET usuario = $1,
+             nombre = $2,
+             display_name = $3,
+             color_perfil = $4,
+             contrasena = $5
+         WHERE id = $6`,
         [
           usuario.trim(),
           nombre.trim(),
@@ -175,11 +175,11 @@ router.put('/perfil/:id', async (req, res) => {
     } else {
       await pool.query(
         `UPDATE usuarios
-         SET usuario = ?,
-             nombre = ?,
-             display_name = ?,
-             color_perfil = ?
-         WHERE id = ?`,
+         SET usuario = $1,
+             nombre = $2,
+             display_name = $3,
+             color_perfil = $4
+         WHERE id = $5`,
         [
           usuario.trim(),
           nombre.trim(),
@@ -190,7 +190,7 @@ router.put('/perfil/:id', async (req, res) => {
       );
     }
 
-    const [rows] = await pool.query(
+    const finalResult = await pool.query(
       `SELECT 
         id,
         usuario,
@@ -199,14 +199,14 @@ router.put('/perfil/:id', async (req, res) => {
         COALESCE(display_name, nombre, usuario) AS display_name,
         COALESCE(color_perfil, '#22d3ee') AS color_perfil
        FROM usuarios
-       WHERE id = ?`,
+       WHERE id = $1`,
       [req.params.id]
     );
 
     res.json({
       ok: true,
       message: 'Perfil actualizado correctamente',
-      usuario: rows[0]
+      usuario: finalResult.rows[0]
     });
 
   } catch (err) {
