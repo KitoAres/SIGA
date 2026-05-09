@@ -4,7 +4,7 @@ const pool = require('../config/db');
 
 router.get('/', async (req, res) => {
   try {
-    const [rows] = await pool.query(`
+    const result = await pool.query(`
       SELECT 
         id,
         titulo,
@@ -16,7 +16,7 @@ router.get('/', async (req, res) => {
       ORDER BY fecha DESC, id DESC
     `);
 
-    res.json(rows);
+    res.json(result.rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -32,10 +32,11 @@ router.post('/', async (req, res) => {
   }
 
   try {
-    const [result] = await pool.query(
+    const result = await pool.query(
       `INSERT INTO cajita 
         (titulo, tipo, descripcion, enlace, fecha) 
-       VALUES (?, ?, ?, ?, ?)`,
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING id`,
       [
         titulo,
         tipo || 'otro',
@@ -46,12 +47,12 @@ router.post('/', async (req, res) => {
     );
 
     res.json({
-      id: result.insertId,
+      id: result.rows[0].id,
       titulo,
-      tipo,
-      descripcion,
+      tipo: tipo || 'otro',
+      descripcion: descripcion || null,
       enlace,
-      fecha
+      fecha: fecha || null
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -70,12 +71,12 @@ router.put('/:id', async (req, res) => {
   try {
     await pool.query(
       `UPDATE cajita
-       SET titulo = ?,
-           tipo = ?,
-           descripcion = ?,
-           enlace = ?,
-           fecha = ?
-       WHERE id = ?`,
+       SET titulo = $1,
+           tipo = $2,
+           descripcion = $3,
+           enlace = $4,
+           fecha = $5
+       WHERE id = $6`,
       [
         titulo,
         tipo || 'otro',
@@ -94,7 +95,7 @@ router.put('/:id', async (req, res) => {
 
 router.delete('/:id', async (req, res) => {
   try {
-    await pool.query('DELETE FROM cajita WHERE id = ?', [req.params.id]);
+    await pool.query('DELETE FROM cajita WHERE id = $1', [req.params.id]);
     res.json({ ok: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
