@@ -4,7 +4,7 @@ const pool = require('../config/db');
 
 router.get('/', async (req, res) => {
   try {
-    const [rows] = await pool.query(`
+    const result = await pool.query(`
       SELECT 
         id,
         titulo,
@@ -13,10 +13,10 @@ router.get('/', async (req, res) => {
         imagen_url,
         enlace_url
       FROM recuerdos 
-      ORDER BY fecha DESC
+      ORDER BY fecha DESC NULLS LAST, id DESC
     `);
 
-    res.json(rows);
+    res.json(result.rows);
   } catch (err) { 
     res.status(500).json({ error: err.message }); 
   }
@@ -26,10 +26,11 @@ router.post('/', async (req, res) => {
   const { titulo, descripcion, fecha, imagen_url, enlace_url } = req.body;
 
   try {
-    const [result] = await pool.query(
+    const result = await pool.query(
       `INSERT INTO recuerdos 
         (titulo, descripcion, fecha, imagen_url, enlace_url) 
-       VALUES (?, ?, ?, ?, ?)`,
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING id`,
       [
         titulo, 
         descripcion, 
@@ -40,12 +41,12 @@ router.post('/', async (req, res) => {
     );
 
     res.json({ 
-      id: result.insertId, 
+      id: result.rows[0].id, 
       titulo, 
       descripcion, 
-      fecha,
-      imagen_url,
-      enlace_url
+      fecha: fecha || null,
+      imagen_url: imagen_url || null,
+      enlace_url: enlace_url || null
     });
   } catch (err) { 
     res.status(500).json({ error: err.message }); 
@@ -59,12 +60,12 @@ router.put('/:id', async (req, res) => {
     await pool.query(
       `UPDATE recuerdos 
        SET 
-        titulo = ?, 
-        descripcion = ?, 
-        fecha = ?,
-        imagen_url = ?,
-        enlace_url = ?
-       WHERE id = ?`,
+        titulo = $1, 
+        descripcion = $2, 
+        fecha = $3,
+        imagen_url = $4,
+        enlace_url = $5
+       WHERE id = $6`,
       [
         titulo, 
         descripcion, 
@@ -83,7 +84,7 @@ router.put('/:id', async (req, res) => {
 
 router.delete('/:id', async (req, res) => {
   try {
-    await pool.query('DELETE FROM recuerdos WHERE id=?', [req.params.id]);
+    await pool.query('DELETE FROM recuerdos WHERE id = $1', [req.params.id]);
     res.json({ ok: true });
   } catch (err) { 
     res.status(500).json({ error: err.message }); 
