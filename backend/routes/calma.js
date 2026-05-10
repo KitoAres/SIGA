@@ -151,9 +151,9 @@ router.post('/', async (req, res) => {
     });
   }
 
-  if (dias > 14) {
+  if (dias > 7) {
     return res.status(400).json({
-      error: 'Modo calma puede durar máximo 14 días'
+      error: 'Modo calma puede durar máximo 7 días'
     });
   }
 
