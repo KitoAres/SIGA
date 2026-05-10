@@ -2534,3 +2534,60 @@ body::after {
   }
 }
 
+/* ======================================================
+   FRASE DEL DÍA
+   ====================================================== */
+
+.frase-dia-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding: 18px 20px;
+  border-radius: 18px;
+  background: rgba(18, 13, 28, 0.90);
+  border: 1px solid rgba(180, 130, 220, 0.18);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 10px 34px rgba(180, 130, 220, 0.06);
+}
+
+.frase-dia-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(180, 130, 220, 0.13);
+  border: 1px solid rgba(180, 130, 220, 0.28);
+  color: var(--accent-purple);
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.frase-dia-label {
+  font-size: 0.76rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  margin-bottom: 4px;
+}
+
+.frase-dia-text {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.25rem;
+  color: var(--text-primary);
+  font-style: italic;
+  line-height: 1.35;
+}
+
+@media (max-width: 768px) {
+  .frase-dia-card {
+    align-items: flex-start;
+  }
+
+  .frase-dia-text {
+    font-size: 1.05rem;
+  }
+}
+
