@@ -273,10 +273,133 @@ async function loadDashboard() {
   } catch {
     // Silencioso si no hay DB aún
   }
-
+cargarFraseDelDia();
   await cargarAvisoMatchDashboard();
 }
+function cargarFraseDelDia() {
+  const el = $('frase-dia-text');
+  if (!el) return;
 
+  const frases = [
+    'Hoy también cuenta como elegirnos con calma.',
+    'No todo tiene que resolverse hoy; a veces basta con seguir aquí.',
+    'Lo bonito también se cuida despacio.',
+    'Un vínculo sano no presiona, acompaña.',
+    'Que hoy haya ternura, incluso en lo pequeño.',
+    'A veces amar también es dar espacio sin soltar la mano.',
+    'No hace falta hacerlo perfecto, solo hacerlo con cariño.',
+    'Hoy puede ser un buen día para cuidar lo nuestro.',
+    'Lo que se construye con calma también puede ser fuerte.',
+    'Estar presente también es una forma de amor.',
+
+    'Un mensaje pequeño también puede abrazar.',
+    'Que lo nuestro tenga paciencia, no prisa.',
+    'A veces el amor se nota en cómo esperamos.',
+    'No estamos compitiendo contra el tiempo, estamos aprendiendo a coincidir.',
+    'Si hoy cuesta hablar, igual podemos cuidarnos bonito.',
+    'No hay que presionar lo que queremos que florezca.',
+    'El cariño también vive en los detalles silenciosos.',
+    'Hoy no hace falta correr; basta con no soltarnos.',
+    'Lo nuestro merece calma, no miedo.',
+    'A veces quedarse también es decir te quiero.',
+
+    'La ternura no siempre hace ruido.',
+    'Hay formas suaves de decir aquí sigo.',
+    'No todo silencio es distancia; a veces es cuidado.',
+    'Que la paciencia sea más fuerte que la ansiedad.',
+    'Hoy podemos elegir hablarnos bonito.',
+    'Amar también es aprender el ritmo del otro.',
+    'No hace falta tener todas las respuestas para cuidar algo real.',
+    'Que hoy nos encuentre menos duros y más humanos.',
+    'El amor bonito no exige perfección.',
+    'A veces un “estoy aquí” vale más que mil explicaciones.',
+
+    'Que lo nuestro no se mida por la prisa, sino por el cuidado.',
+    'Hoy también se puede empezar suave.',
+    'Si algo pesa, que no pese solo.',
+    'Lo que importa también necesita pausas.',
+    'No estamos hechos para adivinar, sino para aprender a hablar.',
+    'Que hoy haya más calma que orgullo.',
+    'A veces cuidar es preguntar menos y acompañar más.',
+    'No todo tiene que doler para ser profundo.',
+    'El cariño se nota en cómo tratamos lo frágil.',
+    'Hoy podemos ser un lugar seguro.',
+
+    'Que el miedo no decida por nosotros.',
+    'A veces amar es respirar antes de responder.',
+    'Lo nuestro puede ir despacio y seguir siendo valioso.',
+    'No necesitamos ganar discusiones, necesitamos entendernos.',
+    'Que la calma nos encuentre antes que la herida.',
+    'Hay días en los que amar es simplemente no irse.',
+    'A veces una pausa también cuida.',
+    'No hace falta forzar cercanía para que exista cariño.',
+    'Que hoy el amor no sea presión, sino refugio.',
+    'Lo sincero también puede ser suave.',
+
+    'Hoy podemos hablarnos como si todavía importara, porque importa.',
+    'A veces el detalle más bonito es tener paciencia.',
+    'Que no nos gane la impulsividad.',
+    'Lo que queremos cuidar merece mejores formas.',
+    'Hoy también podemos elegir la ternura.',
+    'No todo se arregla rápido, pero se puede cuidar mientras tanto.',
+    'Si hay distancia, que no falte respeto.',
+    'Si hay silencio, que no falte cariño.',
+    'Si hay miedo, que no falte honestidad.',
+    'Si hay cansancio, que no falte cuidado.',
+
+    'Que lo bonito no se pierda por no saber hablar.',
+    'A veces el amor empieza por bajar la voz.',
+    'Hoy no necesitamos intensidad, necesitamos calma.',
+    'Lo nuestro no tiene que parecerse a nada más.',
+    'Cada vínculo tiene su propio ritmo.',
+    'Que hoy podamos coincidir aunque sea un poquito.',
+    'A veces un gesto pequeño cambia todo el día.',
+    'No subestimes lo que una palabra suave puede hacer.',
+    'Que el orgullo no ocupe el lugar del cariño.',
+    'Hoy también se puede reparar algo pequeño.',
+
+    'Cuidar no siempre es resolver; a veces es estar.',
+    'A veces lo más bonito es sentirse elegido sin presión.',
+    'Que el día nos trate suave.',
+    'No hace falta estar bien todo el tiempo para merecer cariño.',
+    'Podemos aprender a querernos mejor.',
+    'Lo importante no es no fallar, sino volver con cuidado.',
+    'Que hoy haya menos suposiciones y más claridad.',
+    'A veces preguntar con ternura evita muchas heridas.',
+    'No somos enemigos; solo estamos aprendiendo.',
+    'Que la calma sea nuestro punto de encuentro.',
+
+    'Hoy podemos darnos un poco más de paciencia.',
+    'El amor también necesita descanso.',
+    'A veces cuidar es no insistir de más.',
+    'Que lo nuestro tenga espacio para respirar.',
+    'No todo alejamiento significa olvido.',
+    'A veces el corazón necesita silencio para ordenar lo que siente.',
+    'Que hoy no nos gane la ansiedad.',
+    'Lo bonito también se protege con límites sanos.',
+    'Amar no es invadir; amar también es respetar.',
+    'Que podamos estar cerca sin apurarnos.',
+
+    'Hoy puede bastar con una señal pequeña.',
+    'No hace falta tener un gran día para tener un gesto bonito.',
+    'Que la ternura sea más fuerte que la costumbre.',
+    'A veces lo simple también sostiene.',
+    'Lo nuestro merece palabras que no lastimen.',
+    'Que hoy podamos cuidarnos incluso en lo difícil.',
+    'No todo se dice de golpe; algunas cosas necesitan calma.',
+    'A veces amar es esperar sin castigar.',
+    'Que cada día tenga una forma pequeña de volver.',
+    'Aquí también cabe la calma.'
+  ];
+
+  const hoy = new Date();
+  const inicio = new Date(hoy.getFullYear(), 0, 0);
+  const diferencia = hoy - inicio;
+  const diaDelAno = Math.floor(diferencia / (1000 * 60 * 60 * 24));
+
+  const frase = frases[diaDelAno % frases.length];
+  el.textContent = frase;
+}
 async function cargarAvisoMatchDashboard() {
   const box = $('dashboard-match-alert');
   if (!box) return;
