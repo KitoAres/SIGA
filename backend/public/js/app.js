@@ -294,7 +294,7 @@ async function cargarAvisoMatchDashboard() {
           <div class="dashboard-match-icon">🌙</div>
           <div>
             <div class="dashboard-match-title">Aún no hay match de tiempo</div>
-            <div class="dashboard-match-text">Cuando sus horarios coincidan, aparecerá aquí sin tener que revisar a cada rato.</div>
+            <div class="dashboard-match-text">Cuando sus horarios coincidan, aparecerá aquí.</div>
           </div>
         </div>
       `;
