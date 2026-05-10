@@ -2340,3 +2340,197 @@ body::after {
     padding: 72px 16px 24px !important;
   }
 }
+
+
+/* ======================================================
+   FIX FINALÍSIMO — SIDEBAR IZQUIERDA / CONTENIDO DERECHA
+   ====================================================== */
+
+:root {
+  --sidebar-w: 260px;
+}
+
+html,
+body {
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+  min-height: 100vh !important;
+  overflow-x: hidden !important;
+}
+
+body {
+  background:
+    linear-gradient(rgba(6, 5, 14, 0.88), rgba(6, 5, 14, 0.95)),
+    url("/img/fondo.jpg") !important;
+  background-size: cover !important;
+  background-position: center center !important;
+  background-attachment: fixed !important;
+  background-repeat: no-repeat !important;
+}
+
+body::before,
+body::after {
+  pointer-events: none !important;
+  z-index: 0 !important;
+}
+
+/* App general */
+#app,
+#app.visible {
+  display: block !important;
+  width: 100% !important;
+  min-height: 100vh !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  position: relative !important;
+  overflow-x: hidden !important;
+}
+
+/* Menú izquierdo fijo */
+.sidebar {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: var(--sidebar-w) !important;
+  min-width: var(--sidebar-w) !important;
+  max-width: var(--sidebar-w) !important;
+  height: 100vh !important;
+  z-index: 1000 !important;
+
+  background: rgba(10, 8, 18, 0.97) !important;
+  border-right: 1px solid rgba(180, 130, 220, 0.22) !important;
+  backdrop-filter: blur(12px) !important;
+
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  transform: none !important;
+}
+
+/* Esta es la parte importante:
+   el contenido empieza DESPUÉS del menú */
+.main-content {
+  position: fixed !important;
+  top: 0 !important;
+  left: var(--sidebar-w) !important;
+  right: 0 !important;
+  bottom: 0 !important;
+
+  width: auto !important;
+  height: 100vh !important;
+  min-height: 100vh !important;
+
+  margin: 0 !important;
+  padding: 32px !important;
+
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+
+  background: transparent !important;
+  z-index: 10 !important;
+  transform: none !important;
+}
+
+/* Páginas dentro del contenido derecho */
+.page {
+  position: relative !important;
+  width: 100% !important;
+  min-height: calc(100vh - 64px) !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+
+  transform: none !important;
+  z-index: 11 !important;
+}
+
+.page.active {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.page.active > * {
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* Que nada de las páginas se meta debajo del menú */
+#page-dashboard,
+#page-recuerdos,
+#page-citas,
+#page-playlist,
+#page-razones,
+#page-promesas,
+#page-carta,
+#page-tiempo,
+#page-cajita,
+#page-calma,
+#page-pregunta {
+  max-width: 100% !important;
+}
+
+/* Tarjetas visibles encima del fondo */
+.card,
+.item-card,
+.stat-card,
+.dashboard-match-card,
+.calma-card-activa,
+.modal,
+.disp-item,
+.coincidencia-card,
+.song-item,
+.razon-item,
+.welcome-banner,
+.calma-empty,
+.calma-intro-card,
+.tiempo-login-card,
+.calma-unlocked,
+.calma-cartas {
+  background: rgba(18, 13, 28, 0.92) !important;
+  backdrop-filter: blur(10px) !important;
+  border-color: rgba(255, 255, 255, 0.10) !important;
+}
+
+/* Login */
+#login-screen {
+  background:
+    linear-gradient(rgba(6, 5, 14, 0.86), rgba(6, 5, 14, 0.95)),
+    url("/img/fondo.jpg") !important;
+  background-size: cover !important;
+  background-position: center center !important;
+  background-repeat: no-repeat !important;
+}
+
+/* Móvil */
+@media (max-width: 768px) {
+  .sidebar {
+    transform: translateX(-100%) !important;
+  }
+
+  .sidebar.open {
+    transform: translateX(0) !important;
+  }
+
+  .main-content {
+    position: relative !important;
+    left: 0 !important;
+    right: auto !important;
+    bottom: auto !important;
+
+    width: 100vw !important;
+    height: auto !important;
+    min-height: 100vh !important;
+
+    padding: 72px 16px 24px !important;
+  }
+}
+
