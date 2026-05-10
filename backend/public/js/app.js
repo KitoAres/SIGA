@@ -1733,6 +1733,9 @@ setTimeout(function() {
 
 let calmaActual = null;
 
+const CALMA_MAX_DIAS = 7;
+const VALOR_PERSONALIZADO = '__personalizado__';
+
 function setCalmaMensaje(texto) {
   const el = $('calma-mensaje');
   if (el) el.value = texto;
@@ -1743,6 +1746,80 @@ function setCheckinMensaje(texto) {
   if (el) el.value = texto;
 }
 
+function calcularFechaMaximaCalma(fechaInicio) {
+  const base = fechaInicio ? new Date(fechaInicio + 'T12:00:00') : new Date();
+
+  if (isNaN(base.getTime())) {
+    return '';
+  }
+
+  base.setDate(base.getDate() + CALMA_MAX_DIAS);
+  return base.toISOString().split('T')[0];
+}
+
+function configurarSelectPersonalizado(selectId, inputId, placeholder) {
+  const select = $(selectId);
+  if (!select) return;
+
+  let input = $(inputId);
+
+  const yaExisteOpcion = Array.from(select.options).some(opt => opt.value === VALOR_PERSONALIZADO);
+
+  if (!yaExisteOpcion) {
+    const opt = document.createElement('option');
+    opt.value = VALOR_PERSONALIZADO;
+    opt.textContent = 'Escribir otra opción...';
+    select.appendChild(opt);
+  }
+
+  if (!input) {
+    input = document.createElement('input');
+    input.type = 'text';
+    input.id = inputId;
+    input.placeholder = placeholder;
+    input.className = 'calma-custom-input';
+    input.style.display = 'none';
+    input.style.marginTop = '8px';
+
+    select.insertAdjacentElement('afterend', input);
+  }
+
+  select.onchange = function() {
+    if (select.value === VALOR_PERSONALIZADO) {
+      input.style.display = 'block';
+      input.focus();
+    } else {
+      input.style.display = 'none';
+      input.value = '';
+    }
+  };
+}
+
+function resetSelectPersonalizado(selectId, inputId, valorDefault) {
+  const select = $(selectId);
+  const input = $(inputId);
+
+  if (select) select.value = valorDefault;
+
+  if (input) {
+    input.value = '';
+    input.style.display = 'none';
+  }
+}
+
+function obtenerValorPersonalizado(selectId, inputId, fallback) {
+  const select = $(selectId);
+  const input = $(inputId);
+
+  if (!select) return fallback;
+
+  if (select.value === VALOR_PERSONALIZADO) {
+    return input && input.value.trim() ? input.value.trim() : '';
+  }
+
+  return select.value || fallback;
+}
+
 function openModalCalma() {
   if (!state.currentUser || !state.currentUser.id) {
     toast('Primero inicia sesión.');
@@ -1750,19 +1827,61 @@ function openModalCalma() {
   }
 
   const hoy = new Date().toISOString().split('T')[0];
-  const max = new Date();
-  max.setDate(max.getDate() + 14);
-  const maxFecha = max.toISOString().split('T')[0];
+  const maxFecha = calcularFechaMaximaCalma(hoy);
 
   $('calma-fecha-inicio').value = hoy;
   $('calma-fecha-fin').value = '';
+
   $('calma-fecha-fin').setAttribute('min', hoy);
   $('calma-fecha-fin').setAttribute('max', maxFecha);
-  $('calma-estado').value = 'necesito calma';
+
+  const inicioEl = $('calma-fecha-inicio');
+  if (inicioEl) {
+    inicioEl.onchange = function() {
+      const nuevaInicio = inicioEl.value;
+      const nuevaMax = calcularFechaMaximaCalma(nuevaInicio);
+
+      $('calma-fecha-fin').setAttribute('min', nuevaInicio);
+      $('calma-fecha-fin').setAttribute('max', nuevaMax);
+
+      if ($('calma-fecha-fin').value && $('calma-fecha-fin').value > nuevaMax) {
+        $('calma-fecha-fin').value = '';
+        toast('Modo calma puede durar máximo 1 semana.');
+      }
+    };
+  }
+
+  configurarSelectPersonalizado(
+    'calma-estado',
+    'calma-estado-custom',
+    'Ej: Estoy sensible y necesito espacio'
+  );
+
+  configurarSelectPersonalizado(
+    'calma-contacto',
+    'calma-contacto-custom',
+    'Ej: Solo mensajes cortos por la noche'
+  );
+
+  configurarSelectPersonalizado(
+    'calma-evitar',
+    'calma-evitar-custom',
+    'Ej: Evitar reclamos o preguntas insistentes'
+  );
+
+  configurarSelectPersonalizado(
+    'calma-energia',
+    'calma-energia-custom',
+    'Ej: 20% - Solo puedo leer por ahora'
+  );
+
+  resetSelectPersonalizado('calma-estado', 'calma-estado-custom', 'necesito calma');
+  resetSelectPersonalizado('calma-contacto', 'calma-contacto-custom', 'Señales cortas en la app');
+  resetSelectPersonalizado('calma-evitar', 'calma-evitar-custom', 'Preguntas largas o presión');
+  resetSelectPersonalizado('calma-energia', 'calma-energia-custom', '40% - Puedo leer, responder poquito');
+
   $('calma-mensaje').value = '';
-if ($('calma-contacto')) $('calma-contacto').value = 'Señales cortas en la app';
-if ($('calma-evitar')) $('calma-evitar').value = 'Preguntas largas o presión';
-if ($('calma-energia')) $('calma-energia').value = '40% - Puedo leer, responder poquito';
+
   $('modal-calma').classList.add('open');
 }
 
@@ -1774,14 +1893,55 @@ async function guardarModoCalma() {
 
   const fechaInicio = $('calma-fecha-inicio').value;
   const fechaFin = $('calma-fecha-fin').value;
-  const estado = $('calma-estado').value;
+
+  const estado = obtenerValorPersonalizado(
+    'calma-estado',
+    'calma-estado-custom',
+    'necesito calma'
+  );
+
   const mensaje = $('calma-mensaje').value.trim();
-   const contacto = $('calma-contacto') ? $('calma-contacto').value : 'Señales cortas en la app';
-const evitar = $('calma-evitar') ? $('calma-evitar').value : 'Preguntas largas o presión';
-const energia = $('calma-energia') ? $('calma-energia').value : '40% - Puedo leer, responder poquito';
+
+  const contacto = obtenerValorPersonalizado(
+    'calma-contacto',
+    'calma-contacto-custom',
+    'Señales cortas en la app'
+  );
+
+  const evitar = obtenerValorPersonalizado(
+    'calma-evitar',
+    'calma-evitar-custom',
+    'Preguntas largas o presión'
+  );
+
+  const energia = obtenerValorPersonalizado(
+    'calma-energia',
+    'calma-energia-custom',
+    '40% - Puedo leer, responder poquito'
+  );
 
   if (!fechaInicio || !fechaFin) {
     toast('Elige fecha de inicio y fin.');
+    return;
+  }
+
+  if (!estado) {
+    toast('Escribe cómo estás o elige una opción.');
+    return;
+  }
+
+  if (!contacto) {
+    toast('Escribe qué contacto puedes recibir o elige una opción.');
+    return;
+  }
+
+  if (!evitar) {
+    toast('Escribe qué quieres evitar o elige una opción.');
+    return;
+  }
+
+  if (!energia) {
+    toast('Escribe tu nivel de energía o elige una opción.');
     return;
   }
 
@@ -1794,22 +1954,22 @@ const energia = $('calma-energia') ? $('calma-energia').value : '40% - Puedo lee
     return;
   }
 
-  if (diffDias > 14) {
-    toast('Máximo 14 días de Modo calma.');
+  if (diffDias > CALMA_MAX_DIAS) {
+    toast('Modo calma puede durar máximo 1 semana.');
     return;
   }
 
   try {
-const data = await api('POST', '/api/calma', {
-  usuario_id: state.currentUser.id,
-  fecha_inicio: fechaInicio,
-  fecha_fin: fechaFin,
-  estado_animo: estado,
-  mensaje,
-  contacto_permitido: contacto,
-  evitar,
-  energia
-});
+    const data = await api('POST', '/api/calma', {
+      usuario_id: state.currentUser.id,
+      fecha_inicio: fechaInicio,
+      fecha_fin: fechaFin,
+      estado_animo: estado,
+      mensaje,
+      contacto_permitido: contacto,
+      evitar,
+      energia
+    });
 
     if (data.error) {
       toast(data.error);
