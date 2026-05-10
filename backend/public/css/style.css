@@ -34,7 +34,13 @@ html { font-size: 16px; scroll-behavior: smooth; }
 
 body {
   font-family: 'DM Sans', sans-serif;
-  background: var(--bg-deep);
+  background:
+    linear-gradient(rgba(8, 6, 18, 0.82), rgba(8, 6, 18, 0.92)),
+    url("/img/fondo.jpg");
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  background-repeat: no-repeat;
   color: var(--text-primary);
   min-height: 100vh;
   overflow-x: hidden;
@@ -60,7 +66,12 @@ body::before {
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  background: var(--bg-deep);
+  background:
+    linear-gradient(rgba(8, 6, 18, 0.82), rgba(8, 6, 18, 0.92)),
+    url("/img/fondo.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   animation: fadeIn 0.6s ease;
 }
 
@@ -2654,4 +2665,31 @@ body {
 }
 .item-desc {
   white-space: pre-line;
+}
+
+/* ======================================================
+   FONDO ELEGANTE / EFECTO VIDRIO
+   ====================================================== */
+
+.sidebar,
+.card,
+.item-card,
+.stat-card,
+.dashboard-match-card,
+.calma-card-activa,
+.modal,
+.disp-item,
+.coincidencia-card,
+.song-item,
+.razon-item,
+.welcome-banner,
+.calma-empty,
+.calma-intro-card {
+  background: rgba(18, 13, 28, 0.74) !important;
+  backdrop-filter: blur(12px);
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.main-content {
+  background: transparent !important;
 }
