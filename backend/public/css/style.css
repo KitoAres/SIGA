@@ -2591,3 +2591,121 @@ body::after {
   }
 }
 
+/* ============================================================
+   SIGA — estilos extra para Eventos y preguntas
+   Pegar al FINAL de public/css/style.css
+   ============================================================ */
+
+.eventos-hero-card,
+.eventos-random-card {
+  background: linear-gradient(135deg, rgba(180,130,220,0.12), rgba(232,120,154,0.08));
+  border: 1px solid rgba(180,130,220,0.22);
+  border-radius: var(--radius);
+  padding: 22px 24px;
+  margin-bottom: 18px;
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.eventos-hero-icon,
+.evento-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  background: rgba(180,130,220,0.14);
+  border: 1px solid rgba(180,130,220,0.22);
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.evento-icon.grande {
+  width: 54px;
+  height: 54px;
+  font-size: 1.5rem;
+}
+
+.eventos-hero-card h3,
+.eventos-random-card h3 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.35rem;
+  font-weight: 400;
+  margin-bottom: 4px;
+}
+
+.eventos-hero-card p,
+.eventos-random-card p {
+  color: var(--text-secondary);
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+
+.eventos-random-empty {
+  color: var(--text-muted);
+  font-size: 0.92rem;
+  width: 100%;
+  text-align: center;
+  padding: 10px;
+}
+
+.eventos-random-content {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.eventos-random-label {
+  color: var(--accent-pink);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  margin-bottom: 4px;
+}
+
+.eventos-toolbar {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) 170px 170px;
+  gap: 10px;
+  margin: 18px 0;
+}
+
+.eventos-toolbar input,
+.eventos-toolbar select {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  padding: 11px 12px;
+  font-family: 'DM Sans', sans-serif;
+  outline: none;
+}
+
+.eventos-toolbar input:focus,
+.eventos-toolbar select:focus {
+  border-color: var(--accent-purple);
+}
+
+.evento-card-top {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.evento-desc {
+  white-space: pre-wrap;
+}
+
+@media (max-width: 760px) {
+  .eventos-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .eventos-hero-card,
+  .eventos-random-content {
+    flex-direction: column;
+  }
+}
