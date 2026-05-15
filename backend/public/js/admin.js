@@ -37,3 +37,210 @@
   window.cargarPanelAdmin=cargarPanelAdmin;window.abrirDetalleAdmin=abrirDetalleAdmin;window.cerrarDetalleAdmin=cerrarDetalleAdmin;window.eliminarPuntoAdmin=eliminarPuntoAdmin;
   document.addEventListener('DOMContentLoaded',asegurarUI);setTimeout(asegurarUI,500);setTimeout(asegurarUI,1500);
 })();
+// ======================================================
+// FIX GLOBAL PANEL ADMIN — SIGA
+// Hace disponible loadAdminPanel y pinta los datos
+// ======================================================
+window.loadAdminPanel = async function loadAdminPanel() {
+  const user = JSON.parse(sessionStorage.getItem('siga_user') || 'null');
+
+  const warning = document.getElementById('admin-private-warning');
+  const content = document.getElementById('admin-panel-content');
+
+  if (!user || user.rol !== 'admin') {
+    if (warning) warning.style.display = 'block';
+    if (content) content.style.display = 'none';
+    return;
+  }
+
+  if (warning) warning.style.display = 'none';
+  if (content) content.style.display = 'block';
+
+  try {
+    const res = await fetch(`/api/admin/resumen?usuario_id=${user.id}&x=${Date.now()}`);
+    const data = await res.json();
+
+    if (!data.ok) {
+      console.error(data);
+      alert(data.error || 'Error al cargar panel admin');
+      return;
+    }
+
+    const puntos = data.puntos || {};
+    const accesos = data.accesos || {};
+    const misiones = data.misiones || {};
+    const calma = data.calma || {};
+    const citas = data.citas || {};
+
+    // Tarjetas superiores
+    setText('admin-puntos-total', `${puntos?.resumen?.puntos ?? 0} pts`);
+    setText(
+      'admin-puntos-detalle',
+      `${puntos?.resumen?.registros ?? 0} registros · hoy ${puntos?.resumen?.hoy ?? 0}`
+    );
+
+    setText('admin-misiones-total', misiones?.resumen?.total ?? 0);
+    setText('admin-misiones-puntos', `${misiones?.resumen?.puntos ?? 0} pts acumulados`);
+
+    setText('admin-calma-total', calma?.resumen?.total ?? 0);
+    setText('admin-calma-dias', `${calma?.resumen?.dias_programados ?? 0} días programados`);
+
+    setText('admin-citas-total', citas?.resumen?.total ?? 0);
+    setText(
+      'admin-citas-detalle',
+      `${citas?.resumen?.pendientes ?? 0} pendientes · ${citas?.resumen?.cumplidas ?? 0} cumplidas`
+    );
+
+    setText('admin-accesos-total', accesos?.resumen?.total ?? 0);
+    setText(
+      'admin-accesos-detalle',
+      `${accesos?.resumen?.hoy ?? 0} hoy · ${accesos?.resumen?.ultimos_30 ?? 0} últimos 30 días`
+    );
+
+    // Listas
+    renderLista(
+      'admin-misiones-recientes',
+      misiones?.recientes || [],
+      item => `
+        <div class="admin-mini-row">
+          <div>
+            <strong>${esc(item.titulo || 'Misión')}</strong>
+            <small>${esc(item.usuario_nombre || 'Sin usuario')} · ${esc(item.nivel || '')} · ${formatFecha(item.creado_en)}</small>
+          </div>
+          <div style="display:flex;gap:6px;align-items:center;">
+            <span>+${item.puntos || 0}</span>
+            <button class="btn btn-sm btn-delete" onclick="eliminarMisionAdmin(${item.id})">Eliminar</button>
+          </div>
+        </div>
+      `
+    );
+
+    renderLista(
+      'admin-accesos-lista',
+      accesos?.recientes || [],
+      item => `
+        <div class="admin-mini-row">
+          <div>
+            <strong>${esc(item.usuario_nombre || item.nombre_visible || item.usuario || 'Usuario')}</strong>
+            <small>${esc(item.rol || '')} · ${formatFecha(item.creado_en)}</small>
+          </div>
+          <span>${esc(item.ip || '')}</span>
+        </div>
+      `
+    );
+
+    renderLista(
+      'admin-usuarios-actividad',
+      accesos?.por_usuario || [],
+      item => `
+        <div class="admin-mini-row">
+          <div>
+            <strong>${esc(item.usuario_nombre || 'Usuario')}</strong>
+            <small>Último acceso: ${formatFecha(item.ultimo)}</small>
+          </div>
+          <span>${item.total || 0} accesos</span>
+        </div>
+      `
+    );
+
+    const calmaHtml = `
+      <div class="admin-mini-row">
+        <div>
+          <strong>Modo calma</strong>
+          <small>${calma?.resumen?.activas ?? 0} activas · ${calma?.resumen?.dias_programados ?? 0} días programados</small>
+        </div>
+        <span>${calma?.resumen?.total ?? 0}</span>
+      </div>
+      <div class="admin-mini-row">
+        <div>
+          <strong>Planes / citas</strong>
+          <small>${citas?.resumen?.pendientes ?? 0} pendientes · ${citas?.resumen?.cumplidas ?? 0} cumplidas</small>
+        </div>
+        <span>${citas?.resumen?.total ?? 0}</span>
+      </div>
+    `;
+
+    const calmaBox = document.getElementById('admin-calma-citas-lista');
+    if (calmaBox) calmaBox.innerHTML = calmaHtml;
+
+  } catch (err) {
+    console.error('Error cargando panel admin:', err);
+    alert('Error cargando panel admin. Revisa consola.');
+  }
+};
+
+window.eliminarMisionAdmin = async function eliminarMisionAdmin(id) {
+  const user = JSON.parse(sessionStorage.getItem('siga_user') || 'null');
+  if (!user || user.rol !== 'admin') return alert('Solo admin.');
+
+  if (!confirm('¿Eliminar esta misión cumplida? Esto quitará sus puntos.')) return;
+
+  try {
+    const res = await fetch(`/api/admin/misiones-completadas/${id}?usuario_id=${user.id}`, {
+      method: 'DELETE'
+    });
+
+    const data = await res.json();
+
+    if (!data.ok) {
+      alert(data.error || 'No se pudo eliminar.');
+      return;
+    }
+
+    alert('Misión eliminada.');
+    window.loadAdminPanel();
+
+    if (typeof cargarProgresoMisiones === 'function') {
+      cargarProgresoMisiones();
+    }
+  } catch (err) {
+    console.error(err);
+    alert('Error al eliminar misión.');
+  }
+};
+
+function setText(id, value) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = value;
+}
+
+function renderLista(id, lista, template) {
+  const el = document.getElementById(id);
+  if (!el) return;
+
+  if (!Array.isArray(lista) || lista.length === 0) {
+    el.innerHTML = `<div class="admin-empty">Sin registros todavía.</div>`;
+    return;
+  }
+
+  el.innerHTML = lista.map(template).join('');
+}
+
+function esc(value) {
+  return String(value ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
+}
+
+function formatFecha(value) {
+  if (!value) return '—';
+  try {
+    return new Date(value).toLocaleString('es-BO', {
+      dateStyle: 'short',
+      timeStyle: 'short'
+    });
+  } catch {
+    return value;
+  }
+}
+
+// Cargar automáticamente si ya están en el panel admin
+setTimeout(() => {
+  const pageAdmin = document.getElementById('page-admin');
+  if (pageAdmin && pageAdmin.classList.contains('active')) {
+    window.loadAdminPanel();
+  }
+}, 500);
