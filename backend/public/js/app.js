@@ -2522,3 +2522,39 @@ function editarRecuerdoSeguro(id) {
   cargarScript('/js/puntos.js','siga-puntos-js');
   cargarScript('/js/admin.js','siga-admin-js');
 })();
+
+// ======================================================
+// FIX PANEL ADMIN VISIBLE SOLO PARA ADMIN
+// ======================================================
+(function () {
+  function mostrarPanelAdminSiCorresponde() {
+    try {
+      const user = JSON.parse(sessionStorage.getItem('siga_user') || 'null');
+      const navAdmin = document.getElementById('nav-admin-panel');
+
+      if (!navAdmin) return;
+
+      if (user && user.rol === 'admin') {
+        navAdmin.style.display = 'flex';
+      } else {
+        navAdmin.style.display = 'none';
+      }
+    } catch (err) {
+      console.warn('No se pudo validar panel admin:', err);
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', mostrarPanelAdminSiCorresponde);
+
+  const viejoDoLoginAdminFix = window.doLogin;
+  window.doLogin = async function () {
+    if (typeof viejoDoLoginAdminFix === 'function') {
+      await viejoDoLoginAdminFix();
+    }
+
+    setTimeout(mostrarPanelAdminSiCorresponde, 300);
+  };
+
+  window.mostrarPanelAdminSiCorresponde = mostrarPanelAdminSiCorresponde;
+})();
+
