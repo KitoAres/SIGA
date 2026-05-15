@@ -1,8 +1,3 @@
-/* ============================================================
-   SIGA — routes/eventos.js
-   Módulo: Misiones de conexión + gamificación
-   Reemplaza: backend/routes/eventos.js
-   ============================================================ */
 
 const express = require('express');
 const router = express.Router();
