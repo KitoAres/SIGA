@@ -1,240 +1,39 @@
-/* ============================================================
-   SIGA — admin.js
-   Módulo: Panel admin separado
-   Crear en: backend/public/js/admin.js
-   ============================================================ */
-
-'use strict';
-
-function adminEsAdmin() {
-  return typeof state !== 'undefined' && state.currentUser && state.currentUser.rol === 'admin';
-}
-
-function adminUserId() {
-  return (typeof state !== 'undefined' && state.currentUser && state.currentUser.id) ? state.currentUser.id : null;
-}
-
-function adminEsc(v) {
-  return String(v ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-}
-
-function adminFecha(valor) {
-  if (!valor) return '—';
-  const d = new Date(valor);
-  if (isNaN(d.getTime())) return String(valor).substring(0, 16);
-  return d.toLocaleString('es-BO', {
-    year: 'numeric', month: 'short', day: 'numeric',
-    hour: '2-digit', minute: '2-digit'
-  });
-}
-
-function adminNivelLabel(nivel) {
-  return { facil: 'Fácil', medio: 'Media', dificil: 'Difícil', hardcore: 'Legendaria' }[nivel] || nivel || '—';
-}
-
-function adminMiniRow({ icon = '•', title = '', meta = '', action = '' }) {
-  return `
-    <div class="admin-mini-row">
-      <div class="admin-mini-icon">${icon}</div>
-      <div class="admin-mini-content">
-        <div class="admin-mini-title">${title}</div>
-        <div class="admin-mini-meta">${meta}</div>
-      </div>
-      ${action ? `<div class="admin-mini-action">${action}</div>` : ''}
-    </div>
-  `;
-}
-
-function adminSetText(id, text) {
-  const el = document.getElementById(id);
-  if (el) el.textContent = text;
-}
-
-function adminMostrarNav() {
-  const nav = document.getElementById('nav-admin-panel');
-  if (nav) nav.style.display = adminEsAdmin() ? 'flex' : 'none';
-}
-
-async function loadAdminPanel() {
-  adminMostrarNav();
-
-  const warning = document.getElementById('admin-private-warning');
-  const content = document.getElementById('admin-panel-content');
-
-  if (!warning || !content) return;
-
-  if (!adminEsAdmin()) {
-    warning.style.display = 'block';
-    content.style.display = 'none';
-    return;
+/* SIGA — admin.js: panel admin separado con detalles clicables */
+(function(){
+  function qs(id){return document.getElementById(id)}
+  function esc(v){return String(v??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;')}
+  function user(){if(typeof state!=='undefined'&&state.currentUser)return state.currentUser;try{return JSON.parse(sessionStorage.getItem('siga_user'))}catch{return null}}
+  function isAdmin(){const u=user();return !!(u&&u.rol==='admin')}
+  function fmt(v){if(!v)return '—';const d=new Date(v);return isNaN(d.getTime())?String(v).slice(0,16):d.toLocaleString('es-BO',{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}
+  function label(f){return {todos:'Todos los puntos',misiones:'Misiones',coincidencias:'Coincidencias',planes:'Planes',recuerdos:'Recuerdos',playlist:'Playlist',razones:'Razones',promesas:'Promesas',cajita:'Cajita',calma:'Modo calma',accesos:'Accesos'}[f]||f}
+  function icon(f){return {todos:'🏆',misiones:'🎯',coincidencias:'🕐',planes:'📅',recuerdos:'🌸',playlist:'🎵',razones:'💜',promesas:'🤍',cajita:'🎁',calma:'🌙',accesos:'👤'}[f]||'✨'}
+  function mini(i,t,m,a=''){return `<div class="admin-mini-row"><div class="admin-mini-icon">${i}</div><div class="admin-mini-content"><div class="admin-mini-title">${t}</div><div class="admin-mini-meta">${m}</div></div>${a?`<div class="admin-mini-action">${a}</div>`:''}</div>`}
+  function card(f,total,puntos){return `<button class="admin-source-card" onclick="abrirDetalleAdmin('${esc(f)}')"><div class="admin-source-icon">${icon(f)}</div><div><div class="admin-source-title">${label(f)}</div><div class="admin-source-meta">${Number(total||0)} registro(s)</div></div><strong>${Number(puntos||0)} pts</strong></button>`}
+  function asegurarUI(){
+    if(!isAdmin())return;
+    const nav=document.querySelector('.sidebar-nav');
+    if(nav&&!qs('nav-admin-panel')){const b=document.createElement('button');b.className='nav-item';b.id='nav-admin-panel';b.innerHTML='<span class="nav-icon">📊</span> Panel admin';b.onclick=()=>{if(typeof navigateTo==='function')navigateTo('admin');setTimeout(cargarPanelAdmin,60)};const d=nav.querySelector('.nav-divider');d?nav.insertBefore(b,d):nav.appendChild(b)}
+    const main=document.querySelector('.main-content');
+    if(main&&!qs('page-admin')){const s=document.createElement('section');s.className='page';s.id='page-admin';s.innerHTML=`<div class="page-header"><div><h1 class="page-title">Panel <span>admin</span></h1><p class="page-subtitle">Estadísticas, actividad y puntos de conexión. Solo admin.</p></div><button class="btn" onclick="cargarPanelAdmin()">Actualizar</button></div><div class="admin-shell"><div class="admin-hero"><div class="admin-hero-icon">📊</div><div><h3 id="admin-nivel-titulo">Cargando nivel...</h3><p id="admin-nivel-sub">Reuniendo puntos de conexión.</p><div class="admin-progress-wrap"><div id="admin-progress-bar" class="admin-progress-bar" style="width:0%"></div></div></div></div><div id="admin-resumen-grid" class="admin-source-grid"></div><div class="admin-two-cols"><div class="admin-box"><div class="admin-box-title">Puntos recientes</div><div id="admin-puntos-recientes" class="admin-list-mini">Cargando...</div></div><div class="admin-box"><div class="admin-box-title">Accesos recientes <span class="admin-muted">(sin admin)</span></div><div id="admin-accesos-recientes" class="admin-list-mini">Cargando...</div></div></div><div class="admin-box"><div class="admin-box-title">Actividad por usuario <span class="admin-muted">(sin admin)</span></div><div id="admin-actividad-usuarios" class="admin-list-mini">Cargando...</div></div></div>`;main.appendChild(s)}
   }
-
-  warning.style.display = 'none';
-  content.style.display = 'block';
-
-  const uid = adminUserId();
-  if (!uid) return;
-
-  try {
-    const data = await api('GET', `/api/admin/resumen?usuario_id=${uid}&x=${Date.now()}`);
-
-    if (!data || data.error) {
-      const box = document.getElementById('admin-misiones-recientes');
-      if (box) box.innerHTML = `<div class="admin-empty">${adminEsc(data?.error || 'No se pudo cargar el panel admin.')}</div>`;
-      return;
-    }
-
-    const misiones = data.misiones || {};
-    const calma = data.calma || {};
-    const citas = data.citas || {};
-    const accesos = data.accesos || {};
-    const progreso = data.progreso || {};
-
-    const mr = misiones.resumen || {};
-    const cr = calma.resumen || {};
-    const pr = citas.resumen || {};
-    const ar = accesos.resumen || {};
-    const nivel = progreso.nivel || {};
-
-    adminSetText('admin-puntos-total', `${progreso.puntos ?? 0}`);
-    adminSetText('admin-puntos-detalle', `${nivel.emoji || '🏆'} Nivel ${nivel.nivel || 1} · ${nivel.nombre || 'Primeros destellos'}`);
-
-    adminSetText('admin-misiones-total', mr.total ?? 0);
-    adminSetText('admin-misiones-puntos', `${mr.puntos ?? 0} pts · ${mr.ultimos_7 ?? 0} en 7 días`);
-
-    adminSetText('admin-calma-total', cr.total ?? 0);
-    adminSetText('admin-calma-dias', `${cr.dias_programados ?? 0} días programados · ${cr.activas ?? 0} activo(s)`);
-
-    adminSetText('admin-citas-total', pr.total ?? 0);
-    adminSetText('admin-citas-detalle', `${pr.pendientes ?? 0} pendientes · ${pr.cumplidas ?? 0} cumplidas · ${pr.proximas ?? 0} próximas`);
-
-    adminSetText('admin-accesos-total', ar.ultimos_30 ?? 0);
-    adminSetText('admin-accesos-detalle', `${ar.hoy ?? 0} hoy · último ${adminFecha(ar.ultimo)}`);
-
-    const recientesEl = document.getElementById('admin-misiones-recientes');
-    if (recientesEl) {
-      const recientes = misiones.recientes || [];
-      recientesEl.innerHTML = recientes.length ? recientes.map(m => adminMiniRow({
-        icon: '🏁',
-        title: `${adminEsc(m.titulo)} <span class="admin-chip">+${m.puntos} pts</span>`,
-        meta: `${adminEsc(m.usuario_nombre || 'Sin usuario')} · ${adminNivelLabel(m.nivel)} · ${adminFecha(m.creado_en)}`,
-        action: `<button class="btn-admin-danger" onclick="adminEliminarMision(${m.id})">Eliminar</button>`
-      })).join('') : '<div class="admin-empty">Aún no hay misiones completadas.</div>';
-    }
-
-    const accesosEl = document.getElementById('admin-accesos-lista');
-    if (accesosEl) {
-      const recientes = accesos.recientes || [];
-      accesosEl.innerHTML = recientes.length ? recientes.map(a => adminMiniRow({
-        icon: '👤',
-        title: adminEsc(a.usuario_nombre || a.nombre_visible || a.usuario || 'Usuario'),
-        meta: `${adminEsc(a.rol || '—')} · ${adminFecha(a.creado_en)}${a.ip ? ' · IP ' + adminEsc(a.ip) : ''}`
-      })).join('') : '<div class="admin-empty">Aún no hay accesos registrados. Haz logout/login para empezar a guardar entradas.</div>';
-    }
-
-    const usuariosEl = document.getElementById('admin-usuarios-actividad');
-    if (usuariosEl) {
-      const porUsuario = misiones.por_usuario || [];
-      const accesosUsuario = accesos.por_usuario || [];
-      const bloqueMisiones = porUsuario.length ? porUsuario.map(u => adminMiniRow({
-        icon: '🎯',
-        title: adminEsc(u.usuario_nombre || 'Sin usuario'),
-        meta: `${u.total || 0} misiones · ${u.puntos || 0} pts · última ${adminFecha(u.ultima)}`
-      })).join('') : '<div class="admin-empty">Sin misiones por usuario.</div>';
-
-      const bloqueAccesos = accesosUsuario.length ? `
-        <div class="admin-subtitle">Accesos últimos 30 días</div>
-        ${accesosUsuario.map(u => adminMiniRow({
-          icon: '🟢',
-          title: adminEsc(u.usuario_nombre || 'Sin usuario'),
-          meta: `${u.total || 0} acceso(s) · último ${adminFecha(u.ultimo)}`
-        })).join('')}
-      ` : '';
-
-      usuariosEl.innerHTML = bloqueMisiones + bloqueAccesos;
-    }
-
-    const calmaCitasEl = document.getElementById('admin-calma-citas-lista');
-    if (calmaCitasEl) {
-      const calmaUsuarios = calma.por_usuario || [];
-      const promedio = pr.promedio_dias_entre_planes;
-      const top = `
-        ${adminMiniRow({ icon: '📅', title: 'Frecuencia de planes', meta: promedio ? `aprox. cada ${promedio} día(s) entre planes registrados` : 'aún no hay suficientes fechas para calcular frecuencia' })}
-        ${adminMiniRow({ icon: '🗓️', title: 'Última fecha registrada', meta: adminFecha(pr.ultima_fecha) })}
-      `;
-      const calmaHtml = calmaUsuarios.length ? `
-        <div class="admin-subtitle">Modo calma por usuario</div>
-        ${calmaUsuarios.map(c => adminMiniRow({
-          icon: '🌙',
-          title: adminEsc(c.usuario_nombre || 'Sin usuario'),
-          meta: `${c.total || 0} activación(es) · ${c.dias || 0} día(s) · última ${adminFecha(c.ultima)}`
-        })).join('')}
-      ` : '<div class="admin-empty">Sin registros de modo calma por usuario.</div>';
-      calmaCitasEl.innerHTML = top + calmaHtml;
-    }
-  } catch (err) {
-    console.error(err);
-    const box = document.getElementById('admin-misiones-recientes');
-    if (box) box.innerHTML = '<div class="admin-empty">Error al cargar el panel admin.</div>';
+  async function cargarPanelAdmin(){
+    asegurarUI(); if(!isAdmin()||!qs('page-admin'))return; const u=user();
+    try{const r=await fetch('/api/admin/resumen?usuario_id='+encodeURIComponent(u.id)+'&x='+Date.now());const data=await r.json(); if(!data.ok)return alert(data.error||'No se pudo cargar panel');
+      const n=data.puntos?.nivel||{}, res=data.puntos?.resumen||{}, fuentes=data.puntos?.por_fuente||[];
+      if(qs('admin-nivel-titulo'))qs('admin-nivel-titulo').textContent=`${n.emoji||'🏆'} Nivel ${n.nivel||1} — ${n.nombre||'Primeros destellos'} · ${res.puntos||0} pts`;
+      if(qs('admin-nivel-sub'))qs('admin-nivel-sub').textContent=`${res.registros||0} acciones · ${res.hoy||0} hoy · ${res.ultimos_7||0} en 7 días`;
+      if(qs('admin-progress-bar'))qs('admin-progress-bar').style.width=`${n.progreso||0}%`;
+      if(qs('admin-resumen-grid'))qs('admin-resumen-grid').innerHTML=[card('todos',res.registros,res.puntos),card('accesos',data.accesos?.resumen?.ultimos_30||0,0),...fuentes.map(f=>card(f.fuente,f.total,f.puntos))].join('');
+      if(qs('admin-puntos-recientes')){const it=data.puntos?.recientes||[];qs('admin-puntos-recientes').innerHTML=it.length?it.map(p=>mini(icon(p.fuente),`${esc(p.descripcion||label(p.fuente))} <span class="admin-chip">+${p.puntos}</span>`,`${label(p.fuente)} · ${fmt(p.creado_en)}`,`<button class="btn-admin-danger" onclick="eliminarPuntoAdmin(${p.id})">Eliminar</button>`)).join(''):'<div class="admin-empty">Todavía no hay puntos.</div>'}
+      if(qs('admin-accesos-recientes')){const it=data.accesos?.recientes||[];qs('admin-accesos-recientes').innerHTML=it.length?it.map(a=>mini('👤',esc(a.usuario_nombre||a.usuario||'Usuario'),`${esc(a.rol||'—')} · ${fmt(a.creado_en)}${a.ip?' · IP '+esc(a.ip):''}`)).join(''):'<div class="admin-empty">Sin accesos.</div>'}
+      if(qs('admin-actividad-usuarios')){const it=data.accesos?.por_usuario||[];qs('admin-actividad-usuarios').innerHTML=it.length?it.map(a=>mini('🟢',esc(a.usuario_nombre||'Usuario'),`${a.total||0} acceso(s) en 30 días · último ${fmt(a.ultimo)}`)).join(''):'<div class="admin-empty">Sin actividad.</div>'}
+    }catch(e){console.error(e);alert('Error al cargar panel admin')}
   }
-}
-
-async function adminEliminarMision(id) {
-  if (!adminEsAdmin()) return toast('Solo admin puede eliminar registros.');
-  if (!confirm('¿Eliminar esta misión cumplida? Se restarán esos puntos del progreso.')) return;
-
-  try {
-    const uid = adminUserId();
-    const data = await api('DELETE', `/api/admin/misiones/${id}?usuario_id=${uid}`);
-    if (data && data.error) return toast(data.error);
-    toast('Registro eliminado. Puntos actualizados.');
-    if (typeof cargarProgresoMisiones === 'function') await cargarProgresoMisiones();
-    await loadAdminPanel();
-  } catch (err) {
-    console.error(err);
-    toast('No se pudo eliminar el registro.');
-  }
-}
-
-(function iniciarAdminPanel() {
-  function hookNavigate() {
-    if (typeof window.navigateTo === 'function' && !window.navigateTo.__adminHook) {
-      const anterior = window.navigateTo;
-      const nuevo = function(page) {
-        const r = anterior.apply(this, arguments);
-        setTimeout(() => {
-          adminMostrarNav();
-          if (page === 'admin') loadAdminPanel();
-        }, 50);
-        return r;
-      };
-      nuevo.__adminHook = true;
-      window.navigateTo = nuevo;
-    }
-  }
-
-  document.addEventListener('DOMContentLoaded', () => {
-    adminMostrarNav();
-    hookNavigate();
-    setTimeout(adminMostrarNav, 500);
-    setTimeout(hookNavigate, 700);
-  });
-
-  const viejoLogin = window.doLogin;
-  window.doLogin = async function() {
-    if (typeof viejoLogin === 'function') await viejoLogin.apply(this, arguments);
-    setTimeout(adminMostrarNav, 250);
-  };
-
-  setTimeout(adminMostrarNav, 900);
-  setInterval(adminMostrarNav, 3000);
+  function modal(){if(qs('admin-detalle-modal'))return;const m=document.createElement('div');m.className='modal-overlay';m.id='admin-detalle-modal';m.innerHTML='<div class="modal admin-detalle-modal"><div id="admin-detalle-contenido"></div><div class="modal-actions"><button class="btn-cancel" onclick="cerrarDetalleAdmin()">Cerrar</button></div></div>';m.onclick=e=>{if(e.target===m)cerrarDetalleAdmin()};document.body.appendChild(m)}
+  async function abrirDetalleAdmin(f){modal();const u=user(),m=qs('admin-detalle-modal'),box=qs('admin-detalle-contenido');box.innerHTML='<div style="padding:18px;color:var(--text-muted);">Cargando...</div>';m.classList.add('open');try{const r=await fetch(`/api/admin/detalle/${encodeURIComponent(f)}?usuario_id=${encodeURIComponent(u.id)}&x=${Date.now()}`);const data=await r.json();const items=data.items||[];box.innerHTML=`<div class="admin-detalle-header"><div class="admin-source-icon grande">${icon(f)}</div><div><div class="admin-kicker">Detalle</div><h2>${label(f)}</h2><p>${items.length} registro(s)</p></div></div><div class="admin-detalle-list">${items.length?items.map(x=>renderItem(data.tipo,x)).join(''):'<div class="admin-empty">No hay registros.</div>'}</div>`}catch(e){box.innerHTML='<div style="color:var(--danger);padding:18px;">Error al cargar detalle.</div>'}}
+  function renderItem(tipo,x){if(tipo==='accesos')return mini('👤',esc(x.usuario_nombre||x.usuario||'Usuario'),`${esc(x.rol||'—')} · ${fmt(x.creado_en)}${x.ip?' · IP '+esc(x.ip):''}`);return mini(icon(x.fuente),`${esc(x.descripcion||x.accion||'Punto')} <span class="admin-chip">+${x.puntos||0}</span>`,`${label(x.fuente)} · ${fmt(x.creado_en)}`,`<button class="btn-admin-danger" onclick="eliminarPuntoAdmin(${x.id})">Eliminar</button>`)}
+  function cerrarDetalleAdmin(){const m=qs('admin-detalle-modal');if(m)m.classList.remove('open')}
+  async function eliminarPuntoAdmin(id){if(!confirm('¿Eliminar este registro de puntos?'))return;const u=user();const r=await fetch('/api/admin/puntos/'+id+'?usuario_id='+encodeURIComponent(u.id),{method:'DELETE'});const d=await r.json();if(!d.ok)return alert(d.error||'No se pudo eliminar');await cargarPanelAdmin();if(typeof cargarProgresoGlobal==='function')cargarProgresoGlobal()}
+  window.cargarPanelAdmin=cargarPanelAdmin;window.abrirDetalleAdmin=abrirDetalleAdmin;window.cerrarDetalleAdmin=cerrarDetalleAdmin;window.eliminarPuntoAdmin=eliminarPuntoAdmin;
+  document.addEventListener('DOMContentLoaded',asegurarUI);setTimeout(asegurarUI,500);setTimeout(asegurarUI,1500);
 })();
-
-window.loadAdminPanel = loadAdminPanel;
-window.adminEliminarMision = adminEliminarMision;
-window.adminEsAdmin = adminEsAdmin;
