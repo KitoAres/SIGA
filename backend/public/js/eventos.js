@@ -1,8 +1,3 @@
-/* ============================================================
-   SIGA — eventos.js
-   Módulo: Eventos, actividades, preguntas y guías
-   Reemplaza: backend/public/js/eventos.js
-   ============================================================ */
 
 'use strict';
 
