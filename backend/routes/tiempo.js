@@ -68,7 +68,7 @@ router.get('/disponibilidad', async (req, res) => {
 
 // POST /api/tiempo/disponibilidad
 router.post('/disponibilidad', async (req, res) => {
-  const { usuario_id, fecha, hora_inicio, hora_fin, mensaje } = req.body;
+  const { usuario_id, fecha, hora_inicio, hora_fin, lugar, mensaje } = req.body;
 
   if (!usuario_id || !fecha || !hora_inicio || !hora_fin) {
     return res.status(400).json({ error: 'Faltan campos obligatorios' });
@@ -79,22 +79,23 @@ router.post('/disponibilidad', async (req, res) => {
   }
 
   try {
-    const result = await pool.query(
-      `INSERT INTO tiempo_disponibilidad 
-       (usuario_id, fecha, hora_inicio, hora_fin, mensaje) 
-       VALUES ($1, $2, $3, $4, $5)
-       RETURNING id`,
-      [usuario_id, fecha, hora_inicio, hora_fin, mensaje || null]
-    );
+const result = await pool.query(
+  `INSERT INTO tiempo_disponibilidad 
+   (usuario_id, fecha, hora_inicio, hora_fin, lugar, mensaje) 
+   VALUES ($1, $2, $3, $4, $5, $6)
+   RETURNING id`,
+  [usuario_id, fecha, hora_inicio, hora_fin, lugar || null, mensaje || null]
+);
 
-    res.json({
-      id: result.rows[0].id,
-      usuario_id,
-      fecha,
-      hora_inicio,
-      hora_fin,
-      mensaje: mensaje || null
-    });
+res.json({
+  id: result.rows[0].id,
+  usuario_id,
+  fecha,
+  hora_inicio,
+  hora_fin,
+  lugar: lugar || null,
+  mensaje: mensaje || null
+});
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -102,7 +103,7 @@ router.post('/disponibilidad', async (req, res) => {
 
 // PUT /api/tiempo/disponibilidad/:id
 router.put('/disponibilidad/:id', async (req, res) => {
-  const { usuario_id, fecha, hora_inicio, hora_fin, mensaje } = req.body;
+  const { usuario_id, fecha, hora_inicio, hora_fin, lugar, mensaje } = req.body;
 
   if (!usuario_id) {
     return res.status(400).json({ error: 'Falta usuario_id' });
@@ -127,25 +128,28 @@ router.put('/disponibilidad/:id', async (req, res) => {
 
     // Admin puede editar cualquier horario de yo/ella
     if (usuario.rol === 'admin') {
-      result = await pool.query(
-        `UPDATE tiempo_disponibilidad 
-         SET fecha = $1,
-             hora_inicio = $2,
-             hora_fin = $3,
-             mensaje = $4
-         WHERE id = $5`,
-        [fecha, hora_inicio, hora_fin, mensaje || null, req.params.id]
-      );
+result = await pool.query(
+  `UPDATE tiempo_disponibilidad 
+   SET fecha = $1,
+       hora_inicio = $2,
+       hora_fin = $3,
+       lugar = $4,
+       mensaje = $5
+   WHERE id = $6`,
+  [fecha, hora_inicio, hora_fin, lugar || null, mensaje || null, req.params.id]
+);
+
     } else {
-      result = await pool.query(
-        `UPDATE tiempo_disponibilidad 
-         SET fecha = $1,
-             hora_inicio = $2,
-             hora_fin = $3,
-             mensaje = $4
-         WHERE id = $5 AND usuario_id = $6`,
-        [fecha, hora_inicio, hora_fin, mensaje || null, req.params.id, usuario_id]
-      );
+result = await pool.query(
+  `UPDATE tiempo_disponibilidad 
+   SET fecha = $1,
+       hora_inicio = $2,
+       hora_fin = $3,
+       lugar = $4,
+       mensaje = $5
+   WHERE id = $6 AND usuario_id = $7`,
+  [fecha, hora_inicio, hora_fin, lugar || null, mensaje || null, req.params.id, usuario_id]
+);
     }
 
     if (result.rowCount === 0) {
@@ -235,9 +239,11 @@ router.get('/coincidencias', async (req, res) => {
           a.fecha,
           a.hora_inicio AS yo_inicio,
           a.hora_fin AS yo_fin,
+          a.lugar AS yo_lugar,
           a.mensaje AS yo_mensaje,
           b.hora_inicio AS ella_inicio,
           b.hora_fin AS ella_fin,
+          b.lugar AS ella_lugar,
           b.mensaje AS ella_mensaje,
           GREATEST(a.hora_inicio, b.hora_inicio) AS inicio_coincidencia,
           LEAST(a.hora_fin, b.hora_fin) AS fin_coincidencia
@@ -255,16 +261,18 @@ router.get('/coincidencias', async (req, res) => {
         hay_coincidencia: r.inicio_coincidencia < r.fin_coincidencia,
         inicio_coincidencia: r.inicio_coincidencia,
         fin_coincidencia: r.fin_coincidencia,
-        yo: {
-          hora_inicio: r.yo_inicio,
-          hora_fin: r.yo_fin,
-          mensaje: r.yo_mensaje
-        },
-        ella: {
-          hora_inicio: r.ella_inicio,
-          hora_fin: r.ella_fin,
-          mensaje: r.ella_mensaje
-        }
+ yo: {
+  hora_inicio: r.yo_inicio,
+  hora_fin: r.yo_fin,
+  lugar: r.yo_lugar,
+  mensaje: r.yo_mensaje
+},
+ella: {
+  hora_inicio: r.ella_inicio,
+  hora_fin: r.ella_fin,
+  lugar: r.ella_lugar,
+  mensaje: r.ella_mensaje
+}
       }));
 
       return res.json({ coincidencias });
@@ -291,6 +299,7 @@ router.get('/coincidencias', async (req, res) => {
         a.fecha,
         a.hora_inicio AS mi_inicio,
         a.hora_fin AS mi_fin,
+        a.lugar AS mi_lugar,
         a.mensaje AS mi_mensaje,
         GREATEST(a.hora_inicio, b.hora_inicio) AS inicio_coincidencia,
         LEAST(a.hora_fin, b.hora_fin) AS fin_coincidencia
@@ -308,11 +317,12 @@ router.get('/coincidencias', async (req, res) => {
       hay_coincidencia: r.inicio_coincidencia < r.fin_coincidencia,
       inicio_coincidencia: r.inicio_coincidencia,
       fin_coincidencia: r.fin_coincidencia,
-      mi_disponibilidad: {
-        hora_inicio: r.mi_inicio,
-        hora_fin: r.mi_fin,
-        mensaje: r.mi_mensaje
-      }
+mi_disponibilidad: {
+  hora_inicio: r.mi_inicio,
+  hora_fin: r.mi_fin,
+  lugar: r.mi_lugar,
+  mensaje: r.mi_mensaje
+}
     }));
 
     res.json({ coincidencias });
