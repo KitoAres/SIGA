@@ -1,4 +1,8 @@
-/* Chales */
+/* ============================================================
+   SIGA — eventos.js
+   Módulo: Misiones de conexión + puntos + niveles
+   Reemplaza: backend/public/js/eventos.js
+   ============================================================ */
 
 'use strict';
 
