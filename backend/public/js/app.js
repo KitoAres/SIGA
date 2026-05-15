@@ -219,6 +219,7 @@ function navigateTo(page) {
     promesas: 'Promesas',
     carta: 'Carta',
     tiempo: '¿Nos vemos?',
+    eventos: 'Eventos y preguntas',
     cajita: 'Cajita especial',
     pregunta: 'Pregunta final'
   };
@@ -239,6 +240,7 @@ function navigateTo(page) {
     razones: typeof loadRazones === 'function' ? loadRazones : null,
     promesas: typeof loadPromesas === 'function' ? loadPromesas : null,
     carta: typeof loadCarta === 'function' ? loadCarta : null,
+    eventos: typeof loadEventos === 'function' ? loadEventos : null,
     cajita: typeof loadCajita === 'function' ? loadCajita : null
   };
 
@@ -1721,6 +1723,7 @@ function forzarSeccion(page) {
     promesas: 'Promesas',
     carta: 'Carta',
     tiempo: '¿Nos vemos?',
+    eventos: 'Eventos y preguntas',
     cajita: 'Cajita especial',
     calma: 'Modo calma',
     pregunta: 'Pregunta final'
@@ -1739,6 +1742,7 @@ function forzarSeccion(page) {
   if (page === 'razones' && typeof loadRazones === 'function') loadRazones();
   if (page === 'promesas' && typeof loadPromesas === 'function') loadPromesas();
   if (page === 'carta' && typeof loadCarta === 'function') loadCarta();
+  if (page === 'eventos' && typeof loadEventos === 'function') loadEventos();
   if (page === 'cajita' && typeof loadCajita === 'function') loadCajita();
   if (page === 'tiempo' && typeof initTiempoPage === 'function') initTiempoPage();
   if (page === 'calma' && typeof loadCalma === 'function') loadCalma();
@@ -1761,6 +1765,7 @@ document.addEventListener('click', function(e) {
   else if (texto.includes('Promesas')) forzarSeccion('promesas');
   else if (texto.includes('Carta')) forzarSeccion('carta');
   else if (texto.includes('¿Nos vemos?')) forzarSeccion('tiempo');
+  else if (texto.includes('Eventos y preguntas')) forzarSeccion('eventos');
   else if (texto.includes('Cajita especial')) forzarSeccion('cajita');
   else if (texto.includes('Modo calma')) forzarSeccion('calma');
 });
