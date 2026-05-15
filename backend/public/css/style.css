@@ -3203,3 +3203,194 @@ Si entras y lees esto... pues si le meti mucho amor e insomnio aqui*/
     flex-direction: column;
   }
 }
+
+
+/* ============================================================
+   SIGA — Panel admin separado
+   Pegar al FINAL de backend/public/css/style.css
+   ============================================================ */
+
+.nav-admin-only {
+  border-color: rgba(122, 174, 240, 0.22) !important;
+}
+
+.admin-hero-card {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  background: linear-gradient(135deg, rgba(122,174,240,0.12), rgba(180,130,220,0.10));
+  border: 1px solid rgba(122,174,240,0.22);
+  border-radius: var(--radius);
+  padding: 22px;
+  margin-bottom: 18px;
+}
+
+.admin-hero-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  font-size: 1.5rem;
+  background: rgba(122,174,240,0.12);
+  border: 1px solid rgba(122,174,240,0.22);
+  flex-shrink: 0;
+}
+
+.admin-hero-card h3 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.35rem;
+  font-weight: 400;
+  margin-bottom: 4px;
+}
+
+.admin-hero-card p {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.admin-warning {
+  padding: 18px 20px;
+  border-radius: var(--radius);
+  background: rgba(232,120,120,0.10);
+  border: 1px solid rgba(232,120,120,0.24);
+  color: var(--danger);
+}
+
+.admin-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+  margin: 18px 0;
+}
+
+.admin-stat-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px;
+  min-height: 120px;
+  position: relative;
+  overflow: hidden;
+}
+
+.admin-stat-card::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple), var(--accent-pink));
+  opacity: 0.7;
+}
+
+.admin-stat-label {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin-bottom: 10px;
+}
+
+.admin-stat-card strong {
+  display: block;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2rem;
+  line-height: 1;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.admin-stat-card small {
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+}
+
+.admin-grid-two {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.admin-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px;
+}
+
+.admin-box-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.18rem;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+}
+
+.admin-subtitle {
+  margin: 14px 0 8px;
+  color: var(--accent-purple);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.admin-mini-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.admin-mini-row:last-child { border-bottom: none; }
+
+.admin-mini-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  background: rgba(180,130,220,0.10);
+  border: 1px solid rgba(180,130,220,0.16);
+  flex-shrink: 0;
+}
+
+.admin-mini-content { flex: 1; min-width: 0; }
+.admin-mini-title { color: var(--text-primary); font-size: 0.9rem; line-height: 1.35; }
+.admin-mini-meta { color: var(--text-muted); font-size: 0.76rem; line-height: 1.45; margin-top: 2px; }
+.admin-mini-action { display: flex; align-items: center; }
+
+.admin-chip {
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(122,207,170,0.12);
+  border: 1px solid rgba(122,207,170,0.22);
+  color: var(--success);
+  font-size: 0.72rem;
+}
+
+.admin-empty {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  padding: 12px 0;
+}
+
+.btn-admin-danger {
+  background: rgba(232,120,120,0.10);
+  color: var(--danger);
+  border: 1px solid rgba(232,120,120,0.28);
+  border-radius: 8px;
+  padding: 6px 10px;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.76rem;
+}
+
+.btn-admin-danger:hover {
+  background: rgba(232,120,120,0.18);
+}
