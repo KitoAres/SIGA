@@ -131,8 +131,7 @@ async function doLogin() {
       $('app').classList.add('visible');
 
 renderUsuarioActual();
-forzarSeccion('dashboard');
-      setTimeout(() => navigateTo('dashboard'), 50);
+      forzarSeccion('dashboard');
     } else {
       $('login-error').textContent = data.error || 'Credenciales incorrectas.';
     }
@@ -404,15 +403,21 @@ async function cargarAvisoMatchDashboard() {
   const box = $('dashboard-match-alert');
   if (!box) return;
 
-  box.innerHTML = '';
-
   if (!state.currentUser || !state.currentUser.id) return;
+
+  // Evita el parpadeo inicial: si loadDashboard se llama 2 o 3 veces,
+  // no vaciamos el cuadro mientras la API responde.
+  if (cargarAvisoMatchDashboard._loading) return;
+  cargarAvisoMatchDashboard._loading = true;
 
   try {
     const data = await api('GET', '/api/tiempo/coincidencias?usuario_id=' + state.currentUser.id);
 
+    let html = '';
+    let matches = [];
+
     if (!data || !data.coincidencias || !data.coincidencias.length) {
-      box.innerHTML = `
+      html = `
         <div class="dashboard-match-card sin-match">
           <div class="dashboard-match-icon">🌙</div>
           <div>
@@ -421,44 +426,50 @@ async function cargarAvisoMatchDashboard() {
           </div>
         </div>
       `;
-      return;
+    } else {
+      matches = data.coincidencias.filter(c => c.hay_coincidencia);
+
+      if (!matches.length) {
+        html = `
+          <div class="dashboard-match-card sin-match">
+            <div class="dashboard-match-icon">🌙</div>
+            <div>
+              <div class="dashboard-match-title">Sin match por ahora</div>
+              <div class="dashboard-match-text">Todavía no se cruzaron sus horarios, pero pueden intentar otra fecha.</div>
+            </div>
+          </div>
+        `;
+      } else {
+        const m = matches[0];
+
+        html = `
+          <div class="dashboard-match-card hay-match">
+            <div class="dashboard-match-icon">✨</div>
+            <div>
+              <div class="dashboard-match-title">¡MATCH DE TIEMPO!</div>
+              <div class="dashboard-match-text">
+                Hay un ratito para verse:
+                <strong>${formatHora(m.inicio_coincidencia)} — ${formatHora(m.fin_coincidencia)}</strong>
+                ${m.fecha ? `<br><span>${formatFechaLarga(m.fecha)}</span>` : ''}
+              </div>
+            </div>
+            <button class="btn-ver-match" onclick="navigateTo('tiempo')">Ver detalles</button>
+          </div>
+        `;
+      }
     }
 
-    const matches = data.coincidencias.filter(c => c.hay_coincidencia);
-
-    if (!matches.length) {
-      box.innerHTML = `
-        <div class="dashboard-match-card sin-match">
-          <div class="dashboard-match-icon">🌙</div>
-          <div>
-            <div class="dashboard-match-title">Sin match por ahora</div>
-            <div class="dashboard-match-text">Todavía no se cruzaron sus horarios, pero pueden intentar otra fecha.</div>
-          </div>
-        </div>
-      `;
-      return;
+    // Solo actualiza si cambió. Así ya no aparece/desaparece al inicio.
+    if (box.innerHTML.trim() !== html.trim()) {
+      box.innerHTML = html;
     }
 
-    const m = matches[0];
-
-    box.innerHTML = `
-      <div class="dashboard-match-card hay-match">
-        <div class="dashboard-match-icon">✨</div>
-        <div>
-          <div class="dashboard-match-title">¡MATCH DE TIEMPO!</div>
-          <div class="dashboard-match-text">
-            Hay un ratito para verse:
-            <strong>${formatHora(m.inicio_coincidencia)} — ${formatHora(m.fin_coincidencia)}</strong>
-            ${m.fecha ? `<br><span>${formatFechaLarga(m.fecha)}</span>` : ''}
-          </div>
-        </div>
-        <button class="btn-ver-match" onclick="navigateTo('tiempo')">Ver detalles</button>
-      </div>
-    `;
-
-    mostrarAvisoMatch(matches);
+    if (matches.length) mostrarAvisoMatch(matches);
   } catch (err) {
     console.warn('No se pudo cargar aviso de match en dashboard:', err);
+    // Si falla la API, dejamos lo último que había en pantalla.
+  } finally {
+    cargarAvisoMatchDashboard._loading = false;
   }
 }
 
@@ -1465,6 +1476,8 @@ async function loadDisponibilidades() {
       const dia = fechaInfo.dia;
       const mes = fechaInfo.mes;
       const dow = fechaInfo.texto;
+      const fechaEditar = normalizarFecha(d.fecha);
+
       return `
         <div class="disp-item">
           <div class="disp-fecha-block">
@@ -1474,12 +1487,13 @@ async function loadDisponibilidades() {
           <div class="disp-info">
             <div class="disp-horas">${formatHora(d.hora_inicio)} — ${formatHora(d.hora_fin)}</div>
             <div class="disp-msg">
-  ${dow === 'Fecha por revisar' ? 'Fecha pendiente de revisar' : dow}
-  ${d.mensaje ? ' · ' + esc(d.mensaje) : ''}
-</div>
+              ${dow === 'Fecha por revisar' ? 'Fecha pendiente de revisar' : dow}
+              ${d.lugar ? ' · 📍 ' + esc(d.lugar) : ''}
+              ${d.mensaje ? ' · ' + esc(d.mensaje) : ''}
+            </div>
           </div>
           <div class="disp-actions">
-            <button class="btn btn-sm btn-edit" onclick="editarDisponibilidad(${d.id}, '${d.fecha.split('T')[0]}', '${d.hora_inicio}', '${d.hora_fin}', '${esc(d.mensaje || '')}')">✎</button>
+            <button class="btn btn-sm btn-edit" onclick="editarDisponibilidad(${d.id}, '${fechaEditar}', '${d.hora_inicio}', '${d.hora_fin}', '${esc(d.lugar || '')}', '${esc(d.mensaje || '')}')">✎</button>
             <button class="btn btn-sm btn-delete" onclick="eliminarDisponibilidad(${d.id})">✕</button>
           </div>
         </div>`;
@@ -1507,25 +1521,27 @@ async function loadCoincidencias() {
       return;
     }
 
-const { coincidencias } = data;
+    const { coincidencias } = data;
 
-if (!coincidencias || !coincidencias.length) {
-  container.innerHTML = `
-    <div class="tiempo-empty">
-      <div class="tiempo-empty-icon">🌙</div>
-      <div class="tiempo-empty-text">
-        Aún no hay match de tiempo.<br/>
-        Cuando sus horarios se crucen, aquí aparecerá el momento posible.
-      </div>
-    </div>`;
-  return;
-}
+    if (!coincidencias || !coincidencias.length) {
+      container.innerHTML = `
+        <div class="tiempo-empty">
+          <div class="tiempo-empty-icon">🌙</div>
+          <div class="tiempo-empty-text">
+            Aún no hay match de tiempo.<br/>
+            Cuando sus horarios se crucen, aquí aparecerá el momento posible.
+          </div>
+        </div>`;
+      return;
+    }
 
-// Si hay al menos un match, avisar con sonido y mensaje
-mostrarAvisoMatch(coincidencias);
+    mostrarAvisoMatch(coincidencias);
 
     container.innerHTML = coincidencias.map(c => {
-const fechaStr = formatFechaLarga(c.fecha);
+      const fechaStr = formatFechaLarga(c.fecha);
+      const mi = c.mi_disponibilidad || {};
+      const lugar = mi.lugar ? ' · 📍 ' + esc(mi.lugar) : '';
+      const mensaje = mi.mensaje ? ' · ' + esc(mi.mensaje) : '';
 
       if (c.hay_coincidencia) {
         return `
@@ -1534,12 +1550,12 @@ const fechaStr = formatFechaLarga(c.fecha);
               <span style="font-size:1.1rem;">💙</span>
               <div class="coincidencia-fecha">${fechaStr}</div>
             </div>
-<div class="coincidencia-resultado found">✨ MATCH de tiempo 💙</div>            <div class="coincidencia-horario">
+            <div class="coincidencia-resultado found">✨ MATCH de tiempo 💙</div>
+            <div class="coincidencia-horario">
               ⏰ ${formatHora(c.inicio_coincidencia)} — ${formatHora(c.fin_coincidencia)}
             </div>
             <div class="coincidencia-mi-disp">
-              Tu bloque: ${formatHora(c.mi_disponibilidad.hora_inicio)} – ${formatHora(c.mi_disponibilidad.hora_fin)}
-              ${c.mi_disponibilidad.mensaje ? ' · ' + esc(c.mi_disponibilidad.mensaje) : ''}
+              Tu bloque: ${formatHora(mi.hora_inicio)} – ${formatHora(mi.hora_fin)}${lugar}${mensaje}
             </div>
           </div>`;
       } else {
@@ -1549,8 +1565,9 @@ const fechaStr = formatFechaLarga(c.fecha);
               <span style="font-size:1.1rem;">🌙</span>
               <div class="coincidencia-fecha">${fechaStr}</div>
             </div>
-<div class="coincidencia-resultado not-found">Sin match por ahora 🌙</div>            <div class="coincidencia-mi-disp" style="margin-top:8px;">
-              Tu bloque: ${formatHora(c.mi_disponibilidad.hora_inicio)} – ${formatHora(c.mi_disponibilidad.hora_fin)}
+            <div class="coincidencia-resultado not-found">Sin match por ahora 🌙</div>
+            <div class="coincidencia-mi-disp" style="margin-top:8px;">
+              Tu bloque: ${formatHora(mi.hora_inicio)} – ${formatHora(mi.hora_fin)}${lugar}${mensaje}
             </div>
           </div>`;
       }
@@ -1568,19 +1585,21 @@ function openModalTiempo() {
   if ($('t-fecha'))   $('t-fecha').value   = '';
   if ($('t-inicio'))  $('t-inicio').value  = '';
   if ($('t-fin'))     $('t-fin').value     = '';
+  if ($('t-lugar'))   $('t-lugar').value   = '';
   if ($('t-mensaje')) $('t-mensaje').value = '';
   $('modal-tiempo').classList.add('open');
   setTimeout(() => { if ($('t-fecha')) $('t-fecha').focus(); }, 100);
 }
 
-function editarDisponibilidad(id, fecha, inicio, fin, mensaje) {
+function editarDisponibilidad(id, fecha, inicio, fin, lugar, mensaje) {
   tiempoState.editandoId = id;
   const titleEl = $('modal-tiempo-title');
   if (titleEl) titleEl.textContent = 'Editar disponibilidad';
   if ($('t-fecha'))   $('t-fecha').value   = fecha;
   if ($('t-inicio'))  $('t-inicio').value  = inicio.substring(0, 5);
   if ($('t-fin'))     $('t-fin').value     = fin.substring(0, 5);
-  if ($('t-mensaje')) $('t-mensaje').value = mensaje;
+  if ($('t-lugar'))   $('t-lugar').value   = lugar || '';
+  if ($('t-mensaje')) $('t-mensaje').value = mensaje || '';
   $('modal-tiempo').classList.add('open');
 }
 
@@ -1590,29 +1609,37 @@ async function guardarDisponibilidad() {
   const fecha   = $('t-fecha')   ? $('t-fecha').value.trim()   : '';
   const inicio  = $('t-inicio')  ? $('t-inicio').value.trim()  : '';
   const fin     = $('t-fin')     ? $('t-fin').value.trim()     : '';
+  const lugar   = $('t-lugar')   ? $('t-lugar').value.trim()   : '';
   const mensaje = $('t-mensaje') ? $('t-mensaje').value.trim() : '';
 
   if (!fecha || !inicio || !fin) { toast('Fecha, hora inicio y hora fin son obligatorios.'); return; }
   if (inicio >= fin)             { toast('La hora de inicio debe ser menor que la de fin.'); return; }
 
   const body = {
-    usuario_id:  tiempoState.usuarioId,
-    fecha, hora_inicio: inicio, hora_fin: fin,
+    usuario_id: tiempoState.usuarioId,
+    fecha,
+    hora_inicio: inicio,
+    hora_fin: fin,
+    lugar: lugar || null,
     mensaje: mensaje || null,
   };
 
   try {
-    if (tiempoState.editandoId) {
-      await api('PUT', '/api/tiempo/disponibilidad/' + tiempoState.editandoId, body);
-      toast('✓ Disponibilidad actualizada');
-    } else {
-      await api('POST', '/api/tiempo/disponibilidad', body);
-      toast('✓ Disponibilidad guardada');
+    const data = tiempoState.editandoId
+      ? await api('PUT', '/api/tiempo/disponibilidad/' + tiempoState.editandoId, body)
+      : await api('POST', '/api/tiempo/disponibilidad', body);
+
+    if (data && data.error) {
+      toast(data.error);
+      return;
     }
+
+    toast(tiempoState.editandoId ? '✓ Disponibilidad actualizada' : '✓ Disponibilidad guardada');
     closeModal('modal-tiempo');
     tiempoState.editandoId = null;
     await loadDisponibilidades();
     await loadCoincidencias();
+    await loadDashboard();
   } catch {
     toast('Error al guardar disponibilidad.');
   }
@@ -1738,14 +1765,15 @@ document.addEventListener('click', function(e) {
   else if (texto.includes('Modo calma')) forzarSeccion('calma');
 });
 
-setTimeout(function() {
-  const login = document.getElementById('login-screen');
-  const app = document.getElementById('app');
-
-  if ((login && login.style.display === 'none') || (app && app.classList.contains('visible'))) {
-    forzarSeccion('dashboard');
-  }
-}, 500);
+// Desactivado: este refuerzo recargaba el dashboard al inicio y causaba parpadeo del cuadro de match.
+// setTimeout(function() {
+//   const login = document.getElementById('login-screen');
+//   const app = document.getElementById('app');
+//
+//   if ((login && login.style.display === 'none') || (app && app.classList.contains('visible'))) {
+//     forzarSeccion('dashboard');
+//   }
+// }, 500);
 
 /* ======================================================
    FIX FINAL: ¿NOS VEMOS? SIN MINI-LOGIN
