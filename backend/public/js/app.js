@@ -2515,3 +2515,10 @@ function editarRecuerdoSeguro(id) {
     r.enlace_url || ''
   );
 }
+
+/* SIGA — loader para admin.js y puntos.js. Pegar al FINAL de backend/public/js/app.js */
+(function cargarModulosExtraSIGA(){
+  function cargarScript(src,id){if(document.getElementById(id))return;const s=document.createElement('script');s.src=src+'?v=puntos-globales-2';s.id=id;document.body.appendChild(s)}
+  cargarScript('/js/puntos.js','siga-puntos-js');
+  cargarScript('/js/admin.js','siga-admin-js');
+})();
