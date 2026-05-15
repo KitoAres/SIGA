@@ -70,6 +70,10 @@
         <span class="nav-icon">🕐</span> ¿Nos vemos?
       </button>
 
+      <button class="nav-item" onclick="navigateTo('eventos')">
+        <span class="nav-icon">🎲</span> Eventos y preguntas
+      </button>
+
       <button class="nav-item" onclick="navigateTo('cajita')">
         <span class="nav-icon">🎁</span> Cajita especial
       </button>
@@ -285,6 +289,53 @@
           <div id="list-coincidencias"></div>
         </div>
       </div>
+    </section>
+
+
+    <!-- EVENTOS Y PREGUNTAS -->
+    <section class="page" id="page-eventos">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Eventos <span>y preguntas</span></h1>
+          <p class="page-subtitle">Ideas suaves para coincidir: planes, preguntas, juegos y actividades.</p>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn" onclick="sugerirEventoAleatorio()">🎲 Sorpresa</button>
+          <button class="btn-add" onclick="abrirModalEvento()">+ Nueva idea</button>
+        </div>
+      </div>
+
+      <div class="eventos-hero-card">
+        <div class="eventos-hero-icon">🎲</div>
+        <div>
+          <h3>Un banco de ideas para cuando haya match.</h3>
+          <p>Guarda preguntas, citas, juegos o actividades. Luego puedes usarlas para convertir un match de tiempo en un plan real, sin hacerlo pesado.</p>
+        </div>
+      </div>
+
+      <div class="eventos-random-card" id="evento-random-box">
+        <div class="eventos-random-empty">Toca “Sorpresa” para elegir una idea al azar.</div>
+      </div>
+
+      <div class="eventos-toolbar">
+        <input type="text" id="evento-buscar" placeholder="Buscar idea, pregunta o actividad..." oninput="loadEventos()"/>
+        <select id="evento-filtro-tipo" onchange="loadEventos()">
+          <option value="">Todo</option>
+          <option value="pregunta">Preguntas</option>
+          <option value="actividad">Actividades</option>
+          <option value="cita">Citas</option>
+          <option value="juego">Juegos</option>
+          <option value="detalle">Detalles</option>
+        </select>
+        <select id="evento-filtro-nivel" onchange="loadEventos()">
+          <option value="">Cualquier nivel</option>
+          <option value="suave">Suave</option>
+          <option value="medio">Medio</option>
+          <option value="profundo">Profundo</option>
+        </select>
+      </div>
+
+      <div class="items-grid" id="list-eventos"></div>
     </section>
 
     <!-- CAJITA ESPECIAL -->
@@ -509,6 +560,7 @@
 </div>
     
   <script src="/js/app.js?v=calma-6"></script>
+  <script src="/js/eventos.js?v=eventos-1"></script>
 
 <script>
 /* ======================================================
@@ -526,6 +578,7 @@
     'Promesas': 'promesas',
     'Carta': 'carta',
     '¿Nos vemos?': 'tiempo',
+    'Eventos y preguntas': 'eventos',
     'Cajita especial': 'cajita',
     'Pregunta final': 'pregunta'
   };
@@ -571,7 +624,8 @@
       razones: window.loadRazones,
       promesas: window.loadPromesas,
       carta: window.loadCarta,
-      cajita: window.loadCajita
+      cajita: window.loadCajita,
+      eventos: window.loadEventos
     };
 
     if (typeof loaders[page] === 'function') {
