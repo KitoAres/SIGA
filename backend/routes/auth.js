@@ -2,6 +2,31 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../config/db');
 
+async function registrarAcceso(req, usuario) {
+  try {
+    const ipRaw = req.headers['x-forwarded-for'] || req.socket?.remoteAddress || null;
+    const ip = ipRaw ? String(ipRaw).split(',')[0].trim() : null;
+    const userAgent = req.headers['user-agent'] || null;
+
+    await pool.query(
+      `INSERT INTO accesos_sistema
+        (usuario_id, usuario, nombre_visible, rol, ip, user_agent)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      [
+        usuario.id,
+        usuario.usuario,
+        usuario.display_name || usuario.nombre || usuario.usuario,
+        usuario.rol,
+        ip,
+        userAgent
+      ]
+    );
+  } catch (err) {
+    console.warn('No se pudo registrar acceso:', err.message);
+  }
+}
+
+
 // POST /api/auth/login
 router.post('/login', async (req, res) => {
   const { usuario, contrasena } = req.body;
@@ -35,6 +60,8 @@ router.post('/login', async (req, res) => {
     }
 
     const u = result.rows[0];
+
+    await registrarAcceso(req, u);
 
     res.json({ 
       ok: true, 
