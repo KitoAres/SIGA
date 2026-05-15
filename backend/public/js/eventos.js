@@ -307,7 +307,6 @@ async function guardarEvento() {
     eventosState.editandoId = null;
     await loadEventos();
     await cargarProgresoMisiones();
-    await cargarPanelAdminMisiones();
   } catch (err) {
     console.error(err);
     toast('Error al guardar la misión.');
@@ -329,15 +328,12 @@ async function loadEventos() {
 
     if (!Array.isArray(items) || !items.length) {
       container.innerHTML = emptyState('🎯', 'Aún no hay misiones con esos filtros.');
-      await cargarProgresoMisiones();
-      await cargarPanelAdminMisiones();
       return;
     }
 
     eventosCache = items;
     container.innerHTML = items.map(item => renderEventoCard(item)).join('');
     await cargarProgresoMisiones();
-    await cargarPanelAdminMisiones();
   } catch (err) {
     console.error(err);
     container.innerHTML = '<div style="color:var(--danger);padding:20px;">Error al cargar misiones.</div>';
@@ -567,7 +563,6 @@ async function completarMision(id) {
     }
 
     await cargarProgresoMisiones();
-    await cargarPanelAdminMisiones();
     await loadEventos();
   } catch (err) {
     console.error(err);
@@ -713,206 +708,4 @@ window.editarEventoDesdeCache = editarEventoDesdeCache;
 window.editarEventoDesdeDetalle = editarEventoDesdeDetalle;
 window.eliminarEvento = eliminarEvento;
 window.completarMision = completarMision;
-
-
-/* ============================================================
-   PANEL ADMIN: borrar misiones cumplidas + estadísticas
-   ============================================================ */
-function esAdminMisiones() {
-  return typeof state !== 'undefined' && state.currentUser && state.currentUser.rol === 'admin';
-}
-
-function fmtAdminFecha(valor) {
-  if (!valor) return '—';
-  const d = new Date(valor);
-  if (isNaN(d.getTime())) return String(valor).substring(0, 16);
-  return d.toLocaleString('es-BO', {
-    year: 'numeric', month: 'short', day: 'numeric',
-    hour: '2-digit', minute: '2-digit'
-  });
-}
-
-function adminMiniRow({ icon = '•', title = '', meta = '', action = '' }) {
-  return `
-    <div class="admin-mini-row">
-      <div class="admin-mini-icon">${icon}</div>
-      <div class="admin-mini-content">
-        <div class="admin-mini-title">${title}</div>
-        <div class="admin-mini-meta">${meta}</div>
-      </div>
-      ${action ? `<div class="admin-mini-action">${action}</div>` : ''}
-    </div>
-  `;
-}
-
-function nivelBonitoAdmin(nivel) {
-  return {
-    facil: 'Fácil',
-    medio: 'Media',
-    dificil: 'Difícil',
-    hardcore: 'Legendaria'
-  }[nivel] || nivel || '—';
-}
-
-async function cargarPanelAdminMisiones() {
-  const panel = document.getElementById('misiones-admin-panel');
-  if (!panel) return;
-
-  if (!esAdminMisiones()) {
-    panel.style.display = 'none';
-    return;
-  }
-
-  panel.style.display = 'block';
-
-  const usuario_id = state.currentUser.id;
-
-  try {
-    const data = await api('GET', `/api/eventos/admin/resumen?usuario_id=${usuario_id}`);
-
-    if (!data || data.error) {
-      const recientes = document.getElementById('admin-misiones-recientes');
-      if (recientes) recientes.innerHTML = `<div class="admin-empty">${esc(data?.error || 'No se pudo cargar el panel admin.')}</div>`;
-      return;
-    }
-
-    const misiones = data.misiones || {};
-    const calma = data.calma || {};
-    const citas = data.citas || {};
-    const accesos = data.accesos || {};
-
-    const mr = misiones.resumen || {};
-    const cr = calma.resumen || {};
-    const pr = citas.resumen || {};
-    const ar = accesos.resumen || {};
-
-    const setText = (id, text) => {
-      const el = document.getElementById(id);
-      if (el) el.textContent = text;
-    };
-
-    setText('admin-misiones-total', mr.total ?? 0);
-    setText('admin-misiones-puntos', `${mr.puntos ?? 0} pts · ${mr.ultimos_7 ?? 0} en 7 días`);
-
-    setText('admin-calma-total', cr.total ?? 0);
-    setText('admin-calma-dias', `${cr.dias_programados ?? 0} días programados · ${cr.activas ?? 0} activo(s)`);
-
-    setText('admin-citas-total', pr.total ?? 0);
-    setText('admin-citas-detalle', `${pr.pendientes ?? 0} pendientes · ${pr.cumplidas ?? 0} cumplidas`);
-
-    setText('admin-accesos-total', ar.ultimos_30 ?? 0);
-    setText('admin-accesos-detalle', `${ar.hoy ?? 0} hoy · último ${fmtAdminFecha(ar.ultimo)}`);
-
-    const recientesEl = document.getElementById('admin-misiones-recientes');
-    if (recientesEl) {
-      const recientes = misiones.recientes || [];
-      recientesEl.innerHTML = recientes.length ? recientes.map(m => adminMiniRow({
-        icon: '🏁',
-        title: `${esc(m.titulo)} <span class="admin-chip">+${m.puntos} pts</span>`,
-        meta: `${esc(m.usuario_nombre || 'Sin usuario')} · ${nivelBonitoAdmin(m.nivel)} · ${fmtAdminFecha(m.creado_en)}`,
-        action: `<button class="btn-admin-danger" onclick="eliminarMisionCompletadaAdmin(${m.id})">Eliminar</button>`
-      })).join('') : '<div class="admin-empty">Aún no hay misiones completadas.</div>';
-    }
-
-    const accesosEl = document.getElementById('admin-accesos-lista');
-    if (accesosEl) {
-      const recientes = accesos.recientes || [];
-      accesosEl.innerHTML = recientes.length ? recientes.map(a => adminMiniRow({
-        icon: '👤',
-        title: esc(a.usuario_nombre || a.usuario || 'Usuario'),
-        meta: `${esc(a.rol || '—')} · ${fmtAdminFecha(a.creado_en)}${a.ip ? ' · IP ' + esc(a.ip) : ''}`
-      })).join('') : '<div class="admin-empty">Aún no hay accesos registrados.</div>';
-    }
-
-    const usuariosEl = document.getElementById('admin-usuarios-actividad');
-    if (usuariosEl) {
-      const porUsuario = misiones.por_usuario || [];
-      const accesosUsuario = accesos.por_usuario || [];
-      const bloqueMisiones = porUsuario.length ? porUsuario.map(u => adminMiniRow({
-        icon: '🎯',
-        title: esc(u.usuario_nombre || 'Sin usuario'),
-        meta: `${u.total || 0} misiones · ${u.puntos || 0} pts · última ${fmtAdminFecha(u.ultima)}`
-      })).join('') : '<div class="admin-empty">Sin misiones por usuario.</div>';
-
-      const bloqueAccesos = accesosUsuario.length ? `
-        <div class="admin-subtitle">Accesos últimos 30 días</div>
-        ${accesosUsuario.map(u => adminMiniRow({
-          icon: '🟢',
-          title: esc(u.usuario_nombre || 'Sin usuario'),
-          meta: `${u.total || 0} acceso(s) · último ${fmtAdminFecha(u.ultimo)}`
-        })).join('')}
-      ` : '';
-
-      usuariosEl.innerHTML = bloqueMisiones + bloqueAccesos;
-    }
-
-    const calmaCitasEl = document.getElementById('admin-calma-citas-lista');
-    if (calmaCitasEl) {
-      const calmaUsuarios = calma.por_usuario || [];
-      const promedio = pr.promedio_dias_entre_planes;
-      const top = `
-        ${adminMiniRow({
-          icon: '📅',
-          title: 'Frecuencia de planes',
-          meta: promedio ? `aprox. cada ${promedio} día(s) entre planes registrados` : 'aún no hay suficientes fechas para calcular frecuencia'
-        })}
-        ${adminMiniRow({
-          icon: '🗓️',
-          title: 'Estado de planes',
-          meta: `${pr.proximas || 0} próximos · ${pr.canceladas || 0} cancelados · última fecha ${pr.ultima_fecha ? String(pr.ultima_fecha).substring(0,10) : '—'}`
-        })}
-      `;
-
-      const calmaRows = calmaUsuarios.length ? `
-        <div class="admin-subtitle">Modo calma por usuario</div>
-        ${calmaUsuarios.map(c => adminMiniRow({
-          icon: '🌙',
-          title: esc(c.usuario_nombre || 'Sin usuario'),
-          meta: `${c.total || 0} activación(es) · ${c.dias || 0} día(s) · última ${fmtAdminFecha(c.ultima)}`
-        })).join('')}
-      ` : '<div class="admin-empty">Aún no hay registros de modo calma por usuario.</div>';
-
-      calmaCitasEl.innerHTML = top + calmaRows;
-    }
-  } catch (err) {
-    console.error(err);
-    const recientes = document.getElementById('admin-misiones-recientes');
-    if (recientes) recientes.innerHTML = '<div class="admin-empty">Error al cargar panel admin.</div>';
-  }
-}
-
-async function eliminarMisionCompletadaAdmin(id) {
-  if (!esAdminMisiones()) {
-    toast('Solo admin puede eliminar misiones cumplidas.');
-    return;
-  }
-
-  const ok = confirm('¿Eliminar esta misión cumplida?\n\nEsto resta sus puntos del total. Úsalo solo si fue marcada por error.');
-  if (!ok) return;
-
-  try {
-    const data = await api('DELETE', `/api/eventos/admin/completadas/${id}`, {
-      usuario_id: state.currentUser.id
-    });
-
-    if (data && data.error) {
-      toast(data.error);
-      return;
-    }
-
-    toast('Misión cumplida eliminada. Puntos actualizados.');
-    await cargarProgresoMisiones();
-    await cargarPanelAdminMisiones();
-    await loadEventos();
-  } catch (err) {
-    console.error(err);
-    toast('No se pudo eliminar el registro.');
-  }
-}
-
-window.cargarPanelAdminMisiones = cargarPanelAdminMisiones;
-window.eliminarMisionCompletadaAdmin = eliminarMisionCompletadaAdmin;
-
-setTimeout(cargarPanelAdminMisiones, 800);
-
 window.cargarProgresoMisiones = cargarProgresoMisiones;
