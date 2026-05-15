@@ -1,7 +1,7 @@
 /* ============================================================
    SIGA — eventos.js
-   Módulo: Eventos, actividades y preguntas
-   Archivo nuevo para: public/js/eventos.js
+   Módulo: Eventos, actividades, preguntas y guías
+   Reemplaza: backend/public/js/eventos.js
    ============================================================ */
 
 'use strict';
@@ -10,6 +10,8 @@ const eventosState = {
   editandoId: null,
   cargando: false
 };
+
+let eventosCache = [];
 
 function eventoVal(id) {
   const el = document.getElementById(id);
@@ -22,7 +24,8 @@ function eventoIcono(tipo) {
     actividad: '✨',
     cita: '📅',
     juego: '🎲',
-    detalle: '💌'
+    detalle: '💌',
+    guia: '📖'
   }[tipo] || '🌟';
 }
 
@@ -32,7 +35,8 @@ function eventoTipoLabel(tipo) {
     actividad: 'Actividad',
     cita: 'Cita',
     juego: 'Juego',
-    detalle: 'Detalle'
+    detalle: 'Detalle',
+    guia: 'Guía'
   }[tipo] || 'Idea';
 }
 
@@ -44,6 +48,62 @@ function eventoNivelLabel(nivel) {
   }[nivel] || 'Suave';
 }
 
+function eventoTextoCompleto(item) {
+  let texto = `${item.titulo}\n\n${item.descripcion || ''}`;
+
+  if (item.instrucciones) {
+    texto += `\n\nInstrucciones:\n${item.instrucciones}`;
+  }
+
+  if (item.items && item.items.length) {
+    texto += '\n\nPreguntas / pasos:';
+    item.items.forEach((paso, index) => {
+      const bloque = paso.bloque ? `[${paso.bloque}] ` : '';
+      texto += `\n${index + 1}. ${bloque}${paso.contenido}`;
+    });
+  }
+
+  if (item.duracion) texto += `\n\nDuración sugerida: ${item.duracion}`;
+  if (item.fuente) texto += `\nFuente/idea base: ${item.fuente}`;
+
+  return texto;
+}
+
+function itemsDesdeTextarea() {
+  const texto = eventoVal('evento-items');
+  if (!texto) return [];
+
+  return texto
+    .split('\n')
+    .map(linea => linea.trim())
+    .filter(Boolean)
+    .map((linea, index) => {
+      let bloque = null;
+      let contenido = linea;
+
+      const match = linea.match(/^\[(.*?)\]\s*(.+)$/);
+      if (match) {
+        bloque = match[1].trim();
+        contenido = match[2].trim();
+      }
+
+      return {
+        orden: index + 1,
+        bloque,
+        tipo_item: 'pregunta',
+        contenido
+      };
+    });
+}
+
+function itemsATextarea(items) {
+  if (!items || !items.length) return '';
+  return items.map(item => {
+    const bloque = item.bloque ? `[${item.bloque}] ` : '';
+    return `${bloque}${item.contenido}`;
+  }).join('\n');
+}
+
 function asegurarModalEvento() {
   if (document.getElementById('modal-evento')) return;
 
@@ -51,12 +111,12 @@ function asegurarModalEvento() {
   modal.className = 'modal-overlay';
   modal.id = 'modal-evento';
   modal.innerHTML = `
-    <div class="modal">
+    <div class="modal modal-evento-editar">
       <h2 class="modal-title" id="modal-evento-title">Nueva idea</h2>
 
       <div class="modal-form">
         <label>Título</label>
-        <input type="text" id="evento-titulo" placeholder="Ej: Preguntas para conectar"/>
+        <input type="text" id="evento-titulo" placeholder="Ej: 36 preguntas para conectar"/>
 
         <label>Tipo</label>
         <select id="evento-tipo">
@@ -65,10 +125,11 @@ function asegurarModalEvento() {
           <option value="cita">Cita</option>
           <option value="juego">Juego</option>
           <option value="detalle">Detalle</option>
+          <option value="guia">Guía con pasos</option>
         </select>
 
         <label>Categoría</label>
-        <input type="text" id="evento-categoria" placeholder="Ej: conversación, película, llamada, presencial..."/>
+        <input type="text" id="evento-categoria" placeholder="Ej: conversación, presencial, conexión, calma..."/>
 
         <label>Nivel</label>
         <select id="evento-nivel">
@@ -78,10 +139,19 @@ function asegurarModalEvento() {
         </select>
 
         <label>Duración estimada</label>
-        <input type="text" id="evento-duracion" placeholder="Ej: 15 min, 1 hora, libre..."/>
+        <input type="text" id="evento-duracion" placeholder="Ej: 15 min, 45 min, 1 hora..."/>
 
-        <label>Descripción / pregunta</label>
-        <textarea id="evento-descripcion" placeholder="Escribe la pregunta, idea, actividad o instrucciones..."></textarea>
+        <label>Descripción corta</label>
+        <textarea id="evento-descripcion" placeholder="Describe la actividad o el sentido de la guía..."></textarea>
+
+        <label>Instrucciones opcionales</label>
+        <textarea id="evento-instrucciones" placeholder="Ej: Hacer por turnos, sin presionar, pueden parar cuando quieran..."></textarea>
+
+        <label>Preguntas o pasos extra</label>
+        <textarea id="evento-items" placeholder="Una pregunta o paso por línea. Puedes usar [Grupo 1] Pregunta..."></textarea>
+
+        <label>Fuente / idea base opcional</label>
+        <input type="text" id="evento-fuente" placeholder="Ej: Aron, Gottman, idea propia..."/>
       </div>
 
       <div class="modal-actions">
@@ -93,6 +163,28 @@ function asegurarModalEvento() {
 
   modal.addEventListener('click', function(e) {
     if (e.target === modal) cerrarModalEvento();
+  });
+
+  document.body.appendChild(modal);
+}
+
+function asegurarModalDetalleEvento() {
+  if (document.getElementById('modal-evento-detalle')) return;
+
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay';
+  modal.id = 'modal-evento-detalle';
+  modal.innerHTML = `
+    <div class="modal modal-evento-detalle-card">
+      <div id="evento-detalle-contenido"></div>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="cerrarDetalleEvento()">Cerrar</button>
+      </div>
+    </div>
+  `;
+
+  modal.addEventListener('click', function(e) {
+    if (e.target === modal) cerrarDetalleEvento();
   });
 
   document.body.appendChild(modal);
@@ -112,6 +204,9 @@ function abrirModalEvento(item) {
   document.getElementById('evento-nivel').value = item?.nivel || 'suave';
   document.getElementById('evento-duracion').value = item?.duracion || '';
   document.getElementById('evento-descripcion').value = item?.descripcion || '';
+  document.getElementById('evento-instrucciones').value = item?.instrucciones || '';
+  document.getElementById('evento-items').value = itemsATextarea(item?.items || []);
+  document.getElementById('evento-fuente').value = item?.fuente || '';
 
   document.getElementById('modal-evento').classList.add('open');
 
@@ -127,7 +222,14 @@ function cerrarModalEvento() {
   eventosState.editandoId = null;
 }
 
+function cerrarDetalleEvento() {
+  const modal = document.getElementById('modal-evento-detalle');
+  if (modal) modal.classList.remove('open');
+}
+
 async function guardarEvento() {
+  const items = itemsDesdeTextarea();
+
   const body = {
     titulo: eventoVal('evento-titulo'),
     tipo: eventoVal('evento-tipo') || 'pregunta',
@@ -135,6 +237,10 @@ async function guardarEvento() {
     nivel: eventoVal('evento-nivel') || 'suave',
     duracion: eventoVal('evento-duracion'),
     descripcion: eventoVal('evento-descripcion'),
+    modo: items.length ? 'guia' : 'simple',
+    instrucciones: eventoVal('evento-instrucciones'),
+    fuente: eventoVal('evento-fuente'),
+    items,
     creado_por: (typeof state !== 'undefined' && state.currentUser && state.currentUser.id) ? state.currentUser.id : null
   };
 
@@ -144,7 +250,7 @@ async function guardarEvento() {
   }
 
   if (!body.descripcion) {
-    toast('La descripción o pregunta es obligatoria.');
+    toast('La descripción es obligatoria.');
     return;
   }
 
@@ -179,6 +285,7 @@ async function loadEventos() {
 
   try {
     const items = await api('GET', `/api/eventos?q=${q}&tipo=${tipo}&nivel=${nivel}`);
+    eventosCache = items || [];
 
     if (!items || !items.length) {
       container.innerHTML = `
@@ -198,8 +305,6 @@ async function loadEventos() {
 }
 
 function renderEventoCard(item) {
-  const json = esc(JSON.stringify(item));
-
   return `
     <div class="item-card evento-card">
       <div class="evento-card-top">
@@ -210,6 +315,7 @@ function renderEventoCard(item) {
             ${eventoTipoLabel(item.tipo)}
             ${item.categoria ? ' · ' + esc(item.categoria) : ''}
             ${item.duracion ? ' · ⏱ ' + esc(item.duracion) : ''}
+            ${item.total_items ? ' · ' + item.total_items + ' pasos' : ''}
           </div>
         </div>
         <span class="badge badge-pending">${eventoNivelLabel(item.nivel)}</span>
@@ -218,6 +324,7 @@ function renderEventoCard(item) {
       <p class="item-desc evento-desc">${esc(item.descripcion)}</p>
 
       <div class="item-actions">
+        <button class="btn btn-sm" onclick="abrirDetalleEvento(${item.id})">Abrir</button>
         <button class="btn btn-sm" onclick="copiarEvento(${item.id})">Copiar</button>
         <button class="btn btn-sm" onclick="crearPlanDesdeEvento(${item.id})">Usar en plan</button>
         <button class="btn btn-sm btn-edit" onclick="editarEventoDesdeCache(${item.id})">Editar</button>
@@ -227,38 +334,117 @@ function renderEventoCard(item) {
   `;
 }
 
-let eventosCache = [];
-
-async function cargarEventosCache() {
-  try {
-    eventosCache = await api('GET', '/api/eventos');
-  } catch {
-    eventosCache = [];
-  }
-}
-
 function obtenerEventoCache(id) {
   return eventosCache.find(e => Number(e.id) === Number(id));
 }
 
-async function editarEventoDesdeCache(id) {
-  if (!eventosCache.length) await cargarEventosCache();
-  const item = obtenerEventoCache(id);
-  if (!item) {
-    toast('No se encontró la idea.');
-    return;
+async function obtenerEventoCompleto(id) {
+  const data = await api('GET', '/api/eventos/' + id);
+  if (!data || data.error) throw new Error(data?.error || 'No se encontró la idea');
+  return data;
+}
+
+async function abrirDetalleEvento(id) {
+  asegurarModalDetalleEvento();
+
+  const box = document.getElementById('evento-detalle-contenido');
+  const modal = document.getElementById('modal-evento-detalle');
+
+  if (!box || !modal) return;
+
+  box.innerHTML = '<div style="color:var(--text-muted);padding:20px;">Cargando guía...</div>';
+  modal.classList.add('open');
+
+  try {
+    const item = await obtenerEventoCompleto(id);
+    box.innerHTML = renderDetalleEvento(item);
+  } catch (err) {
+    console.error(err);
+    box.innerHTML = '<div style="color:var(--danger);padding:20px;">No se pudo cargar la guía.</div>';
   }
-  abrirModalEvento(item);
+}
+
+function renderDetalleEvento(item) {
+  const grupos = {};
+
+  (item.items || []).forEach(paso => {
+    const key = paso.bloque || 'Preguntas / pasos';
+    if (!grupos[key]) grupos[key] = [];
+    grupos[key].push(paso);
+  });
+
+  const bloquesHtml = Object.keys(grupos).map(nombre => `
+    <div class="evento-detalle-bloque">
+      <h3>${esc(nombre)}</h3>
+      <div class="evento-pasos-lista">
+        ${grupos[nombre].map((paso, index) => `
+          <div class="evento-paso">
+            <div class="evento-paso-num">${index + 1}</div>
+            <div class="evento-paso-text">${esc(paso.contenido)}</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `).join('');
+
+  return `
+    <div class="evento-detalle-header">
+      <div class="evento-icon grande">${eventoIcono(item.tipo)}</div>
+      <div>
+        <div class="evento-detalle-label">${eventoTipoLabel(item.tipo)} · ${eventoNivelLabel(item.nivel)}</div>
+        <h2>${esc(item.titulo)}</h2>
+        <div class="item-meta">
+          ${item.categoria ? esc(item.categoria) : 'sin categoría'}
+          ${item.duracion ? ' · ⏱ ' + esc(item.duracion) : ''}
+          ${item.fuente ? ' · ' + esc(item.fuente) : ''}
+        </div>
+      </div>
+    </div>
+
+    <p class="evento-detalle-desc">${esc(item.descripcion || '')}</p>
+
+    ${item.instrucciones ? `
+      <div class="evento-instrucciones">
+        <strong>Cómo hacerlo:</strong><br>
+        ${esc(item.instrucciones)}
+      </div>
+    ` : ''}
+
+    ${bloquesHtml || `
+      <div class="evento-instrucciones">
+        Esta idea no tiene pasos extra. Puedes usarla como actividad simple.
+      </div>
+    `}
+
+    <div class="item-actions evento-detalle-actions">
+      <button class="btn btn-sm" onclick="copiarEventoCompleto(${item.id})">Copiar guía completa</button>
+      <button class="btn btn-sm" onclick="crearPlanDesdeEvento(${item.id})">Usar en plan</button>
+      <button class="btn btn-sm btn-edit" onclick="editarEventoDesdeDetalle(${item.id})">Editar</button>
+    </div>
+  `;
+}
+
+async function editarEventoDesdeCache(id) {
+  try {
+    const item = await obtenerEventoCompleto(id);
+    abrirModalEvento(item);
+  } catch {
+    toast('No se encontró la idea.');
+  }
+}
+
+async function editarEventoDesdeDetalle(id) {
+  cerrarDetalleEvento();
+  await editarEventoDesdeCache(id);
 }
 
 async function copiarEvento(id) {
-  if (!eventosCache.length) await cargarEventosCache();
-  const item = obtenerEventoCache(id);
-  if (!item) return toast('No se encontró la idea.');
-
-  const texto = `${item.titulo}\n${item.descripcion}`;
-
   try {
+    const item = await obtenerEventoCompleto(id);
+    const texto = item.items && item.items.length
+      ? eventoTextoCompleto(item)
+      : `${item.titulo}\n${item.descripcion || ''}`;
+
     await navigator.clipboard.writeText(texto);
     toast('Idea copiada ♡');
   } catch {
@@ -266,16 +452,31 @@ async function copiarEvento(id) {
   }
 }
 
+async function copiarEventoCompleto(id) {
+  try {
+    const item = await obtenerEventoCompleto(id);
+    await navigator.clipboard.writeText(eventoTextoCompleto(item));
+    toast('Guía completa copiada ♡');
+  } catch {
+    toast('No se pudo copiar la guía.');
+  }
+}
+
 async function crearPlanDesdeEvento(id) {
-  if (!eventosCache.length) await cargarEventosCache();
-  const item = obtenerEventoCache(id);
-  if (!item) return toast('No se encontró la idea.');
+  let item;
+
+  try {
+    item = await obtenerEventoCompleto(id);
+  } catch {
+    return toast('No se encontró la idea.');
+  }
 
   if (typeof openModal !== 'function') {
     toast('No se pudo abrir el formulario de planes.');
     return;
   }
 
+  cerrarDetalleEvento();
   openModal('citas');
 
   setTimeout(() => {
@@ -283,9 +484,7 @@ async function crearPlanDesdeEvento(id) {
     const descripcion = document.getElementById('f-descripcion');
 
     if (titulo) titulo.value = item.titulo || '';
-    if (descripcion) {
-      descripcion.value = `${item.descripcion || ''}${item.duracion ? '\n\nDuración sugerida: ' + item.duracion : ''}`;
-    }
+    if (descripcion) descripcion.value = eventoTextoCompleto(item);
   }, 80);
 }
 
@@ -334,9 +533,10 @@ async function sugerirEventoAleatorio() {
             ${eventoTipoLabel(item.tipo)}
             ${item.categoria ? ' · ' + esc(item.categoria) : ''}
             ${item.duracion ? ' · ⏱ ' + esc(item.duracion) : ''}
+            ${item.total_items ? ' · ' + item.total_items + ' pasos' : ''}
           </div>
           <div class="item-actions" style="margin-top:12px;">
-            <button class="btn btn-sm" onclick="copiarEvento(${item.id})">Copiar</button>
+            <button class="btn btn-sm" onclick="abrirDetalleEvento(${item.id})">Abrir</button>
             <button class="btn btn-sm" onclick="crearPlanDesdeEvento(${item.id})">Usar en plan</button>
           </div>
         </div>
@@ -348,27 +548,27 @@ async function sugerirEventoAleatorio() {
   }
 }
 
-// Sobrescribimos loadEventos para mantener cache actualizada después de renderizar.
-const loadEventosOriginal = loadEventos;
-loadEventos = async function() {
-  await loadEventosOriginal();
-  await cargarEventosCache();
-};
-
 window.loadEventos = loadEventos;
 window.abrirModalEvento = abrirModalEvento;
 window.cerrarModalEvento = cerrarModalEvento;
 window.guardarEvento = guardarEvento;
 window.editarEventoDesdeCache = editarEventoDesdeCache;
+window.editarEventoDesdeDetalle = editarEventoDesdeDetalle;
 window.eliminarEvento = eliminarEvento;
 window.copiarEvento = copiarEvento;
+window.copiarEventoCompleto = copiarEventoCompleto;
 window.crearPlanDesdeEvento = crearPlanDesdeEvento;
 window.sugerirEventoAleatorio = sugerirEventoAleatorio;
+window.abrirDetalleEvento = abrirDetalleEvento;
+window.cerrarDetalleEvento = cerrarDetalleEvento;
 
-// Escape para cerrar el modal de eventos.
+// Escape para cerrar modales de eventos.
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') {
-    const modal = document.getElementById('modal-evento');
-    if (modal && modal.classList.contains('open')) cerrarModalEvento();
+    const modalEditar = document.getElementById('modal-evento');
+    const modalDetalle = document.getElementById('modal-evento-detalle');
+
+    if (modalEditar && modalEditar.classList.contains('open')) cerrarModalEvento();
+    if (modalDetalle && modalDetalle.classList.contains('open')) cerrarDetalleEvento();
   }
 });
