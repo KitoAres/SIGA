@@ -71,7 +71,7 @@
       </button>
 
       <button class="nav-item" onclick="navigateTo('eventos')">
-        <span class="nav-icon">🎲</span> Eventos y preguntas
+        <span class="nav-icon">🎯</span> Misiones de conexión
       </button>
 
       <button class="nav-item" onclick="navigateTo('cajita')">
@@ -146,6 +146,29 @@
           <div class="stat-icon">💜</div>
           <div class="stat-number" id="stat-razones">—</div>
           <div class="stat-label">Razones para quererte</div>
+        </div>
+      </div>
+
+      <div class="misiones-dashboard-card" id="misiones-dashboard-card">
+        <div class="misiones-dashboard-main">
+          <div class="misiones-dashboard-icon">🏆</div>
+          <div class="misiones-dashboard-info">
+            <div class="misiones-dashboard-label">Nivel de conexión</div>
+            <div class="misiones-dashboard-title" id="misiones-nivel-nombre">Cargando progreso...</div>
+            <div class="misiones-dashboard-sub" id="misiones-nivel-texto">Las misiones cumplidas suman puntos para ambos.</div>
+          </div>
+          <div class="misiones-dashboard-points">
+            <span id="misiones-puntos-total">0</span> pts
+          </div>
+        </div>
+
+        <div class="misiones-progress-wrap">
+          <div class="misiones-progress-bar" id="misiones-progress-bar" style="width:0%;"></div>
+        </div>
+
+        <div class="misiones-dashboard-footer">
+          <span id="misiones-progreso-detalle">0 / 100 pts para el siguiente nivel</span>
+          <button class="btn btn-sm" onclick="navigateTo('eventos')">Ver misiones</button>
         </div>
       </div>
     </section>
@@ -292,33 +315,33 @@
     </section>
 
 
-    <!-- EVENTOS Y PREGUNTAS -->
+    <!-- MISIONES DE CONEXIÓN -->
     <section class="page" id="page-eventos">
       <div class="page-header">
         <div>
-          <h1 class="page-title">Eventos <span>y preguntas</span></h1>
-          <p class="page-subtitle">Ideas suaves para coincidir: planes, preguntas, juegos y actividades.</p>
+          <h1 class="page-title">Misiones <span>de conexión</span></h1>
+          <p class="page-subtitle">Pequeñas misiones para conectar, sumar puntos y subir de nivel juntos.</p>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <button class="btn" onclick="sugerirEventoAleatorio()">🎲 Sorpresa</button>
-          <button class="btn-add" onclick="abrirModalEvento()">+ Nueva idea</button>
+          <button class="btn" onclick="sugerirEventoAleatorio()">🎲 Misión sorpresa</button>
+          <button class="btn-add" onclick="abrirModalEvento()">+ Nueva misión</button>
         </div>
       </div>
 
       <div class="eventos-hero-card">
-        <div class="eventos-hero-icon">🎲</div>
+        <div class="eventos-hero-icon">🎯</div>
         <div>
-          <h3>Un banco de ideas para cuando haya match.</h3>
-          <p>Guarda preguntas, citas, juegos o actividades. Luego puedes usarlas para convertir un match de tiempo en un plan real, sin hacerlo pesado.</p>
+          <h3>Misiones para sumar momentos.</h3>
+          <p>Elijan una misión, háganla a su ritmo y márquenla como cumplida. Cada misión suma puntos a la relación y desbloquea niveles simbólicos.</p>
         </div>
       </div>
 
       <div class="eventos-random-card" id="evento-random-box">
-        <div class="eventos-random-empty">Toca “Sorpresa” para elegir una idea al azar.</div>
+        <div class="eventos-random-empty">Toca “Misión sorpresa” para elegir una misión al azar.</div>
       </div>
 
       <div class="eventos-toolbar">
-        <input type="text" id="evento-buscar" placeholder="Buscar idea, pregunta o actividad..." oninput="loadEventos()"/>
+        <input type="text" id="evento-buscar" placeholder="Buscar misión, pregunta o actividad..." oninput="loadEventos()"/>
         <select id="evento-filtro-tipo" onchange="loadEventos()">
           <option value="">Todo</option>
           <option value="pregunta">Preguntas</option>
@@ -329,9 +352,10 @@
         </select>
         <select id="evento-filtro-nivel" onchange="loadEventos()">
           <option value="">Cualquier nivel</option>
-          <option value="suave">Suave</option>
-          <option value="medio">Medio</option>
-          <option value="profundo">Profundo</option>
+          <option value="facil">Fácil</option>
+          <option value="medio">Media</option>
+          <option value="dificil">Difícil</option>
+          <option value="hardcore">Legendaria</option>
         </select>
       </div>
 
@@ -560,7 +584,7 @@
 </div>
     
   <script src="/js/app.js?v=calma-6"></script>
-  <script src="/js/eventos.js?v=eventos-1"></script>
+  <script src="/js/eventos.js?v=misiones-1"></script>
 
 <script>
 /* ======================================================
@@ -578,7 +602,7 @@
     'Promesas': 'promesas',
     'Carta': 'carta',
     '¿Nos vemos?': 'tiempo',
-    'Eventos y preguntas': 'eventos',
+    'Misiones de conexión': 'eventos',
     'Cajita especial': 'cajita',
     'Pregunta final': 'pregunta'
   };
