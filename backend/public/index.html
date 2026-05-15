@@ -84,6 +84,11 @@
   <span class="nav-icon">🌙</span>
   <span>Modo calma</span>
 </button>
+
+<button class="nav-item nav-admin-only" id="nav-admin-panel" style="display:none;" onclick="navigateTo('admin')">
+  <span class="nav-icon">📊</span>
+  <span>Panel admin</span>
+</button>
     </nav>
 
 <div class="sidebar-footer">
@@ -360,64 +365,6 @@
       </div>
 
       <div class="items-grid" id="list-eventos"></div>
-
-      <!-- PANEL ADMIN: HISTORIAL Y ESTADÍSTICAS -->
-      <div class="misiones-admin-panel" id="misiones-admin-panel" style="display:none;">
-        <div class="admin-panel-header">
-          <div>
-            <div class="admin-kicker">Solo admin</div>
-            <h3>Panel de control SIGA</h3>
-            <p>Historial, estadísticas y limpieza de misiones marcadas por error.</p>
-          </div>
-          <button class="btn btn-sm" onclick="cargarPanelAdminMisiones()">Actualizar</button>
-        </div>
-
-        <div class="admin-stats-grid">
-          <div class="admin-stat-card">
-            <span class="admin-stat-label">Misiones cumplidas</span>
-            <strong id="admin-misiones-total">—</strong>
-            <small id="admin-misiones-puntos">— pts acumulados</small>
-          </div>
-          <div class="admin-stat-card">
-            <span class="admin-stat-label">Modo calma</span>
-            <strong id="admin-calma-total">—</strong>
-            <small id="admin-calma-dias">— días programados</small>
-          </div>
-          <div class="admin-stat-card">
-            <span class="admin-stat-label">Planes / citas</span>
-            <strong id="admin-citas-total">—</strong>
-            <small id="admin-citas-detalle">—</small>
-          </div>
-          <div class="admin-stat-card">
-            <span class="admin-stat-label">Accesos al sistema</span>
-            <strong id="admin-accesos-total">—</strong>
-            <small id="admin-accesos-detalle">últimos 30 días</small>
-          </div>
-        </div>
-
-        <div class="admin-grid-two">
-          <div class="admin-box">
-            <div class="admin-box-title">Misiones recientes</div>
-            <div id="admin-misiones-recientes" class="admin-list-mini">Cargando...</div>
-          </div>
-          <div class="admin-box">
-            <div class="admin-box-title">Últimos accesos</div>
-            <div id="admin-accesos-lista" class="admin-list-mini">Cargando...</div>
-          </div>
-        </div>
-
-        <div class="admin-grid-two">
-          <div class="admin-box">
-            <div class="admin-box-title">Actividad por usuario</div>
-            <div id="admin-usuarios-actividad" class="admin-list-mini">Cargando...</div>
-          </div>
-          <div class="admin-box">
-            <div class="admin-box-title">Modo calma y planes</div>
-            <div id="admin-calma-citas-lista" class="admin-list-mini">Cargando...</div>
-          </div>
-        </div>
-      </div>
-
     </section>
 
     <!-- CAJITA ESPECIAL -->
@@ -465,6 +412,83 @@
 
   <div id="calma-activa-box"></div>
 </section>
+
+
+<!-- PANEL ADMIN -->
+<section class="page" id="page-admin">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Panel <span>admin</span></h1>
+      <p class="page-subtitle">Estadísticas privadas, accesos, misiones cumplidas y limpieza de errores.</p>
+    </div>
+    <button class="btn" onclick="loadAdminPanel()">Actualizar</button>
+  </div>
+
+  <div class="admin-hero-card">
+    <div class="admin-hero-icon">📊</div>
+    <div>
+      <h3>Centro de control SIGA</h3>
+      <p>Este módulo solo aparece para el rol <strong>admin</strong>. Sirve para revisar actividad, detectar errores y administrar misiones marcadas por accidente.</p>
+    </div>
+  </div>
+
+  <div id="admin-private-warning" class="admin-warning" style="display:none;">
+    Este panel solo está disponible para el administrador.
+  </div>
+
+  <div id="admin-panel-content" style="display:none;">
+    <div class="admin-stats-grid">
+      <div class="admin-stat-card">
+        <span class="admin-stat-label">Puntos de relación</span>
+        <strong id="admin-puntos-total">—</strong>
+        <small id="admin-puntos-detalle">—</small>
+      </div>
+      <div class="admin-stat-card">
+        <span class="admin-stat-label">Misiones cumplidas</span>
+        <strong id="admin-misiones-total">—</strong>
+        <small id="admin-misiones-puntos">—</small>
+      </div>
+      <div class="admin-stat-card">
+        <span class="admin-stat-label">Modo calma</span>
+        <strong id="admin-calma-total">—</strong>
+        <small id="admin-calma-dias">—</small>
+      </div>
+      <div class="admin-stat-card">
+        <span class="admin-stat-label">Planes / citas</span>
+        <strong id="admin-citas-total">—</strong>
+        <small id="admin-citas-detalle">—</small>
+      </div>
+      <div class="admin-stat-card">
+        <span class="admin-stat-label">Accesos</span>
+        <strong id="admin-accesos-total">—</strong>
+        <small id="admin-accesos-detalle">—</small>
+      </div>
+    </div>
+
+    <div class="admin-grid-two">
+      <div class="admin-box">
+        <div class="admin-box-title">Misiones cumplidas recientes</div>
+        <div id="admin-misiones-recientes" class="admin-list-mini">Cargando...</div>
+      </div>
+      <div class="admin-box">
+        <div class="admin-box-title">Registro de accesos</div>
+        <div id="admin-accesos-lista" class="admin-list-mini">Cargando...</div>
+      </div>
+    </div>
+
+    <div class="admin-grid-two">
+      <div class="admin-box">
+        <div class="admin-box-title">Actividad por usuario</div>
+        <div id="admin-usuarios-actividad" class="admin-list-mini">Cargando...</div>
+      </div>
+      <div class="admin-box">
+        <div class="admin-box-title">Modo calma y planes</div>
+        <div id="admin-calma-citas-lista" class="admin-list-mini">Cargando...</div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- ── MODALES ─────────────────────────────────── -->
 
 <!-- Modal genérico CRUD -->
@@ -642,7 +666,8 @@
 </div>
     
   <script src="/js/app.js?v=calma-6"></script>
-  <script src="/js/eventos.js?v=misiones-admin-2"></script>
+  <script src="/js/eventos.js?v=misiones-clean-1"></script>
+  <script src="/js/admin.js?v=admin-separado-1"></script>
 
 <script>
 /* ======================================================
@@ -707,7 +732,8 @@
       promesas: window.loadPromesas,
       carta: window.loadCarta,
       cajita: window.loadCajita,
-      eventos: window.loadEventos
+      eventos: window.loadEventos,
+      admin: window.loadAdminPanel
     };
 
     if (typeof loaders[page] === 'function') {
