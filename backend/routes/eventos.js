@@ -1,8 +1,3 @@
-/* ============================================================
-   SIGA — routes/eventos.js
-   Módulo: Eventos, actividades, preguntas y guías
-   Reemplaza: backend/routes/eventos.js
-   ============================================================ */
 
 const express = require('express');
 const router = express.Router();
