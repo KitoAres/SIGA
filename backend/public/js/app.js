@@ -1,4 +1,8 @@
-/* Primer avance... Esta jodido, pero se puede. Vamos que se puede. */
+/* ============================================================
+   SIGA — app.js
+   JS puro, compatible con cualquier navegador moderno.
+   Sin imports, sin módulos, sin frameworks.
+   ============================================================ */
 
 'use strict';
 
@@ -215,7 +219,7 @@ function navigateTo(page) {
     promesas: 'Promesas',
     carta: 'Carta',
     tiempo: '¿Nos vemos?',
-    eventos: 'Eventos y preguntas',
+    eventos: 'Misiones de conexión',
     cajita: 'Cajita especial',
     pregunta: 'Pregunta final'
   };
@@ -1719,7 +1723,7 @@ function forzarSeccion(page) {
     promesas: 'Promesas',
     carta: 'Carta',
     tiempo: '¿Nos vemos?',
-    eventos: 'Eventos y preguntas',
+    eventos: 'Misiones de conexión',
     cajita: 'Cajita especial',
     calma: 'Modo calma',
     pregunta: 'Pregunta final'
@@ -1761,7 +1765,7 @@ document.addEventListener('click', function(e) {
   else if (texto.includes('Promesas')) forzarSeccion('promesas');
   else if (texto.includes('Carta')) forzarSeccion('carta');
   else if (texto.includes('¿Nos vemos?')) forzarSeccion('tiempo');
-  else if (texto.includes('Eventos y preguntas')) forzarSeccion('eventos');
+  else if (texto.includes('Misiones de conexión')) forzarSeccion('eventos');
   else if (texto.includes('Cajita especial')) forzarSeccion('cajita');
   else if (texto.includes('Modo calma')) forzarSeccion('calma');
 });
