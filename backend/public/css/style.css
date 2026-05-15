@@ -2709,3 +2709,106 @@ body::after {
     flex-direction: column;
   }
 }
+
+/* ============================================================
+   SIGA — CSS extra v2 para Eventos con guías/preguntas
+   Pegar al FINAL de backend/public/css/style.css
+   ============================================================ */
+
+.modal-evento-editar,
+.modal-evento-detalle-card {
+  max-width: 760px;
+}
+
+.modal-evento-editar textarea#evento-items {
+  min-height: 180px;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.evento-detalle-header {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.evento-detalle-header h2 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2rem;
+  font-weight: 400;
+  margin: 2px 0 4px;
+}
+
+.evento-detalle-label {
+  font-size: 0.76rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.evento-detalle-desc {
+  color: var(--text-secondary);
+  line-height: 1.7;
+  margin-bottom: 16px;
+}
+
+.evento-instrucciones {
+  background: rgba(180,130,220,0.08);
+  border: 1px solid rgba(180,130,220,0.18);
+  border-radius: var(--radius);
+  padding: 16px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  margin-bottom: 18px;
+}
+
+.evento-detalle-bloque {
+  margin-top: 18px;
+}
+
+.evento-detalle-bloque h3 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.35rem;
+  font-weight: 400;
+  margin-bottom: 10px;
+  color: var(--text-primary);
+}
+
+.evento-pasos-lista {
+  display: grid;
+  gap: 10px;
+}
+
+.evento-paso {
+  display: flex;
+  gap: 12px;
+  background: var(--bg-card2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+}
+
+.evento-paso-num {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink));
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  flex-shrink: 0;
+}
+
+.evento-paso-text {
+  color: var(--text-secondary);
+  line-height: 1.55;
+  font-size: 0.92rem;
+}
+
+.evento-detalle-actions {
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
