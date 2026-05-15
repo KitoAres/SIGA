@@ -24,6 +24,7 @@ app.use('/api/cartas', require('./routes/cartas'));
 app.use('/api/tiempo', require('./routes/tiempo'));
 app.use('/api/calma', require('./routes/calma'));
 app.use('/api/cajita', require('./routes/cajita'));
+app.use('/api/eventos', require('./routes/eventos'));
 
 // Ruta raíz
 app.get('/', (req, res) => {
