@@ -1,8 +1,3 @@
-/* ============================================================
-   SIGA — app.js
-   JS puro, compatible con cualquier navegador moderno.
-   Sin imports, sin módulos, sin frameworks.
-   ============================================================ */
 
 'use strict';
 
