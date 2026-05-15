@@ -1,3 +1,8 @@
+/* ============================================================
+   SIGA — routes/eventos.js
+   Módulo: Misiones de conexión + gamificación
+   Reemplaza: backend/routes/eventos.js
+   ============================================================ */
 
 const express = require('express');
 const router = express.Router();
@@ -15,13 +20,56 @@ function validarTipo(tipo) {
 }
 
 function validarNivel(nivel) {
-  const permitidos = ['suave', 'medio', 'profundo'];
-  return permitidos.includes(nivel) ? nivel : 'suave';
+  const mapa = {
+    suave: 'facil',
+    fácil: 'facil',
+    facil: 'facil',
+    medio: 'medio',
+    dificil: 'dificil',
+    difícil: 'dificil',
+    profundo: 'dificil',
+    hardcore: 'hardcore',
+    legendaria: 'hardcore',
+    especial: 'hardcore'
+  };
+  const key = normalizarTexto(nivel)?.toLowerCase();
+  return mapa[key] || 'facil';
 }
 
 function validarModo(modo) {
   const permitidos = ['simple', 'guia'];
   return permitidos.includes(modo) ? modo : 'simple';
+}
+
+function puntosPorNivel(nivel) {
+  const n = validarNivel(nivel);
+  return { facil: 10, medio: 25, dificil: 50, hardcore: 100 }[n] || 10;
+}
+
+function calcularNivelRelacion(total) {
+  const niveles = [
+    { nivel: 1, nombre: 'Primeros destellos', minimo: 0, siguiente: 100, emoji: '✨' },
+    { nivel: 2, nombre: 'Coincidencia bonita', minimo: 100, siguiente: 250, emoji: '💫' },
+    { nivel: 3, nombre: 'Ritmo propio', minimo: 250, siguiente: 500, emoji: '🌙' },
+    { nivel: 4, nombre: 'Cuidado mutuo', minimo: 500, siguiente: 850, emoji: '💜' },
+    { nivel: 5, nombre: 'Historia compartida', minimo: 850, siguiente: 1300, emoji: '📖' },
+    { nivel: 6, nombre: 'Vínculo fuerte', minimo: 1300, siguiente: 2000, emoji: '🏆' },
+    { nivel: 7, nombre: 'Modo legendario', minimo: 2000, siguiente: 3000, emoji: '👑' },
+    { nivel: 8, nombre: 'Universo propio', minimo: 3000, siguiente: null, emoji: '🌌' }
+  ];
+
+  let actual = niveles[0];
+  for (const n of niveles) {
+    if (total >= n.minimo) actual = n;
+  }
+
+  const siguiente = actual.siguiente;
+  const faltan = siguiente ? Math.max(siguiente - total, 0) : 0;
+  const progreso = siguiente
+    ? Math.min(Math.round(((total - actual.minimo) / (siguiente - actual.minimo)) * 100), 100)
+    : 100;
+
+  return { ...actual, total, faltan, progreso };
 }
 
 function limpiarItems(items) {
@@ -52,6 +100,46 @@ async function guardarItems(client, eventoId, items) {
   }
 }
 
+// GET /api/eventos/progreso
+router.get('/progreso', async (req, res) => {
+  try {
+    const resumen = await pool.query(
+      `SELECT
+          COALESCE(SUM(puntos), 0)::int AS puntos,
+          COUNT(*)::int AS completadas,
+          COUNT(*) FILTER (WHERE fecha = CURRENT_DATE)::int AS hoy
+       FROM misiones_completadas`
+    );
+
+    const porNivel = await pool.query(
+      `SELECT nivel, COUNT(*)::int AS total, COALESCE(SUM(puntos), 0)::int AS puntos
+       FROM misiones_completadas
+       GROUP BY nivel`
+    );
+
+    const ultimas = await pool.query(
+      `SELECT id, evento_id, titulo, nivel, puntos, comentario, fecha, creado_en
+       FROM misiones_completadas
+       ORDER BY creado_en DESC
+       LIMIT 5`
+    );
+
+    const total = resumen.rows[0]?.puntos || 0;
+
+    res.json({
+      puntos: total,
+      completadas: resumen.rows[0]?.completadas || 0,
+      hoy: resumen.rows[0]?.hoy || 0,
+      nivel: calcularNivelRelacion(total),
+      por_nivel: porNivel.rows,
+      ultimas: ultimas.rows
+    });
+  } catch (err) {
+    console.error('Error GET /api/eventos/progreso:', err);
+    res.status(500).json({ error: 'Error al cargar progreso de misiones' });
+  }
+});
+
 // GET /api/eventos?q=&tipo=&nivel=
 router.get('/', async (req, res) => {
   const { q, tipo, nivel } = req.query;
@@ -65,7 +153,7 @@ router.get('/', async (req, res) => {
   }
 
   if (nivel) {
-    valores.push(nivel);
+    valores.push(validarNivel(nivel));
     filtros.push(`e.nivel = $${valores.length}`);
   }
 
@@ -99,19 +187,28 @@ router.get('/', async (req, res) => {
           e.activo,
           e.creado_por,
           e.creado_en,
-          COUNT(ei.id)::int AS total_items
+          COUNT(ei.id)::int AS total_items,
+          COALESCE((SELECT COUNT(*)::int FROM misiones_completadas mc WHERE mc.evento_id = e.id), 0) AS completada_total
        FROM eventos_preguntas e
        LEFT JOIN evento_items ei ON ei.evento_id = e.id
        WHERE ${filtros.join(' AND ')}
        GROUP BY e.id
-       ORDER BY e.creado_en DESC, e.id DESC`,
+       ORDER BY
+        CASE e.nivel
+          WHEN 'facil' THEN 1
+          WHEN 'medio' THEN 2
+          WHEN 'dificil' THEN 3
+          WHEN 'hardcore' THEN 4
+          ELSE 5
+        END,
+        e.titulo ASC`,
       valores
     );
 
     res.json(result.rows);
   } catch (err) {
     console.error('Error GET /api/eventos:', err);
-    res.status(500).json({ error: 'Error al cargar eventos y preguntas' });
+    res.status(500).json({ error: 'Error al cargar misiones' });
   }
 });
 
@@ -128,7 +225,7 @@ router.get('/aleatorio', async (req, res) => {
   }
 
   if (nivel) {
-    valores.push(nivel);
+    valores.push(validarNivel(nivel));
     filtros.push(`e.nivel = $${valores.length}`);
   }
 
@@ -145,7 +242,8 @@ router.get('/aleatorio', async (req, res) => {
           COALESCE(e.modo, 'simple') AS modo,
           e.instrucciones,
           e.fuente,
-          COUNT(ei.id)::int AS total_items
+          COUNT(ei.id)::int AS total_items,
+          COALESCE((SELECT COUNT(*)::int FROM misiones_completadas mc WHERE mc.evento_id = e.id), 0) AS completada_total
        FROM eventos_preguntas e
        LEFT JOIN evento_items ei ON ei.evento_id = e.id
        WHERE ${filtros.join(' AND ')}
@@ -156,13 +254,13 @@ router.get('/aleatorio', async (req, res) => {
     );
 
     if (!result.rows.length) {
-      return res.status(404).json({ error: 'No hay ideas disponibles' });
+      return res.status(404).json({ error: 'No hay misiones disponibles' });
     }
 
     res.json(result.rows[0]);
   } catch (err) {
     console.error('Error GET /api/eventos/aleatorio:', err);
-    res.status(500).json({ error: 'Error al sugerir una idea' });
+    res.status(500).json({ error: 'Error al sugerir una misión' });
   }
 });
 
@@ -183,14 +281,15 @@ router.get('/:id', async (req, res) => {
           fuente,
           activo,
           creado_por,
-          creado_en
+          creado_en,
+          COALESCE((SELECT COUNT(*)::int FROM misiones_completadas mc WHERE mc.evento_id = eventos_preguntas.id), 0) AS completada_total
        FROM eventos_preguntas
        WHERE id = $1 AND activo = true`,
       [req.params.id]
     );
 
     if (!eventoResult.rows.length) {
-      return res.status(404).json({ error: 'Idea no encontrada' });
+      return res.status(404).json({ error: 'Misión no encontrada' });
     }
 
     const itemsResult = await pool.query(
@@ -203,11 +302,74 @@ router.get('/:id', async (req, res) => {
 
     res.json({
       ...eventoResult.rows[0],
+      puntos: puntosPorNivel(eventoResult.rows[0].nivel),
       items: itemsResult.rows
     });
   } catch (err) {
     console.error('Error GET /api/eventos/:id:', err);
-    res.status(500).json({ error: 'Error al cargar la guía' });
+    res.status(500).json({ error: 'Error al cargar la misión' });
+  }
+});
+
+// POST /api/eventos/:id/completar
+router.post('/:id/completar', async (req, res) => {
+  const { usuario_id, comentario } = req.body || {};
+
+  try {
+    const eventoResult = await pool.query(
+      `SELECT id, titulo, nivel
+       FROM eventos_preguntas
+       WHERE id = $1 AND activo = true`,
+      [req.params.id]
+    );
+
+    if (!eventoResult.rows.length) {
+      return res.status(404).json({ error: 'Misión no encontrada' });
+    }
+
+    const evento = eventoResult.rows[0];
+    const nivel = validarNivel(evento.nivel);
+    const puntos = puntosPorNivel(nivel);
+
+    try {
+      const insert = await pool.query(
+        `INSERT INTO misiones_completadas
+          (evento_id, usuario_id, titulo, nivel, puntos, comentario)
+         VALUES ($1, $2, $3, $4, $5, $6)
+         RETURNING id, evento_id, titulo, nivel, puntos, fecha, creado_en`,
+        [evento.id, usuario_id || null, evento.titulo, nivel, puntos, normalizarTexto(comentario)]
+      );
+
+      const progreso = await pool.query(
+        `SELECT COALESCE(SUM(puntos), 0)::int AS total
+         FROM misiones_completadas`
+      );
+
+      return res.json({
+        ok: true,
+        repetida: false,
+        completada: insert.rows[0],
+        progreso: calcularNivelRelacion(progreso.rows[0]?.total || 0)
+      });
+    } catch (err) {
+      if (err.code === '23505') {
+        const progreso = await pool.query(
+          `SELECT COALESCE(SUM(puntos), 0)::int AS total
+           FROM misiones_completadas`
+        );
+
+        return res.json({
+          ok: true,
+          repetida: true,
+          mensaje: 'Esta misión ya fue marcada como cumplida hoy por este usuario.',
+          progreso: calcularNivelRelacion(progreso.rows[0]?.total || 0)
+        });
+      }
+      throw err;
+    }
+  } catch (err) {
+    console.error('Error POST /api/eventos/:id/completar:', err);
+    res.status(500).json({ error: 'Error al completar la misión' });
   }
 });
 
@@ -264,7 +426,7 @@ router.post('/', async (req, res) => {
   } catch (err) {
     await client.query('ROLLBACK');
     console.error('Error POST /api/eventos:', err);
-    res.status(500).json({ error: 'Error al guardar la idea' });
+    res.status(500).json({ error: 'Error al guardar la misión' });
   } finally {
     client.release();
   }
@@ -323,7 +485,7 @@ router.put('/:id', async (req, res) => {
 
     if (!result.rows.length) {
       await client.query('ROLLBACK');
-      return res.status(404).json({ error: 'Idea no encontrada' });
+      return res.status(404).json({ error: 'Misión no encontrada' });
     }
 
     await guardarItems(client, req.params.id, items);
@@ -333,7 +495,7 @@ router.put('/:id', async (req, res) => {
   } catch (err) {
     await client.query('ROLLBACK');
     console.error('Error PUT /api/eventos:', err);
-    res.status(500).json({ error: 'Error al actualizar la idea' });
+    res.status(500).json({ error: 'Error al actualizar la misión' });
   } finally {
     client.release();
   }
@@ -351,13 +513,13 @@ router.delete('/:id', async (req, res) => {
     );
 
     if (!result.rows.length) {
-      return res.status(404).json({ error: 'Idea no encontrada' });
+      return res.status(404).json({ error: 'Misión no encontrada' });
     }
 
     res.json({ ok: true });
   } catch (err) {
     console.error('Error DELETE /api/eventos:', err);
-    res.status(500).json({ error: 'Error al eliminar la idea' });
+    res.status(500).json({ error: 'Error al eliminar la misión' });
   }
 });
 
