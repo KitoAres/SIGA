@@ -1,4 +1,4 @@
-/* SIGA — admin.js: panel admin separado con detalles clicables */
+/* SIGA — admin.js: panel admin separado con detalles clicables asdsadsaf*/
 (function(){
   function qs(id){return document.getElementById(id)}
   function esc(v){return String(v??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;')}
