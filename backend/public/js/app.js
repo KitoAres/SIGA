@@ -977,6 +977,7 @@ async function loadCajita() {
 
   try {
     const items = await api('GET', '/api/cajita');
+    window.cajitaCache = items;
 
     if (!items.length) {
       container.innerHTML = emptyState('🎁', 'Aún no hay detalles guardados en la cajita.');
@@ -1004,28 +1005,44 @@ async function loadCajita() {
 
         <p class="item-desc">${esc(item.descripcion || '')}</p>
 
-        <a class="btn-link-recuerdo" href="${esc(item.enlace)}" target="_blank" rel="noopener">
-          Abrir detalle especial ♡
-        </a>
+        ${
+          item.enlace
+            ? `<a class="btn-link-recuerdo" href="${esc(item.enlace)}" target="_blank" rel="noopener">
+                Abrir detalle especial ♡
+              </a>`
+            : ''
+        }
 
         <div class="item-actions">
-          <button class="btn btn-sm btn-edit" onclick="openModal(
-            'cajita',
-            ${item.id},
-            '${esc(item.titulo)}',
-            '${esc(item.tipo || 'otro')}',
-            '${esc(item.descripcion || '')}',
-            '${esc(item.enlace)}',
-            '${item.fecha ? item.fecha.split('T')[0] : ''}'
-          )">Editar</button>
-
+          <button class="btn btn-sm btn-edit" onclick="editarCajitaSeguro(${item.id})">Editar</button>
           <button class="btn btn-sm btn-delete" onclick="deleteItem('cajita', ${item.id})">Eliminar</button>
         </div>
       </div>
     `).join('');
-  } catch {
+
+  } catch (err) {
+    console.error('Error al cargar cajita:', err);
     container.innerHTML = '<div style="color:var(--danger);padding:20px;">Error al cargar la cajita.</div>';
   }
+}
+
+function editarCajitaSeguro(id) {
+  const item = (window.cajitaCache || []).find(x => Number(x.id) === Number(id));
+
+  if (!item) {
+    toast('No se encontró el detalle para editar.');
+    return;
+  }
+
+  openModal(
+    'cajita',
+    item.id,
+    item.titulo || '',
+    item.tipo || 'otro',
+    item.descripcion || '',
+    item.enlace || '',
+    normalizarFecha(item.fecha)
+  );
 }
 // ── MI CUENTA / PERFIL ─────────────────────────────────────────
 async function abrirModalPerfil() {
