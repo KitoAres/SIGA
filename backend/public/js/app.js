@@ -2267,7 +2267,7 @@ async function loadCalma() {
             <div class="calma-tool-card espera">
               <h4>Modo espera segura</h4>
               <p>
-                No tienes que perseguir para no perder.
+                Dar espacio es una forma de amar.
                 Si hay una señal, hay vínculo.
               </p>
             </div>
