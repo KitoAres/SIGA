@@ -271,6 +271,9 @@ async function loadDashboard() {
   }
 cargarFraseDelDia();
   await cargarAvisoMatchDashboard();
+  if (typeof cargarProgresoGlobal === 'function') {
+  await cargarProgresoGlobal();
+  }
 }
 function cargarFraseDelDia() {
   const el = $('frase-dia-text');
