@@ -215,10 +215,11 @@ router.post('/:id/checkin', async (req, res) => {
       });
     }
 
-    await pool.query(
+    const checkinInsert = await pool.query(
       `INSERT INTO modo_calma_checkins
        (calma_id, usuario_id, mensaje)
-       VALUES ($1, $2, $3)`,
+       VALUES ($1, $2, $3)
+       RETURNING id, creado_en`,
       [
         req.params.id,
         usuario_id,
@@ -226,9 +227,46 @@ router.post('/:id/checkin', async (req, res) => {
       ]
     );
 
+    const checkinId = checkinInsert.rows[0].id;
+
+    // Máximo 1 recompensa de calma por usuario al día.
+    // Puede dejar más señales, pero solo la primera del día suma puntos.
+    const yaTienePuntoHoy = await pool.query(
+      `SELECT id
+       FROM puntos_conexion
+       WHERE usuario_id = $1
+         AND fuente = 'calma'
+         AND creado_en::date = CURRENT_DATE
+       LIMIT 1`,
+      [usuario_id]
+    );
+
+    let puntosOtorgados = 0;
+
+    if (!yaTienePuntoHoy.rows.length) {
+      puntosOtorgados = 10;
+
+      await pool.query(
+        `INSERT INTO puntos_conexion
+          (usuario_id, fuente, referencia_id, descripcion, puntos)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [
+          usuario_id,
+          'calma',
+          checkinId,
+          'Señal de calma enviada',
+          puntosOtorgados
+        ]
+      );
+    }
+
     res.json({
       ok: true,
-      message: 'Señal guardada'
+      message: 'Señal guardada',
+      puntos_otorgados: puntosOtorgados,
+      mensaje_bonito: puntosOtorgados > 0
+        ? 'Gracias por dejar una señal. A veces una frase pequeña también cuida el vínculo.'
+        : 'Señal guardada. Hoy ya se sumaron puntos por calma, pero la señal igual cuenta.'
     });
 
   } catch (err) {
