@@ -1,4 +1,4 @@
-/* SIGA — admin.js limpio
+/* SIGA — admin.js limpio y completo
    Panel admin separado:
    - Resumen de puntos
    - Tarjetas clicables por fuente
@@ -6,6 +6,7 @@
    - Eliminar puntos
    - Sumar/quitar puntos manualmente
    - Ver accesos sin admin
+   - Reconstruye el panel aunque exista un page-admin viejo
 */
 
 (function () {
@@ -118,12 +119,16 @@
   }
 
   function asegurarUIAdmin() {
-    const user = getUser();
-
     const navAdmin = qs('nav-admin-panel');
 
     if (navAdmin) {
       navAdmin.style.display = isAdmin() ? 'flex' : 'none';
+      navAdmin.onclick = function () {
+        if (typeof navigateTo === 'function') {
+          navigateTo('admin');
+        }
+        setTimeout(cargarPanelAdmin, 100);
+      };
     }
 
     if (!isAdmin()) return;
@@ -139,8 +144,7 @@
         if (typeof navigateTo === 'function') {
           navigateTo('admin');
         }
-
-        setTimeout(cargarPanelAdmin, 80);
+        setTimeout(cargarPanelAdmin, 100);
       };
 
       const divider = nav.querySelector('.nav-divider');
@@ -152,60 +156,64 @@
     }
 
     const main = document.querySelector('.main-content');
+    if (!main) return;
 
-    if (main && !qs('page-admin')) {
-      const section = document.createElement('section');
+    let section = qs('page-admin');
+
+    if (!section) {
+      section = document.createElement('section');
       section.className = 'page';
       section.id = 'page-admin';
+      main.appendChild(section);
+    }
 
-      section.innerHTML = `
-        <div class="page-header">
+    // Siempre reconstruimos el contenido del panel admin.
+    // Así eliminamos el panel viejo que quedaba vacío.
+    section.innerHTML = `
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Panel <span>admin</span></h1>
+          <p class="page-subtitle">Estadísticas, actividad, accesos y puntos de conexión.</p>
+        </div>
+
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn" onclick="abrirAjusteAdmin()">Ajustar puntos</button>
+          <button class="btn" onclick="cargarPanelAdmin()">Actualizar</button>
+        </div>
+      </div>
+
+      <div class="admin-shell">
+        <div class="admin-hero">
+          <div class="admin-hero-icon">📊</div>
           <div>
-            <h1 class="page-title">Panel <span>admin</span></h1>
-            <p class="page-subtitle">Estadísticas, actividad, accesos y puntos de conexión.</p>
-          </div>
-
-          <div style="display:flex;gap:8px;flex-wrap:wrap;">
-            <button class="btn" onclick="abrirAjusteAdmin()">Ajustar puntos</button>
-            <button class="btn" onclick="cargarPanelAdmin()">Actualizar</button>
+            <h3 id="admin-nivel-titulo">Cargando nivel...</h3>
+            <p id="admin-nivel-sub">Reuniendo puntos de conexión.</p>
+            <div class="admin-progress-wrap">
+              <div id="admin-progress-bar" class="admin-progress-bar" style="width:0%"></div>
+            </div>
           </div>
         </div>
 
-        <div class="admin-shell">
-          <div class="admin-hero">
-            <div class="admin-hero-icon">📊</div>
-            <div>
-              <h3 id="admin-nivel-titulo">Cargando nivel...</h3>
-              <p id="admin-nivel-sub">Reuniendo puntos de conexión.</p>
-              <div class="admin-progress-wrap">
-                <div id="admin-progress-bar" class="admin-progress-bar" style="width:0%"></div>
-              </div>
-            </div>
-          </div>
+        <div id="admin-resumen-grid" class="admin-source-grid"></div>
 
-          <div id="admin-resumen-grid" class="admin-source-grid"></div>
-
-          <div class="admin-two-cols">
-            <div class="admin-box">
-              <div class="admin-box-title">Puntos recientes</div>
-              <div id="admin-puntos-recientes" class="admin-list-mini">Cargando...</div>
-            </div>
-
-            <div class="admin-box">
-              <div class="admin-box-title">Accesos recientes <span class="admin-muted">(sin admin)</span></div>
-              <div id="admin-accesos-recientes" class="admin-list-mini">Cargando...</div>
-            </div>
+        <div class="admin-two-cols">
+          <div class="admin-box">
+            <div class="admin-box-title">Puntos recientes</div>
+            <div id="admin-puntos-recientes" class="admin-list-mini">Cargando...</div>
           </div>
 
           <div class="admin-box">
-            <div class="admin-box-title">Actividad por usuario <span class="admin-muted">(sin admin)</span></div>
-            <div id="admin-actividad-usuarios" class="admin-list-mini">Cargando...</div>
+            <div class="admin-box-title">Accesos recientes <span class="admin-muted">(sin admin)</span></div>
+            <div id="admin-accesos-recientes" class="admin-list-mini">Cargando...</div>
           </div>
         </div>
-      `;
 
-      main.appendChild(section);
-    }
+        <div class="admin-box">
+          <div class="admin-box-title">Actividad por usuario <span class="admin-muted">(sin admin)</span></div>
+          <div id="admin-actividad-usuarios" class="admin-list-mini">Cargando...</div>
+        </div>
+      </div>
+    `;
   }
 
   async function cargarPanelAdmin() {
