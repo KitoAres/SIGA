@@ -675,24 +675,6 @@ function lanzarConfettiMision() {
   }
 }
 
-// Integración con dashboard: al cargar dashboard también refresca puntos.
-(function integrarDashboardMisiones() {
-  const intentar = function() {
-    if (typeof window.loadDashboard === 'function' && !window.loadDashboard.__misionesHook) {
-      const viejo = window.loadDashboard;
-      const nuevo = async function() {
-        await viejo.apply(this, arguments);
-        await cargarProgresoMisiones();
-      };
-      nuevo.__misionesHook = true;
-      window.loadDashboard = nuevo;
-    }
-  };
-
-  intentar();
-  setTimeout(intentar, 300);
-  setTimeout(cargarProgresoMisiones, 600);
-})();
 
 window.loadEventos = loadEventos;
 window.abrirModalEvento = abrirModalEvento;
