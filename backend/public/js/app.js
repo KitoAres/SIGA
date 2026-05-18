@@ -2280,7 +2280,7 @@ async function loadCalma() {
               <li>No exigir explicación inmediata.</li>
               <li>Una frase corta cada cierto tiempo puede bastar.</li>
               <li>La calma no significa rechazo.</li>
-              <li>Volvemos a hablar cuando ambos puedan hacerlo bien.</li>
+              <li>Volveran a hablar cuando ambos puedan hacerlo bien.</li>
             </ul>
           </div>
 
