@@ -2164,6 +2164,31 @@ async function loadCalma() {
 
     const c = data.calma;
     const checkins = data.checkins || [];
+        const proximoCheckinDate = data.proximo_checkin
+      ? new Date(normalizarFecha(data.proximo_checkin) + 'T23:59:59')
+      : null;
+
+    const ahoraCalma = new Date();
+
+    const checkinPendiente =
+      proximoCheckinDate &&
+      !isNaN(proximoCheckinDate.getTime()) &&
+      ahoraCalma > proximoCheckinDate;
+
+    const estadoSenalHTML = checkinPendiente
+      ? `
+        <div class="calma-senal-status pendiente">
+          <strong>Aún no hay señal reciente.</strong>
+          <span>Puede que todavía necesite calma. Una señal pequeña puede dejarse cuando haya energía.</span>
+        </div>
+      `
+      : `
+        <div class="calma-senal-status tranquila">
+          <strong>Señal en calma.</strong>
+          <span>Si hace falta, una frase corta puede bastar para cuidar el vínculo.</span>
+        </div>
+      `;
+    
 
     const puedeCerrar =
       Number(c.usuario_id) === Number(state.currentUser?.id) ||
@@ -2228,6 +2253,7 @@ async function loadCalma() {
             <strong>${formatDate(data.proximo_checkin)}</strong>
           </div>
         </div>
+        ${estadoSenalHTML}
 
         ${
           c.mensaje
@@ -2348,8 +2374,25 @@ async function guardarCheckinCalma() {
     }
 
     closeModal('modal-checkin-calma');
-    toast('Señal guardada ♡');
+
+    const puntos = Number(data.puntos_otorgados || 0);
+
+    if (puntos > 0) {
+      toast(`${data.mensaje_bonito || 'Señal guardada.'} +${puntos} pts 🌙`);
+    } else {
+      toast(data.mensaje_bonito || 'Señal guardada ♡');
+    }
+
     loadCalma();
+
+    if (typeof cargarProgresoGlobal === 'function') {
+      cargarProgresoGlobal();
+    }
+
+    if (typeof cargarProgresoMisiones === 'function') {
+      cargarProgresoMisiones();
+    }
+
   } catch {
     toast('Error al guardar la señal.');
   }
