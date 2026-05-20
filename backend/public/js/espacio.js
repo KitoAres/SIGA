@@ -3,83 +3,195 @@
    - No diario íntimo.
    - No diagnóstico.
    - Mensajes cortos, copiables y compartibles solo si la persona quiere.
+   - Corrige menú duplicado.
 */
+
 (function () {
   const herramientas = {
     semaforo: {
       icon: '🚦',
       titulo: 'Semáforo emocional',
-      subtitulo: 'Decir cómo estás sin explicar todo.',
+      subtitulo: 'Decir cómo estás sin tener que explicar todo.',
       opciones: [
-        { estado: 'verde', label: '🟢 Puedo hablar', mensaje: 'Estoy disponible para hablar con calma.' },
-        { estado: 'amarillo', label: '🟡 Puedo hablar poquito', mensaje: 'Puedo hablar, pero despacio. Si tardo, no es rechazo.' },
-        { estado: 'naranja', label: '🟠 Estoy sensible', mensaje: 'Estoy sensible. Necesito cuidado y palabras suaves.' },
-        { estado: 'rojo', label: '🔴 Necesito espacio', mensaje: 'Necesito espacio para regularme. No me estoy yendo, solo necesito calma.' }
+        {
+          estado: 'verde',
+          label: '🟢 Puedo hablar',
+          mensaje: 'Estoy disponible para hablar con calma.'
+        },
+        {
+          estado: 'amarillo',
+          label: '🟡 Puedo hablar poquito',
+          mensaje: 'Puedo hablar, pero despacio. Si tardo, no es rechazo.'
+        },
+        {
+          estado: 'naranja',
+          label: '🟠 Estoy sensible',
+          mensaje: 'Estoy sensible. Necesito cuidado y palabras suaves.'
+        },
+        {
+          estado: 'rojo',
+          label: '🔴 Necesito espacio',
+          mensaje: 'Necesito espacio para regularme. No me estoy yendo, solo necesito calma.'
+        }
       ]
     },
+
     senal_minima: {
       icon: '🌙',
       titulo: 'Señal mínima',
-      subtitulo: 'Una frase pequeña para no desaparecer.',
+      subtitulo: 'Una frase corta para seguir presente sin presionarte.',
       opciones: [
-        { estado: 'calma', label: '🌙 Estoy aquí', mensaje: 'Estoy aquí, solo necesito calma.' },
-        { estado: 'tardo', label: '🫧 Quizá tarde', mensaje: 'Te leo, pero quizá tarde en responder.' },
-        { estado: 'no_rechazo', label: '🤍 No es rechazo', mensaje: 'No es rechazo, solo estoy procesando.' },
-        { estado: 'despacio', label: '🌱 Ir despacio', mensaje: 'Quiero ir despacio, pero sigo aquí.' },
-        { estado: 'poco', label: '🕯️ Puedo poco', mensaje: 'No puedo hablar mucho, pero sigo aquí.' }
+        {
+          estado: 'calma',
+          label: '🌙 Estoy aquí',
+          mensaje: 'Estoy aquí, solo necesito calma.'
+        },
+        {
+          estado: 'tardo',
+          label: '🫧 Quizá tarde',
+          mensaje: 'Te leo, pero quizá tarde en responder.'
+        },
+        {
+          estado: 'no_rechazo',
+          label: '🤍 No es rechazo',
+          mensaje: 'No es rechazo, solo estoy procesando.'
+        },
+        {
+          estado: 'despacio',
+          label: '🌱 Ir despacio',
+          mensaje: 'Quiero ir despacio, pero sigo aquí.'
+        },
+        {
+          estado: 'poco',
+          label: '🕯️ Puedo poco',
+          mensaje: 'No puedo hablar mucho, pero sigo aquí.'
+        }
       ]
     },
+
     pausa: {
       icon: '⏳',
       titulo: 'Pausa antes de responder',
-      subtitulo: 'Responder desde calma, no desde impulso.',
+      subtitulo: 'Tomarte un momento antes de contestar desde la emoción.',
       opciones: [
-        { estado: '5min', label: '5 minutos', mensaje: 'Quiero responder bien. Dame 5 minutos para ordenar lo que siento.' },
-        { estado: '10min', label: '10 minutos', mensaje: 'Necesito 10 minutos para no hablar desde el enojo o la ansiedad.' },
-        { estado: '20min', label: '20 minutos', mensaje: 'Dame 20 minutos. No me estoy yendo, solo necesito regularme.' },
-        { estado: 'mañana', label: 'Hasta mañana', mensaje: 'Hoy no puedo responder bien. Prefiero hablar mañana con más calma.' }
+        {
+          estado: '5min',
+          label: '5 minutos',
+          mensaje: 'Quiero responder bien. Dame 5 minutos para ordenar lo que siento.'
+        },
+        {
+          estado: '10min',
+          label: '10 minutos',
+          mensaje: 'Necesito 10 minutos para no hablar desde el enojo o la ansiedad.'
+        },
+        {
+          estado: '20min',
+          label: '20 minutos',
+          mensaje: 'Dame 20 minutos. No me estoy yendo, solo necesito regularme.'
+        },
+        {
+          estado: 'mañana',
+          label: 'Hasta mañana',
+          mensaje: 'Hoy no puedo responder bien. Prefiero hablar mañana con más calma.'
+        }
       ]
     },
+
     grounding_54321: {
       icon: '🫧',
       titulo: '5, 4, 3, 2, 1',
       subtitulo: 'Volver al presente cuando todo se siente demasiado.',
       opciones: [
-        { estado: 'guiado', label: 'Iniciar guía', mensaje: 'Ahora no tengo que resolver todo. Solo vuelvo al presente: 5 cosas que veo, 4 que siento, 3 que escucho, 2 olores o sabores y 1 frase amable para mí.' }
+        {
+          estado: 'guiado',
+          label: 'Iniciar guía',
+          mensaje: 'Ahora no tengo que resolver todo. Solo vuelvo al presente: 5 cosas que veo, 4 que siento, 3 que escucho, 2 olores o sabores y 1 frase amable para mí.'
+        }
       ]
     },
+
     volver_calma: {
       icon: '🌿',
       titulo: 'Volver con calma',
-      subtitulo: 'Una forma suave de acercarse después de una pausa.',
+      subtitulo: 'Acercarte otra vez después de una pausa.',
       opciones: [
-        { estado: 'mensaje_corto', label: 'Mensaje corto', mensaje: 'Ya puedo acercarme un poco más. Me gustaría volver con un mensaje corto, sin hablar de todo de golpe.' },
-        { estado: 'mañana', label: 'Hablar mañana', mensaje: 'Quiero volver, pero prefiero que hablemos mañana con más calma.' },
-        { estado: 'suave', label: 'Hablar suave', mensaje: 'Me gustaría volver despacio, con palabras suaves y sin presión.' },
-        { estado: 'estar', label: 'Solo estar', mensaje: 'Quiero acercarme, pero quizá solo necesito estar sin hablar mucho.' }
+        {
+          estado: 'mensaje_corto',
+          label: 'Mensaje corto',
+          mensaje: 'Ya puedo acercarme un poco más. Me gustaría volver con un mensaje corto, sin hablar de todo de golpe.'
+        },
+        {
+          estado: 'mañana',
+          label: 'Hablar mañana',
+          mensaje: 'Quiero volver, pero prefiero que hablemos mañana con más calma.'
+        },
+        {
+          estado: 'suave',
+          label: 'Hablar suave',
+          mensaje: 'Me gustaría volver despacio, con palabras suaves y sin presión.'
+        },
+        {
+          estado: 'estar',
+          label: 'Solo estar',
+          mensaje: 'Quiero acercarme, pero quizá solo necesito estar sin hablar mucho.'
+        }
       ]
     },
+
     quejas_anhelos: {
       icon: '💬',
       titulo: 'Quejas y anhelos',
-      subtitulo: 'Transformar un reclamo en una necesidad.',
+      subtitulo: 'Convertir una molestia en una necesidad clara.',
       custom: true,
       campos: [
-        { id: 'molesto', label: 'Lo que me molestó', placeholder: 'Ej: cuando no respondes por mucho tiempo...' },
-        { id: 'necesito', label: 'Lo que en realidad necesito', placeholder: 'Ej: una señal pequeña para saber que seguimos bien...' }
+        {
+          id: 'molesto',
+          label: 'Lo que me molestó',
+          placeholder: 'Ej: cuando no respondes por mucho tiempo...'
+        },
+        {
+          id: 'necesito',
+          label: 'Lo que en realidad necesito',
+          placeholder: 'Ej: una señal pequeña para saber que seguimos bien...'
+        }
       ],
-      generar: (v) => `Cuando pasa ${v.molesto || 'esto'}, me siento sensible. Lo que necesito es ${v.necesito || 'poder hablarlo con calma'}.`
+      generar: (v) => {
+        const molesto = v.molesto || 'esto';
+        const necesito = v.necesito || 'poder hablarlo con calma';
+        return `Cuando pasa ${molesto}, me siento sensible. Lo que necesito es ${necesito}.`;
+      }
     },
+
     caja_recursos: {
       icon: '🎁',
       titulo: 'Caja de recursos',
-      subtitulo: 'Elegir algo pequeño para cuidarte ahora.',
+      subtitulo: 'Elegir algo pequeño que te ayude ahora.',
       opciones: [
-        { estado: 'musica', label: '🎵 Canción segura', mensaje: 'Voy a escuchar algo que me ayude a regularme antes de responder.' },
-        { estado: 'calma', label: '🌙 Modo calma', mensaje: 'Necesito activar calma. No quiero desaparecer, solo cuidarme un poco.' },
-        { estado: 'frase', label: '💌 Frase de cuidado', mensaje: 'No tengo que poder con todo al mismo tiempo.' },
-        { estado: 'respirar', label: '🫧 Respirar', mensaje: 'Voy a respirar un momento antes de seguir.' },
-        { estado: 'pequeña_felicidad', label: '✨ Pequeña felicidad', mensaje: 'Hoy voy a hacer algo pequeño por mí.' }
+        {
+          estado: 'musica',
+          label: '🎵 Canción segura',
+          mensaje: 'Voy a escuchar algo que me ayude a regularme antes de responder.'
+        },
+        {
+          estado: 'calma',
+          label: '🌙 Modo calma',
+          mensaje: 'Necesito activar calma. No quiero alejarme mal, solo cuidarme un poco.'
+        },
+        {
+          estado: 'frase',
+          label: '💌 Frase de cuidado',
+          mensaje: 'No tengo que poder con todo al mismo tiempo.'
+        },
+        {
+          estado: 'respirar',
+          label: '🫧 Respirar',
+          mensaje: 'Voy a respirar un momento antes de seguir.'
+        },
+        {
+          estado: 'pequeña_felicidad',
+          label: '✨ Pequeña felicidad',
+          mensaje: 'Hoy voy a hacer algo pequeño por mí.'
+        }
       ]
     }
   };
@@ -88,11 +200,20 @@
   let mensajeActual = '';
   let estadoActual = '';
 
-  function qs(id) { return document.getElementById(id); }
+  function qs(id) {
+    return document.getElementById(id);
+  }
 
   function user() {
-    if (typeof state !== 'undefined' && state.currentUser) return state.currentUser;
-    try { return JSON.parse(sessionStorage.getItem('siga_user') || 'null'); } catch { return null; }
+    if (typeof state !== 'undefined' && state.currentUser) {
+      return state.currentUser;
+    }
+
+    try {
+      return JSON.parse(sessionStorage.getItem('siga_user') || 'null');
+    } catch {
+      return null;
+    }
   }
 
   function escapeHtml(v) {
@@ -105,23 +226,35 @@
   }
 
   function toastLocal(msg) {
-    if (typeof toast === 'function') return toast(msg);
+    if (typeof toast === 'function') {
+      return toast(msg);
+    }
+
     alert(msg);
   }
 
   function copiarTexto(texto) {
     if (!texto) return;
+
     if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(texto).then(() => toastLocal('Copiado ♡'));
+      navigator.clipboard.writeText(texto).then(() => {
+        toastLocal('Copiado ♡');
+      }).catch(() => {
+        copiarTextoFallback(texto);
+      });
     } else {
-      const ta = document.createElement('textarea');
-      ta.value = texto;
-      document.body.appendChild(ta);
-      ta.select();
-      document.execCommand('copy');
-      ta.remove();
-      toastLocal('Copiado ♡');
+      copiarTextoFallback(texto);
     }
+  }
+
+  function copiarTextoFallback(texto) {
+    const ta = document.createElement('textarea');
+    ta.value = texto;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    ta.remove();
+    toastLocal('Copiado ♡');
   }
 
   function asegurarModal() {
@@ -130,10 +263,13 @@
     const modal = document.createElement('div');
     modal.className = 'modal-overlay';
     modal.id = 'modal-espacio';
+
     modal.innerHTML = `
       <div class="modal espacio-modal">
         <h2 class="modal-title" id="espacio-modal-title">Mi espacio</h2>
+
         <div id="espacio-modal-body"></div>
+
         <div class="modal-actions espacio-modal-actions">
           <button class="btn-cancel" onclick="cerrarEspacioModal()">Cerrar</button>
           <button class="btn" onclick="copiarMensajeEspacio()">Copiar</button>
@@ -149,6 +285,57 @@
     document.body.appendChild(modal);
   }
 
+  function asegurarSeccionEspacio() {
+    const main = document.querySelector('.main-content');
+    if (!main) return;
+
+    let section = qs('page-espacio');
+
+    if (!section) {
+      section = document.createElement('section');
+      section.className = 'page';
+      section.id = 'page-espacio';
+      main.appendChild(section);
+    }
+
+    section.innerHTML = `
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Mi <span>espacio</span></h1>
+          <p class="page-subtitle">Herramientas pequeñas para ordenar lo que sientes, pedir calma o volver sin presión.</p>
+        </div>
+      </div>
+
+      <div class="espacio-hero">
+        <div class="espacio-hero-icon">🌿</div>
+        <div>
+          <h3>Un lugar pequeño para no cargar todo de golpe.</h3>
+          <p>
+            Aquí puedes ordenar lo que sientes, pedir una pausa o encontrar una forma suave de volver.
+          </p>
+          <p>
+            No es una prueba, no es una obligación y no tienes que explicar más de lo que puedas explicar.
+          </p>
+
+          <div class="espacio-rules">
+            <div><strong>Privado:</strong> úsalo solo para ordenar tu respuesta.</div>
+            <div><strong>Señal:</strong> guarda una frase breve para cuidar el vínculo.</div>
+            <div><strong>Copiar:</strong> llévala a WhatsApp si prefieres enviarla fuera de SIGA.</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="espacio-tools-grid" class="espacio-tools-grid"></div>
+
+      <div class="espacio-history-box">
+        <h3>Últimas señales guardadas</h3>
+        <div id="espacio-historial">
+          <div class="espacio-empty">Todavía no hay señales guardadas. Puedes usar las herramientas sin presión.</div>
+        </div>
+      </div>
+    `;
+  }
+
   function renderHerramientas() {
     const grid = qs('espacio-tools-grid');
     if (!grid) return;
@@ -156,8 +343,8 @@
     grid.innerHTML = Object.entries(herramientas).map(([key, h]) => `
       <button class="espacio-tool-card" onclick="abrirHerramientaEspacio('${key}')">
         <div class="espacio-tool-icon">${h.icon}</div>
-        <div class="espacio-tool-title">${h.titulo}</div>
-        <div class="espacio-tool-sub">${h.subtitulo}</div>
+        <div class="espacio-tool-title">${escapeHtml(h.titulo)}</div>
+        <div class="espacio-tool-sub">${escapeHtml(h.subtitulo)}</div>
       </button>
     `).join('');
   }
@@ -165,6 +352,7 @@
   async function cargarHistorialEspacio() {
     const box = qs('espacio-historial');
     const u = user();
+
     if (!box || !u || !u.id) return;
 
     try {
@@ -177,8 +365,18 @@
       }
 
       box.innerHTML = data.items.slice(0, 6).map(item => {
-        const h = herramientas[item.herramienta] || { icon: '🌿', titulo: 'Mi espacio' };
-        const fecha = item.creado_en ? new Date(item.creado_en).toLocaleString('es-BO', { dateStyle:'short', timeStyle:'short' }) : '—';
+        const h = herramientas[item.herramienta] || {
+          icon: '🌿',
+          titulo: 'Mi espacio'
+        };
+
+        const fecha = item.creado_en
+          ? new Date(item.creado_en).toLocaleString('es-BO', {
+              dateStyle: 'short',
+              timeStyle: 'short'
+            })
+          : '—';
+
         return `
           <div class="espacio-history-item">
             <span>${h.icon}</span>
@@ -191,12 +389,14 @@
         `;
       }).join('');
     } catch (err) {
+      console.warn('No se pudo cargar historial de Mi espacio:', err);
       box.innerHTML = '<div class="espacio-empty">No se pudo cargar el historial.</div>';
     }
   }
 
   function abrirHerramientaEspacio(key) {
     asegurarModal();
+
     herramientaActual = key;
     mensajeActual = '';
     estadoActual = '';
@@ -209,20 +409,27 @@
     if (h.custom) {
       qs('espacio-modal-body').innerHTML = `
         <p class="espacio-modal-sub">${escapeHtml(h.subtitulo)}</p>
+
         <div class="espacio-custom-form">
           ${h.campos.map(c => `
             <label>${escapeHtml(c.label)}</label>
             <textarea id="espacio-campo-${c.id}" placeholder="${escapeHtml(c.placeholder)}"></textarea>
           `).join('')}
+
           <button class="btn" onclick="generarMensajeEspacioCustom()">Generar frase suave</button>
-          <div class="espacio-preview" id="espacio-preview">La frase aparecerá aquí.</div>
+
+          <div class="espacio-preview" id="espacio-preview">
+            La frase aparecerá aquí.
+          </div>
         </div>
       `;
     } else if (key === 'grounding_54321') {
       mensajeActual = h.opciones[0].mensaje;
       estadoActual = h.opciones[0].estado;
+
       qs('espacio-modal-body').innerHTML = `
         <p class="espacio-modal-sub">${escapeHtml(h.subtitulo)}</p>
+
         <div class="espacio-grounding">
           <div><strong>5</strong><span>cosas que veo</span></div>
           <div><strong>4</strong><span>cosas que siento con el cuerpo</span></div>
@@ -230,11 +437,15 @@
           <div><strong>2</strong><span>olores o sabores</span></div>
           <div><strong>1</strong><span>frase amable para mí</span></div>
         </div>
-        <div class="espacio-preview activo">${escapeHtml(mensajeActual)}</div>
+
+        <div class="espacio-preview activo">
+          ${escapeHtml(mensajeActual)}
+        </div>
       `;
     } else {
       qs('espacio-modal-body').innerHTML = `
         <p class="espacio-modal-sub">${escapeHtml(h.subtitulo)}</p>
+
         <div class="espacio-options">
           ${h.opciones.map((op, i) => `
             <button class="espacio-option" onclick="seleccionarMensajeEspacio('${key}', ${i})">
@@ -243,7 +454,10 @@
             </button>
           `).join('')}
         </div>
-        <div class="espacio-preview" id="espacio-preview">Elige una opción.</div>
+
+        <div class="espacio-preview" id="espacio-preview">
+          Elige una opción.
+        </div>
       `;
     }
 
@@ -253,16 +467,21 @@
   function seleccionarMensajeEspacio(key, index) {
     const h = herramientas[key];
     const op = h && h.opciones ? h.opciones[index] : null;
+
     if (!op) return;
 
     mensajeActual = op.mensaje;
     estadoActual = op.estado;
 
-    document.querySelectorAll('.espacio-option').forEach(b => b.classList.remove('selected'));
+    document.querySelectorAll('.espacio-option').forEach(b => {
+      b.classList.remove('selected');
+    });
+
     const btns = Array.from(document.querySelectorAll('.espacio-option'));
     if (btns[index]) btns[index].classList.add('selected');
 
     const preview = qs('espacio-preview');
+
     if (preview) {
       preview.classList.add('activo');
       preview.textContent = mensajeActual;
@@ -271,9 +490,11 @@
 
   function generarMensajeEspacioCustom() {
     const h = herramientas[herramientaActual];
+
     if (!h || !h.custom) return;
 
     const values = {};
+
     h.campos.forEach(c => {
       const el = qs(`espacio-campo-${c.id}`);
       values[c.id] = el ? el.value.trim() : '';
@@ -283,6 +504,7 @@
     estadoActual = 'generado';
 
     const preview = qs('espacio-preview');
+
     if (preview) {
       preview.classList.add('activo');
       preview.textContent = mensajeActual;
@@ -291,18 +513,27 @@
 
   async function guardarHerramientaEspacio(compartido) {
     const u = user();
-    if (!u || !u.id) return toastLocal('Primero inicia sesión.');
+
+    if (!u || !u.id) {
+      return toastLocal('Primero inicia sesión.');
+    }
 
     if (!herramientaActual) return;
-    if (!mensajeActual) {
-      if (herramientas[herramientaActual]?.custom) generarMensajeEspacioCustom();
+
+    if (!mensajeActual && herramientas[herramientaActual]?.custom) {
+      generarMensajeEspacioCustom();
     }
-    if (!mensajeActual) return toastLocal('Primero elige o genera una frase.');
+
+    if (!mensajeActual) {
+      return toastLocal('Primero elige o genera una frase.');
+    }
 
     try {
       const res = await fetch('/api/espacio/usar', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json'
+        },
         body: JSON.stringify({
           usuario_id: u.id,
           herramienta: herramientaActual,
@@ -313,57 +544,116 @@
       });
 
       const data = await res.json();
-      if (!data.ok) return toastLocal(data.error || 'No se pudo guardar.');
+
+      if (!data.ok) {
+        return toastLocal(data.error || 'No se pudo guardar.');
+      }
 
       toastLocal(data.mensaje_bonito || 'Guardado ♡');
+
       cerrarEspacioModal();
       cargarHistorialEspacio();
 
-      if (typeof cargarProgresoGlobal === 'function') cargarProgresoGlobal();
+      if (typeof cargarProgresoGlobal === 'function') {
+        cargarProgresoGlobal();
+      }
     } catch (err) {
+      console.error('Error guardando herramienta de Mi espacio:', err);
       toastLocal('Error al guardar herramienta.');
     }
   }
 
   function copiarMensajeEspacio() {
-    if (!mensajeActual) {
-      if (herramientas[herramientaActual]?.custom) generarMensajeEspacioCustom();
+    if (!mensajeActual && herramientas[herramientaActual]?.custom) {
+      generarMensajeEspacioCustom();
     }
-    if (!mensajeActual) return toastLocal('Primero elige o genera una frase.');
+
+    if (!mensajeActual) {
+      return toastLocal('Primero elige o genera una frase.');
+    }
+
     copiarTexto(mensajeActual);
   }
 
   function cerrarEspacioModal() {
     const modal = qs('modal-espacio');
-    if (modal) modal.classList.remove('open');
+
+    if (modal) {
+      modal.classList.remove('open');
+    }
   }
 
   function loadEspacio() {
+    asegurarSeccionEspacio();
     renderHerramientas();
     cargarHistorialEspacio();
   }
 
+  function limpiarBotonesDuplicadosMiEspacio() {
+    const botones = Array.from(document.querySelectorAll('.nav-item'))
+      .filter(btn => btn.textContent && btn.textContent.includes('Mi espacio'));
+
+    if (!botones.length) return null;
+
+    const primero = botones[0];
+
+    botones.slice(1).forEach(btn => btn.remove());
+
+    primero.id = 'nav-mi-espacio';
+    primero.onclick = function () {
+      if (typeof navigateTo === 'function') {
+        navigateTo('espacio');
+      }
+
+      setTimeout(loadEspacio, 100);
+    };
+
+    return primero;
+  }
+
   function reforzarNavegacion() {
     const nav = document.querySelector('.sidebar-nav');
-    if (nav && !qs('nav-mi-espacio')) {
-      const btn = document.createElement('button');
-      btn.className = 'nav-item';
-      btn.id = 'nav-mi-espacio';
-      btn.innerHTML = '<span class="nav-icon">🌿</span><span>Mi espacio</span>';
-      btn.onclick = () => {
-        if (typeof navigateTo === 'function') navigateTo('espacio');
-        setTimeout(loadEspacio, 80);
-      };
+    if (!nav) return;
 
-      const calmaBtn = Array.from(nav.querySelectorAll('.nav-item')).find(b => b.textContent.includes('Modo calma'));
-      if (calmaBtn) nav.insertBefore(btn, calmaBtn);
-      else nav.appendChild(btn);
+    const existente = limpiarBotonesDuplicadosMiEspacio();
+
+    if (existente) {
+      return;
     }
 
-    document.addEventListener('click', function(e) {
+    const btn = document.createElement('button');
+    btn.className = 'nav-item';
+    btn.id = 'nav-mi-espacio';
+    btn.innerHTML = '<span class="nav-icon">🌿</span><span>Mi espacio</span>';
+
+    btn.onclick = function () {
+      if (typeof navigateTo === 'function') {
+        navigateTo('espacio');
+      }
+
+      setTimeout(loadEspacio, 100);
+    };
+
+    const calmaBtn = Array.from(nav.querySelectorAll('.nav-item'))
+      .find(b => b.textContent && b.textContent.includes('Modo calma'));
+
+    if (calmaBtn) {
+      nav.insertBefore(btn, calmaBtn);
+    } else {
+      nav.appendChild(btn);
+    }
+  }
+
+  function instalarClickDelegado() {
+    if (window.__sigaEspacioClickDelegado) return;
+    window.__sigaEspacioClickDelegado = true;
+
+    document.addEventListener('click', function (e) {
       const btn = e.target.closest('.nav-item');
+
       if (!btn) return;
-      if (btn.textContent.includes('Mi espacio')) {
+
+      if (btn.textContent && btn.textContent.includes('Mi espacio')) {
         setTimeout(loadEspacio, 100);
       }
     });
@@ -377,14 +667,22 @@
   window.copiarMensajeEspacio = copiarMensajeEspacio;
   window.cerrarEspacioModal = cerrarEspacioModal;
 
-  document.addEventListener('DOMContentLoaded', () => {
+  document.addEventListener('DOMContentLoaded', function () {
     reforzarNavegacion();
-    setTimeout(reforestarSeccion, 300);
+    instalarClickDelegado();
+
+    setTimeout(function () {
+      asegurarSeccionEspacio();
+      renderHerramientas();
+    }, 300);
   });
 
-  function reforestarSeccion() {
-    if (qs('page-espacio')) renderHerramientas();
-  }
+  setTimeout(function () {
+    reforzarNavegacion();
+    instalarClickDelegado();
+  }, 600);
 
-  setTimeout(reforzarNavegacion, 600);
+  setTimeout(function () {
+    reforzarNavegacion();
+  }, 1500);
 })();
