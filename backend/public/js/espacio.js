@@ -687,6 +687,72 @@
   }, 1500);
 })();
 
+
+
+  /* ======================================================
+     FIX: cargar Mi espacio cuando se navega a la sección
+     ====================================================== */
+
+  function activarMiEspacioSeguro() {
+    const pagina = document.getElementById('page-espacio');
+
+    if (!pagina) return;
+
+    const estaVisible =
+      pagina.classList.contains('active') ||
+      pagina.style.display === 'block' ||
+      pagina.style.visibility === 'visible';
+
+    if (!estaVisible) return;
+
+    if (typeof asegurarSeccionEspacio === 'function') {
+      asegurarSeccionEspacio();
+    }
+
+    if (typeof renderHerramientas === 'function') {
+      renderHerramientas();
+    }
+
+    if (typeof cargarHistorialEspacio === 'function') {
+      cargarHistorialEspacio();
+    }
+  }
+
+  const viejoNavigateToEspacio = window.navigateTo;
+
+  window.navigateTo = function(page) {
+    if (typeof viejoNavigateToEspacio === 'function') {
+      viejoNavigateToEspacio(page);
+    }
+
+    if (page === 'espacio') {
+      setTimeout(function() {
+        if (typeof loadEspacio === 'function') {
+          loadEspacio();
+        } else {
+          activarMiEspacioSeguro();
+        }
+      }, 120);
+    }
+  };
+
+  document.addEventListener('click', function(e) {
+    const btn = e.target.closest('.nav-item');
+    if (!btn) return;
+
+    if (btn.textContent && btn.textContent.includes('Mi espacio')) {
+      setTimeout(function() {
+        if (typeof loadEspacio === 'function') {
+          loadEspacio();
+        } else {
+          activarMiEspacioSeguro();
+        }
+      }, 120);
+    }
+  });
+
+  setTimeout(activarMiEspacioSeguro, 500);
+  setTimeout(activarMiEspacioSeguro, 1200);
 /* =========================================================
    SIGA — MI ESPACIO (REDISEÑO VISUAL)
    Pegar al final de style.css
