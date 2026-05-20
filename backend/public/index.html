@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SIGA — Sistema Integral de Gestión de Amor</title>
+  <link rel="stylesheet" href="/css/style.css"/>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💜</text></svg>"/>
+</head>
+<body>
+
+<!-- ── LOGIN ─────────────────────────────────── -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">S<span>I</span>GA</div>
+    <div class="login-sub">Sistema Integral de Gestión de Amor</div>
+    <input type="text" id="login-user" placeholder="Usuario" autocomplete="off"/>
+    <input type="password" id="login-pass" placeholder="Contraseña"/>
+    <button class="btn-primary" onclick="doLogin()">Entrar ♡</button>
+    <div class="login-error" id="login-error"></div>
+  </div>
+</div>
+
+<!-- ── APP ────────────────────────────────────── -->
+<div id="app">
+
+  <!-- Hamburger móvil -->
+  <button class="hamburger" id="hamburger" onclick="toggleSidebar()" aria-label="Menú">
+    <span></span><span></span><span></span>
+  </button>
+  <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">S<span>I</span>GA</div>
+      <div class="sidebar-tagline">v2.0 · Edición especial</div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <button class="nav-item active" onclick="navigateTo('dashboard')">
+        <span class="nav-icon">✦</span> Dashboard
+      </button>
+
+      <button class="nav-item" onclick="navigateTo('recuerdos')">
+        <span class="nav-icon">🌸</span> Recuerdos
+      </button>
+
+      <button class="nav-item" onclick="navigateTo('citas')">
+        <span class="nav-icon">📅</span> Nuestros planes
+      </button>
+
+      <button class="nav-item" onclick="navigateTo('playlist')">
+        <span class="nav-icon">🎵</span> Playlist
+      </button>
+
+      <button class="nav-item" onclick="navigateTo('razones')">
+        <span class="nav-icon">💜</span> Razones
+      </button>
+
+      <button class="nav-item" onclick="navigateTo('promesas')">
+        <span class="nav-icon">🤍</span> Promesas
+      </button>
+
+      <button class="nav-item" onclick="navigateTo('carta')">
+        <span class="nav-icon">✉️</span> Carta
+      </button>
+
+      <button class="nav-item" onclick="navigateTo('tiempo')">
+        <span class="nav-icon">🕐</span> ¿Nos vemos?
+      </button>
+
+      <button class="nav-item" onclick="navigateTo('eventos')">
+        <span class="nav-icon">🎯</span> Misiones SIGA
+      </button>
+
+      <button class="nav-item" onclick="navigateTo('cajita')">
+        <span class="nav-icon">🎁</span> Cajita especial
+      </button>
+
+      <div class="nav-divider"></div>
+
+<button class="nav-item" onclick="navigateTo('espacio')">
+  <span class="nav-icon">🌿</span>
+  <span>Mi espacio</span>
+</button>
+
+<button class="nav-item" onclick="navigateTo('calma')">
+  <span class="nav-icon">🌙</span>
+  <span>Modo calma</span>
+</button>
+
+<button class="nav-item nav-admin-only" id="nav-admin-panel" style="display:none;" onclick="navigateTo('admin')">
+  <span class="nav-icon">📊</span>
+  <span>Panel admin</span>
+</button>
+    </nav>
+
+<div class="sidebar-footer">
+  <span id="sidebar-user">—</span>
+  <div class="sidebar-actions">
+    <button class="btn-account" onclick="abrirModalPerfil()">Mi cuenta</button>
+    <button class="btn-logout" onclick="doLogout()">Salir</button>
+  </div>
+</div>
+
+</aside>
+
+<!-- MAIN -->
+<main class="main-content">
+
+    <!-- DASHBOARD -->
+    <section class="page active" id="page-dashboard">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Panel <span>de amor</span></h1>
+          <p class="page-subtitle">Todo lo nuestro, en un solo lugar.</p>
+        </div>
+      </div>
+
+      <div class="welcome-banner">
+        <div class="welcome-greeting" id="welcome-msg">Bienvenida, querida Francin</div>
+        <div class="welcome-sub">Este sistema fue construido con cariño, para ti.</div>
+      </div>
+<div id="dashboard-match-alert"></div>
+
+<div class="frase-dia-card">
+  <div class="frase-dia-icon">✦</div>
+  <div>
+    <div class="frase-dia-label">Frase del día</div>
+    <div class="frase-dia-text" id="frase-dia-text">Cargando una frase bonita...</div>
+  </div>
+</div>
+      
+<div class="stats-grid">
+  
+        <div class="stat-card">
+          <div class="stat-icon">🌙</div>
+          <div class="stat-number" id="stat-dias">—</div>
+          <div class="stat-label">Días pensándote</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon">🌸</div>
+          <div class="stat-number" id="stat-recuerdos">—</div>
+          <div class="stat-label">Recuerdos guardados</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon">📅</div>
+          <div class="stat-number" id="stat-citas">—</div>
+          <div class="stat-label">Planes pendientes</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon">💜</div>
+          <div class="stat-number" id="stat-razones">—</div>
+          <div class="stat-label">Razones para quererte</div>
+        </div>
+      </div>
+
+      <div class="misiones-dashboard-card" id="misiones-dashboard-card">
+        <div class="misiones-dashboard-main">
+          <div class="misiones-dashboard-icon">🏆</div>
+          <div class="misiones-dashboard-info">
+            <div class="misiones-dashboard-label">Nivel de conexión</div>
+            <div class="misiones-dashboard-title" id="misiones-nivel-nombre">Cargando progreso...</div>
+            <div class="misiones-dashboard-sub" id="misiones-nivel-texto">Las misiones cumplidas suman puntos para ambos.</div>
+          </div>
+          <div class="misiones-dashboard-points">
+            <span id="misiones-puntos-total">0</span> pts
+          </div>
+        </div>
+
+        <div class="misiones-progress-wrap">
+          <div class="misiones-progress-bar" id="misiones-progress-bar" style="width:0%;"></div>
+        </div>
+
+        <div class="misiones-dashboard-footer">
+          <span id="misiones-progreso-detalle">0 / 100 pts para el siguiente nivel</span>
+          <button class="btn btn-sm" onclick="navigateTo('eventos')">Ver misiones</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- RECUERDOS -->
+    <section class="page" id="page-recuerdos">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Recuerdos <span>compartidos</span></h1>
+          <p class="page-subtitle">Nuestros momentos que guardamos.</p>
+        </div>
+        <button class="btn-add" onclick="openModal('recuerdos')">+ Nuevo recuerdo</button>
+      </div>
+      <div class="items-grid" id="list-recuerdos"></div>
+    </section>
+
+    <!-- PLANES -->
+    <section class="page" id="page-citas">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Nuestros <span>planes</span></h1>
+          <p class="page-subtitle">Cosas que nos gustaria vivir juntos.</p>
+        </div> 
+        <button class="btn-add" onclick="openModal('citas')">+ Nuevo plan</button>
+      </div>
+      <div class="items-grid" id="list-citas"></div>
+    </section>
+
+    <!-- PLAYLIST -->
+    <section class="page" id="page-playlist">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Nuestra <span>playlist</span></h1>
+          <p class="page-subtitle">Canciones que suenan cuando pensamos en el otro.</p>
+        </div>
+        <button class="btn-add" onclick="openModal('playlist')">+ Agregar canción</button>
+      </div>
+      <div class="items-grid" id="list-playlist"></div>
+    </section>
+
+    <!-- RAZONES -->
+    <section class="page" id="page-razones">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Razones <span>para quererte</span></h1>
+          <p class="page-subtitle">Lista incompleta, siempre en construcción.</p>
+        </div>
+        <button class="btn-add" onclick="openModal('razones')">+ Nueva razón</button>
+      </div>
+      <div class="items-grid" id="list-razones"></div>
+    </section>
+
+    <!-- PROMESAS -->
+    <section class="page" id="page-promesas">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Mis <span>promesas</span></h1>
+          <p class="page-subtitle">Lo que te ofrezco con la intención de cumplir.</p>
+        </div>
+        <button class="btn-add" onclick="openModal('promesas')">+ Nueva promesa</button>
+      </div>
+      <div class="items-grid" id="list-promesas"></div>
+    </section>
+
+    <!-- CARTA -->
+    <section class="page" id="page-carta">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Mi <span>carta</span></h1>
+          <p class="page-subtitle">Para ti, que de alguna manera inexplicable llegaste a quedarte.</p>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn" id="btn-edit-carta" onclick="editCarta()">✎ Editar</button>
+          <button class="btn-save" id="btn-save-carta" style="display:none;" onclick="saveCarta()">Guardar</button>
+          <button class="btn-cancel" id="btn-cancel-carta" style="display:none;" onclick="cancelCarta()">Cancelar</button>
+        </div>
+      </div>
+
+      <div class="carta-container">
+        <div class="carta-paper" id="carta-view"></div>
+        <textarea class="carta-edit-area" id="carta-edit" style="display:none;"></textarea>
+      </div>
+    </section>
+
+    <!-- ¿NOS VEMOS? -->
+    <section class="page" id="page-tiempo">
+
+      <!-- LOGIN DEL MÓDULO -->
+      <div id="tiempo-login-wrap" class="tiempo-login-wrap">
+        <div class="tiempo-login-card">
+          <div class="tiempo-login-icon">🕐</div>
+          <div class="tiempo-login-title">¿Nos vemos?</div>
+          <div class="tiempo-login-sub">Un espacio para coincidir sin presión</div>
+
+          <div class="tiempo-user-btns">
+            <button class="tiempo-user-btn" id="tbtn-yo" onclick="seleccionarTiempoUser('yo')">Yo</button>
+            <button class="tiempo-user-btn" id="tbtn-ella" onclick="seleccionarTiempoUser('ella')">Ella</button>
+          </div>
+
+          <input type="password" id="t-pass" placeholder="Contraseña"/>
+          <button class="btn-tiempo-login" onclick="loginTiempo()">Entrar 🕐</button>
+          <div class="tiempo-login-error" id="t-login-error"></div>
+        </div>
+      </div>
+
+      <!-- PANEL PRINCIPAL -->
+      <div id="tiempo-panel" class="tiempo-panel">
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">¿Nos <span>vemos?</span></h1>
+            <p class="page-subtitle">Pon cuándo puedes. Si nuestros horarios coinciden, la pagina web encuentra un momento para vernos.</p>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <div class="tiempo-user-badge">
+              <span class="badge-dot"></span>
+              <span id="tiempo-badge-nombre">—</span>
+            </div>
+            <button class="btn-add" onclick="openModalTiempo()">+ Disponibilidad</button>
+            <button class="btn-tiempo-logout" onclick="logoutTiempo()">Salir</button>
+          </div>
+        </div>
+
+        <div class="tiempo-tabs">
+          <button class="tiempo-tab active" onclick="switchTiempoTab('mis')" id="ttab-mis">
+            📋 Mis disponibilidades
+          </button>
+          <button class="tiempo-tab" onclick="switchTiempoTab('coincidencias')" id="ttab-coin">
+            ✨ Momentos posibles
+          </button>
+        </div>
+
+        <div class="tiempo-tab-content active" id="tcontent-mis">
+          <div id="list-disponibilidades"></div>
+        </div>
+
+        <div class="tiempo-tab-content" id="tcontent-coin">
+          <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:18px;">
+            Aquí solo aparecerán los momentos donde sus horarios hacen match. No verás el horario exacto que puso el ni viceversa, solo el rato en el que coinciden.
+          </p>
+          <div id="list-coincidencias"></div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- MISIONES  SIGA -->
+    <section class="page" id="page-eventos">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Misiones <span>SIGA</span></h1>
+          <p class="page-subtitle">Pequeñas misiones para conectar, sumar puntos y subir de nivel juntos.</p>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn" onclick="sugerirEventoAleatorio()">🎲 Misión sorpresa</button>
+          <button class="btn-add" onclick="abrirModalEvento()">+ Nueva misión</button>
+        </div>
+      </div>
+
+      <div class="eventos-hero-card">
+        <div class="eventos-hero-icon">🎯</div>
+        <div>
+          <h3>Misiones para sumar momentos.</h3>
+          <p>Elijan una misión, háganla a su ritmo y márquenla como cumplida. Cada misión suma puntos a la relación y desbloquea niveles simbólicos.</p>
+        </div>
+      </div>
+
+      <div class="eventos-random-card" id="evento-random-box">
+        <div class="eventos-random-empty">Toca “Misión sorpresa” para elegir una misión al azar.</div>
+      </div>
+
+      <div class="eventos-toolbar">
+        <input type="text" id="evento-buscar" placeholder="Buscar misión, pregunta o actividad..." oninput="loadEventos()"/>
+        <select id="evento-filtro-tipo" onchange="loadEventos()">
+          <option value="">Todo</option>
+          <option value="pregunta">Preguntas</option>
+          <option value="actividad">Actividades</option>
+          <option value="cita">Citas</option>
+          <option value="juego">Juegos</option>
+          <option value="detalle">Detalles</option>
+        </select>
+        <select id="evento-filtro-nivel" onchange="loadEventos()">
+          <option value="">Cualquier nivel</option>
+          <option value="facil">Fácil</option>
+          <option value="medio">Media</option>
+          <option value="dificil">Difícil</option>
+          <option value="hardcore">Legendaria</option>
+        </select>
+      </div>
+
+      <div class="items-grid" id="list-eventos"></div>
+    </section>
+
+    <!-- CAJITA ESPECIAL -->
+    <section class="page" id="page-cajita">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Cajita <span>especial</span></h1>
+          <p class="page-subtitle">Todo lo que alguna vez intenté decirte de formas distintas: cartas, juegos, bitácoras y pequeños detalles.</p>
+        </div>
+        <button class="btn-add" onclick="openModal('cajita')">+ Agregar detalle</button>
+      </div>
+
+      <div class="cajita-intro">
+        <div class="cajita-intro-icon">🎁</div>
+        <div>
+          <h3>Cosas que hice para ti</h3>
+          <p>Este espacio guarda links a páginas, cartas, mensajes o juegos que tienen algo de nosotros.</p>
+        </div>
+      </div>
+
+      <div class="items-grid" id="list-cajita"></div>
+    </section>
+
+
+<!-- MI ESPACIO -->
+<section class="page" id="page-espacio">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Mi <span>espacio</span></h1>
+      <p class="page-subtitle">Herramientas pequeñas para ordenar lo que siento, pedir calma o volver sin presión.</p>
+    </div>
+  </div>
+
+  <div class="espacio-intro-card">
+    <div class="espacio-intro-icon">🌿</div>
+    <div>
+      <h3>Un lugar personal, no un examen.</h3>
+      <p>Nada diagnostica, nada obliga y nada exige explicarlo todo. Puedes usar una herramienta, copiar una frase o dejar una señal pequeña.</p>
+    </div>
+  </div>
+
+  <div class="espacio-privacy-card">
+    <div><strong>Privado:</strong> úsalo para ordenar tu respuesta.</div>
+    <div><strong>Señal:</strong> guarda una frase corta si quieres que cuente como cuidado del vínculo.</div>
+    <div><strong>Copiar:</strong> llévalo a WhatsApp si prefieres enviarlo fuera de SIGA.</div>
+  </div>
+
+  <div class="espacio-tools-grid" id="espacio-tools-grid"></div>
+
+  <div class="espacio-history-card">
+    <div class="espacio-history-title">Últimas señales guardadas</div>
+    <div id="espacio-historial" class="espacio-history-list">Cargando...</div>
+  </div>
+</section>
+
+<!-- MODO CALMA -->
+<section class="page" id="page-calma">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Modo <span>calma</span></h1>
+      <p class="page-subtitle">Un espacio para respirar sin desaparecer.</p>
+    </div>
+
+    <button class="btn-add" onclick="openModalCalma()">+ Necesito calma</button>
+  </div>
+
+  <div class="calma-intro-card">
+    <div class="calma-intro-icon">🌙</div>
+    <div>
+      <h3>A veces no hace falta explicar todo.</h3>
+      <p>
+        Este espacio sirve para decir: “Estoy aquí, solo necesito calma”.
+        Sin desaparecer. Sin presión. Sin miedo.
+      </p>
+    </div>
+  </div>
+
+  <div id="calma-activa-box"></div>
+</section>
+
+
+<!-- PANEL ADMIN -->
+<section class="page" id="page-admin">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Panel <span>admin</span></h1>
+      <p class="page-subtitle">Estadísticas privadas, accesos, misiones cumplidas y limpieza de errores.</p>
+    </div>
+    <button class="btn" onclick="loadAdminPanel()">Actualizar</button>
+  </div>
+
+  <div class="admin-hero-card">
+    <div class="admin-hero-icon">📊</div>
+    <div>
+      <h3>Centro de control SIGA</h3>
+      <p>Este módulo solo aparece para el rol <strong>admin</strong>. Sirve para revisar actividad, detectar errores y administrar misiones marcadas por accidente.</p>
+    </div>
+  </div>
+
+  <div id="admin-private-warning" class="admin-warning" style="display:none;">
+    Este panel solo está disponible para el administrador.
+  </div>
+
+  <div id="admin-panel-content" style="display:none;">
+    <div class="admin-stats-grid">
+      <div class="admin-stat-card">
+        <span class="admin-stat-label">Puntos de relación</span>
+        <strong id="admin-puntos-total">—</strong>
+        <small id="admin-puntos-detalle">—</small>
+      </div>
+      <div class="admin-stat-card">
+        <span class="admin-stat-label">Misiones cumplidas</span>
+        <strong id="admin-misiones-total">—</strong>
+        <small id="admin-misiones-puntos">—</small>
+      </div>
+      <div class="admin-stat-card">
+        <span class="admin-stat-label">Modo calma</span>
+        <strong id="admin-calma-total">—</strong>
+        <small id="admin-calma-dias">—</small>
+      </div>
+      <div class="admin-stat-card">
+        <span class="admin-stat-label">Planes / citas</span>
+        <strong id="admin-citas-total">—</strong>
+        <small id="admin-citas-detalle">—</small>
+      </div>
+      <div class="admin-stat-card">
+        <span class="admin-stat-label">Accesos</span>
+        <strong id="admin-accesos-total">—</strong>
+        <small id="admin-accesos-detalle">—</small>
+      </div>
+    </div>
+
+    <div class="admin-grid-two">
+      <div class="admin-box">
+        <div class="admin-box-title">Misiones cumplidas recientes</div>
+        <div id="admin-misiones-recientes" class="admin-list-mini">Cargando...</div>
+      </div>
+      <div class="admin-box">
+        <div class="admin-box-title">Registro de accesos</div>
+        <div id="admin-accesos-lista" class="admin-list-mini">Cargando...</div>
+      </div>
+    </div>
+
+    <div class="admin-grid-two">
+      <div class="admin-box">
+        <div class="admin-box-title">Actividad por usuario</div>
+        <div id="admin-usuarios-actividad" class="admin-list-mini">Cargando...</div>
+      </div>
+      <div class="admin-box">
+        <div class="admin-box-title">Modo calma y planes</div>
+        <div id="admin-calma-citas-lista" class="admin-list-mini">Cargando...</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── MODALES ─────────────────────────────────── -->
+
+<!-- Modal genérico CRUD -->
+<div class="modal-overlay" id="modal-crud">
+  <div class="modal">
+    <h2 class="modal-title" id="modal-crud-title">Nuevo</h2>
+    <div class="modal-form" id="modal-crud-form"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('modal-crud')">Cancelar</button>
+      <button class="btn-save" onclick="saveModal()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Nuestro Tiempo -->
+<div class="modal-overlay" id="modal-tiempo">
+  <div class="modal">
+    <h2 class="modal-title" id="modal-tiempo-title">Agregar disponibilidad</h2>
+    <div class="modal-form">
+      <label>Fecha</label>
+      <input type="date" id="t-fecha"/>
+
+      <label>Hora inicio</label>
+      <input type="time" id="t-inicio"/>
+
+      <label>Hora fin</label>
+      <input type="time" id="t-fin"/>
+
+      <label>Lugar opcional</label>
+      <input type="text" id="t-lugar" placeholder="Ej: cerca de la U, plaza, videollamada..."/>
+
+      <label>Mensaje opcional</label>
+      <input type="text" id="t-mensaje" placeholder="Ej: libre después de clases..."/>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('modal-tiempo')">Cancelar</button>
+      <button class="btn-save" onclick="guardarDisponibilidad()">Guardar</button>
+    </div>
+  </div>
+</div>
+<!-- Modal Mi Cuenta -->
+<div class="modal-overlay" id="modal-perfil">
+  <div class="modal">
+    <h2 class="modal-title">Mi cuenta</h2>
+
+    <div class="modal-form">
+      <label>Nombre visible</label>
+      <input type="text" id="perfil-display-name" placeholder="Ej: Franco o Francin"/>
+
+      <label>Usuario</label>
+      <input type="text" id="perfil-usuario" placeholder="Tu usuario"/>
+
+      <label>Contraseña actual</label>
+      <input type="password" id="perfil-contrasena-actual" placeholder="Necesaria solo si cambiarás contraseña"/>
+
+      <label>Nueva contraseña</label>
+      <input type="password" id="perfil-nueva-contrasena" placeholder="Déjalo vacío si no quieres cambiarla"/>
+
+      <label>Color de perfil</label>
+      <input type="color" id="perfil-color" value="#22d3ee"/>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('modal-perfil')">Cancelar</button>
+      <button class="btn-save" onclick="guardarPerfil()">Guardar cambios</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Modo Calma -->
+<div class="modal-overlay" id="modal-calma">
+  <div class="modal">
+    <h2 class="modal-title">Activar Modo calma 🌙</h2>
+
+    <div class="modal-form">
+      <label>Desde</label>
+      <input type="date" id="calma-fecha-inicio"/>
+
+      <label>Hasta</label>
+      <input type="date" id="calma-fecha-fin"/>
+
+      <label>Cómo estoy</label>
+      <select id="calma-estado">
+        <option value="necesito calma">Necesito calma</option>
+        <option value="estoy saturada/o">Estoy saturada/o</option>
+        <option value="necesito regularme">Necesito regularme</option>
+        <option value="necesito silencio">Necesito silencio</option>
+        <option value="necesito ir despacio">Necesito ir despacio</option>
+      </select>
+
+      <label>Mensaje corto</label>
+      <textarea id="calma-mensaje" placeholder="Ej: Estoy bien, solo necesito calma. No es contra ti."></textarea>
+<label>Qué contacto puedo recibir</label>
+<select id="calma-contacto">
+  <option value="Señales cortas en la app">Señales cortas en la app</option>
+  <option value="Mensajes cortitos y suaves">Mensajes cortitos y suaves</option>
+  <option value="Solo señales, sin conversación larga">Solo señales, sin conversación larga</option>
+  <option value="Puedo leer, pero quizá no responder">Puedo leer, pero quizá no responder</option>
+  <option value="Podemos hablar, pero despacio">Podemos hablar, pero despacio</option>
+</select>
+
+<label>Evitar por ahora</label>
+<select id="calma-evitar">
+  <option value="Preguntas largas o presión">Preguntas largas o presión</option>
+  <option value="Insistir si no respondo rápido">Insistir si no respondo rápido</option>
+  <option value="Hablar de temas difíciles por ahora">Hablar de temas difíciles por ahora</option>
+  <option value="Pedir explicaciones inmediatas">Pedir explicaciones inmediatas</option>
+</select>
+
+<label>Nivel de energía</label>
+<select id="calma-energia">
+  <option value="20% - No puedo hablar mucho">20% - No puedo hablar mucho</option>
+  <option value="40% - Puedo leer, responder poquito">40% - Puedo leer, responder poquito</option>
+  <option value="60% - Puedo responder corto">60% - Puedo responder corto</option>
+  <option value="80% - Podemos hablar suave">80% - Podemos hablar suave</option>
+</select>
+      <div class="calma-quick-options">
+        <button type="button" onclick="setCalmaMensaje('Estoy bien, solo necesito calma. No es contra ti.')">Estoy bien, solo necesito calma.</button>
+        <button type="button" onclick="setCalmaMensaje('Sigo aquí, aunque hoy no pueda hablar mucho.')">Sigo aquí.</button>
+        <button type="button" onclick="setCalmaMensaje('Te quiero, solo estoy procesando.')">Te quiero, estoy procesando.</button>
+        <button type="button" onclick="setCalmaMensaje('Podemos hablar pronto, pero despacio.')">Hablemos despacio.</button>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('modal-calma')">Cancelar</button>
+      <button class="btn-save" onclick="guardarModoCalma()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Check-in Calma -->
+<div class="modal-overlay" id="modal-checkin-calma">
+  <div class="modal">
+    <h2 class="modal-title">Dejar una señal ♡</h2>
+
+    <div class="modal-form">
+      <label>Mensaje</label>
+      <textarea id="checkin-calma-mensaje" placeholder="Una señal pequeña basta..."></textarea>
+
+      <div class="calma-quick-options">
+        <button type="button" onclick="setCheckinMensaje('Estoy bien.')">Estoy bien.</button>
+        <button type="button" onclick="setCheckinMensaje('Sigo con calma.')">Sigo con calma.</button>
+        <button type="button" onclick="setCheckinMensaje('Te quiero, solo necesito más tiempo.')">Te quiero, necesito más tiempo.</button>
+        <button type="button" onclick="setCheckinMensaje('Hoy no puedo hablar mucho, pero sigo aquí.')">Sigo aquí.</button>
+        <button type="button" onclick="setCheckinMensaje('Gracias por esperarme.')">Gracias por esperarme.</button>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('modal-checkin-calma')">Cancelar</button>
+      <button class="btn-save" onclick="guardarCheckinCalma()">Guardar señal</button>
+    </div>
+  </div>
+</div>
+<!-- Modal Carta de Calma -->
+<div class="modal-overlay" id="modal-carta-calma">
+  <div class="modal">
+    <h2 class="modal-title">Carta para cuando vuelva la calma 💌</h2>
+
+    <div class="modal-form">
+      <label>Título</label>
+      <input type="text" id="carta-calma-titulo" placeholder="Ej: Para cuando estés lista"/>
+
+      <label>Contenido</label>
+      <textarea id="carta-calma-contenido" placeholder="Escribe aquí. La carta queda guardada para después, sin presionar ahora."></textarea>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('modal-carta-calma')">Cancelar</button>
+      <button class="btn-save" onclick="guardarCartaCalma()">Guardar carta</button>
+    </div>
+  </div>
+</div>
+    
+  <script src="/js/app.js?v=calma-6"></script>
+  <script src="/js/espacio.js?v=mi-espacio-1"></script>
+  <script src="/js/eventos.js?v=misiones-clean-1"></script>
+  <script src="/js/admin.js?v=admin-separado-1"></script>
+
+<script>
+/* ======================================================
+   FIX DEFINITIVO DE NAVEGACIÓN SIGA
+   Fuerza que cada sección se muestre al hacer clic
+   ====================================================== */
+
+(function () {
+  const mapa = {
+    'Dashboard': 'dashboard',
+    'Recuerdos': 'recuerdos',
+    'Nuestros planes': 'citas',
+    'Playlist': 'playlist',
+    'Razones': 'razones',
+    'Promesas': 'promesas',
+    'Carta': 'carta',
+    '¿Nos vemos?': 'tiempo',
+    'Misiones SIGA': 'eventos',
+    'Cajita especial': 'cajita',
+    'Mi espacio': 'espacio',
+    'Pregunta final': 'pregunta'
+  };
+
+  window.mostrarSeccionSIGA = function (page) {
+    const pagina = document.getElementById('page-' + page);
+
+    if (!pagina) {
+      console.error('No existe la sección:', 'page-' + page);
+      return;
+    }
+
+    document.querySelectorAll('.page').forEach(p => {
+      p.classList.remove('active');
+      p.style.setProperty('display', 'none', 'important');
+      p.style.setProperty('visibility', 'hidden', 'important');
+      p.style.setProperty('opacity', '0', 'important');
+    });
+
+    pagina.classList.add('active');
+    pagina.style.setProperty('display', 'block', 'important');
+    pagina.style.setProperty('visibility', 'visible', 'important');
+    pagina.style.setProperty('opacity', '1', 'important');
+    pagina.style.setProperty('position', 'relative', 'important');
+    pagina.style.setProperty('z-index', '10', 'important');
+
+    document.querySelectorAll('.nav-item').forEach(btn => {
+      btn.classList.remove('active');
+      const texto = btn.textContent.trim();
+
+      for (const label in mapa) {
+        if (mapa[label] === page && texto.includes(label)) {
+          btn.classList.add('active');
+        }
+      }
+    });
+
+    const loaders = {
+      dashboard: window.loadDashboard,
+      recuerdos: window.loadRecuerdos,
+      citas: window.loadCitas,
+      playlist: window.loadPlaylist,
+      razones: window.loadRazones,
+      promesas: window.loadPromesas,
+      carta: window.loadCarta,
+      cajita: window.loadCajita,
+      eventos: window.loadEventos,
+      espacio: window.loadEspacio,
+      admin: window.loadAdminPanel
+    };
+
+    if (typeof loaders[page] === 'function') {
+      loaders[page]();
+    }
+
+    if (page === 'tiempo' && typeof window.initTiempoPage === 'function') {
+      window.initTiempoPage();
+    }
+  };
+
+  window.navigateTo = window.mostrarSeccionSIGA;
+
+  function conectarMenu() {
+    document.querySelectorAll('.nav-item').forEach(btn => {
+      const texto = btn.textContent.trim();
+
+      for (const label in mapa) {
+        if (texto.includes(label)) {
+          const page = mapa[label];
+          btn.onclick = function () {
+            window.mostrarSeccionSIGA(page);
+          };
+        }
+      }
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    conectarMenu();
+
+    setTimeout(function () {
+      const app = document.getElementById('app');
+      const login = document.getElementById('login-screen');
+
+      if (app && app.classList.contains('visible')) {
+        window.mostrarSeccionSIGA('dashboard');
+      }
+
+      if (login && login.style.display === 'none') {
+        window.mostrarSeccionSIGA('dashboard');
+      }
+    }, 500);
+  });
+
+  const viejoLogin = window.doLogin;
+
+  window.doLogin = async function () {
+    if (typeof viejoLogin === 'function') {
+      await viejoLogin();
+    }
+
+    setTimeout(function () {
+      const app = document.getElementById('app');
+      const login = document.getElementById('login-screen');
+
+      if (app && app.classList.contains('visible')) {
+        window.mostrarSeccionSIGA('dashboard');
+      }
+
+      if (login && login.style.display === 'none') {
+        window.mostrarSeccionSIGA('dashboard');
+      }
+    }, 300);
+  };
+})();
+</script>
+
+</body>
+</html>
+
+  
