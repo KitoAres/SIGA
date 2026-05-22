@@ -1743,7 +1743,7 @@ function forzarSeccion(page) {
     eventos: 'Misiones de conexión',
     cajita: 'Cajita especial',
     espacio: 'Mi espacio',
-    calma: 'Modo calma',
+    calma: 'Modo avión',
     pregunta: 'Pregunta final'
   };
 
@@ -1787,7 +1787,7 @@ document.addEventListener('click', function(e) {
   else if (texto.includes('Misiones de conexión')) forzarSeccion('eventos');
   else if (texto.includes('Cajita especial')) forzarSeccion('cajita');
   else if (texto.includes('Mi espacio')) forzarSeccion('espacio');
-  else if (texto.includes('Modo calma')) forzarSeccion('calma');
+  else if (texto.includes('Modo avión') || texto.includes('Modo calma')) forzarSeccion('calma');
 });
 
 // Desactivado: este refuerzo recargaba el dashboard al inicio y causaba parpadeo del cuadro de match.
@@ -1904,658 +1904,193 @@ setTimeout(function() {
 }, 500);
 
 /* ======================================================
-   MODO CALMA
+   MODO AVIÓN
+   Antes: Modo calma.
+   Ahora: un solo estado simple.
+   - Solo usuarios normales pueden activarlo.
+   - Solo quien lo activó puede desactivarlo.
+   - Admin/otro usuario solo mira el aviso.
    ====================================================== */
 
 let calmaActual = null;
-
-const CALMA_MAX_DIAS = 7;
-const VALOR_PERSONALIZADO = '__personalizado__';
-
-function setCalmaMensaje(texto) {
-  const el = $('calma-mensaje');
-  if (el) el.value = texto;
-}
-
-function setCheckinMensaje(texto) {
-  const el = $('checkin-calma-mensaje');
-  if (el) el.value = texto;
-}
-
-function calcularFechaMaximaCalma(fechaInicio) {
-  const base = fechaInicio ? new Date(fechaInicio + 'T12:00:00') : new Date();
-
-  if (isNaN(base.getTime())) {
-    return '';
-  }
-
-  base.setDate(base.getDate() + CALMA_MAX_DIAS);
-  return base.toISOString().split('T')[0];
-}
-
-function configurarSelectPersonalizado(selectId, inputId, placeholder) {
-  const select = $(selectId);
-  if (!select) return;
-
-  let input = $(inputId);
-
-  const yaExisteOpcion = Array.from(select.options).some(opt => opt.value === VALOR_PERSONALIZADO);
-
-  if (!yaExisteOpcion) {
-    const opt = document.createElement('option');
-    opt.value = VALOR_PERSONALIZADO;
-    opt.textContent = 'Escribir otra opción...';
-    select.appendChild(opt);
-  }
-
-  if (!input) {
-    input = document.createElement('input');
-    input.type = 'text';
-    input.id = inputId;
-    input.placeholder = placeholder;
-    input.className = 'calma-custom-input';
-    input.style.display = 'none';
-    input.style.marginTop = '8px';
-
-    select.insertAdjacentElement('afterend', input);
-  }
-
-  select.onchange = function() {
-    if (select.value === VALOR_PERSONALIZADO) {
-      input.style.display = 'block';
-      input.focus();
-    } else {
-      input.style.display = 'none';
-      input.value = '';
-    }
-  };
-}
-
-function resetSelectPersonalizado(selectId, inputId, valorDefault) {
-  const select = $(selectId);
-  const input = $(inputId);
-
-  if (select) select.value = valorDefault;
-
-  if (input) {
-    input.value = '';
-    input.style.display = 'none';
-  }
-}
-
-function obtenerValorPersonalizado(selectId, inputId, fallback) {
-  const select = $(selectId);
-  const input = $(inputId);
-
-  if (!select) return fallback;
-
-  if (select.value === VALOR_PERSONALIZADO) {
-    return input && input.value.trim() ? input.value.trim() : '';
-  }
-
-  return select.value || fallback;
-}
-
-function openModalCalma() {
-  if (!state.currentUser || !state.currentUser.id) {
-    toast('Primero inicia sesión.');
-    return;
-  }
-
-  const hoy = new Date().toISOString().split('T')[0];
-  const maxFecha = calcularFechaMaximaCalma(hoy);
-
-  $('calma-fecha-inicio').value = hoy;
-  $('calma-fecha-fin').value = '';
-
-  $('calma-fecha-fin').setAttribute('min', hoy);
-  $('calma-fecha-fin').setAttribute('max', maxFecha);
-
-  const inicioEl = $('calma-fecha-inicio');
-  if (inicioEl) {
-    inicioEl.onchange = function() {
-      const nuevaInicio = inicioEl.value;
-      const nuevaMax = calcularFechaMaximaCalma(nuevaInicio);
-
-      $('calma-fecha-fin').setAttribute('min', nuevaInicio);
-      $('calma-fecha-fin').setAttribute('max', nuevaMax);
-
-      if ($('calma-fecha-fin').value && $('calma-fecha-fin').value > nuevaMax) {
-        $('calma-fecha-fin').value = '';
-        toast('Modo calma puede durar máximo 1 semana.');
-      }
-    };
-  }
-
-  configurarSelectPersonalizado(
-    'calma-estado',
-    'calma-estado-custom',
-    'Ej: Estoy sensible y necesito espacio'
-  );
-
-  configurarSelectPersonalizado(
-    'calma-contacto',
-    'calma-contacto-custom',
-    'Ej: Solo mensajes cortos por la noche'
-  );
-
-  configurarSelectPersonalizado(
-    'calma-evitar',
-    'calma-evitar-custom',
-    'Ej: Evitar reclamos o preguntas insistentes'
-  );
-
-  configurarSelectPersonalizado(
-    'calma-energia',
-    'calma-energia-custom',
-    'Ej: 20% - Solo puedo leer por ahora'
-  );
-
-  resetSelectPersonalizado('calma-estado', 'calma-estado-custom', 'necesito calma');
-  resetSelectPersonalizado('calma-contacto', 'calma-contacto-custom', 'Señales cortas en la app');
-  resetSelectPersonalizado('calma-evitar', 'calma-evitar-custom', 'Preguntas largas o presión');
-  resetSelectPersonalizado('calma-energia', 'calma-energia-custom', '40% - Puedo leer, responder poquito');
-
-  $('calma-mensaje').value = '';
-
-  $('modal-calma').classList.add('open');
-}
-
-async function guardarModoCalma() {
-  if (!state.currentUser || !state.currentUser.id) {
-    toast('Primero inicia sesión.');
-    return;
-  }
-
-  const fechaInicio = $('calma-fecha-inicio').value;
-  const fechaFin = $('calma-fecha-fin').value;
-
-  const estado = obtenerValorPersonalizado(
-    'calma-estado',
-    'calma-estado-custom',
-    'necesito calma'
-  );
-
-  const mensaje = $('calma-mensaje').value.trim();
-
-  const contacto = obtenerValorPersonalizado(
-    'calma-contacto',
-    'calma-contacto-custom',
-    'Señales cortas en la app'
-  );
-
-  const evitar = obtenerValorPersonalizado(
-    'calma-evitar',
-    'calma-evitar-custom',
-    'Preguntas largas o presión'
-  );
-
-  const energia = obtenerValorPersonalizado(
-    'calma-energia',
-    'calma-energia-custom',
-    '40% - Puedo leer, responder poquito'
-  );
-
-  if (!fechaInicio || !fechaFin) {
-    toast('Elige fecha de inicio y fin.');
-    return;
-  }
-
-  if (!estado) {
-    toast('Escribe cómo estás o elige una opción.');
-    return;
-  }
-
-  if (!contacto) {
-    toast('Escribe qué contacto puedes recibir o elige una opción.');
-    return;
-  }
-
-  if (!evitar) {
-    toast('Escribe qué quieres evitar o elige una opción.');
-    return;
-  }
-
-  if (!energia) {
-    toast('Escribe tu nivel de energía o elige una opción.');
-    return;
-  }
-
-  const inicio = new Date(fechaInicio + 'T12:00:00');
-  const fin = new Date(fechaFin + 'T12:00:00');
-  const diffDias = Math.ceil((fin - inicio) / (1000 * 60 * 60 * 24));
-
-  if (diffDias < 0) {
-    toast('La fecha final no puede ser anterior.');
-    return;
-  }
-
-  if (diffDias > CALMA_MAX_DIAS) {
-    toast('Modo calma puede durar máximo 1 semana.');
-    return;
-  }
-
-  try {
-    const data = await api('POST', '/api/calma', {
-      usuario_id: state.currentUser.id,
-      fecha_inicio: fechaInicio,
-      fecha_fin: fechaFin,
-      estado_animo: estado,
-      mensaje,
-      contacto_permitido: contacto,
-      evitar,
-      energia
-    });
-
-    if (data.error) {
-      toast(data.error);
-      return;
-    }
-
-    closeModal('modal-calma');
-    toast('Modo calma activado 🌙');
-    loadCalma();
-  } catch {
-    toast('Error al activar Modo calma.');
-  }
-}
 
 async function loadCalma() {
   const box = $('calma-activa-box');
   if (!box) return;
 
-  box.innerHTML = '<div style="color:var(--text-muted);padding:20px;">Cargando Modo calma...</div>';
+  if (!state.currentUser || !state.currentUser.id) {
+    box.innerHTML = `
+      <div class="calma-empty">
+        <div class="calma-empty-icon">✈️</div>
+        <h3>Primero inicia sesión</h3>
+        <p>Necesitas iniciar sesión para ver Modo avión.</p>
+      </div>
+    `;
+    return;
+  }
+
+  box.innerHTML = '<div style="color:var(--text-muted);padding:20px;">Cargando Modo avión...</div>';
 
   try {
-    const data = await api('GET', '/api/calma/activa');
+    const data = await api('GET', '/api/calma/estado');
 
-    if (!data.activa) {
-      calmaActual = null;
-
+    if (!data.ok) {
       box.innerHTML = `
         <div class="calma-empty">
-          <div class="calma-empty-icon">🌙</div>
-          <h3>No hay Modo calma activo</h3>
-          <p>
-            Cuando alguno necesite respirar, puede dejar una señal aquí.
-            No es una despedida. Es una forma de cuidar el vínculo.
-          </p>
+          <div class="calma-empty-icon">✈️</div>
+          <h3>No se pudo cargar Modo avión</h3>
+          <p>Intenta actualizar la página.</p>
         </div>
       `;
       return;
     }
 
-    calmaActual = data.calma;
+    const activo = !!data.activo && data.modo;
+    const modo = data.modo;
+    calmaActual = activo ? modo : null;
 
-    const c = data.calma;
-    const checkins = data.checkins || [];
-        const proximoCheckinDate = data.proximo_checkin
-      ? new Date(normalizarFecha(data.proximo_checkin) + 'T23:59:59')
-      : null;
+    const soyAdmin = state.currentUser.rol === 'admin';
+    const yoSoyQuienActivo = activo && Number(modo.usuario_id) === Number(state.currentUser.id);
 
-    const ahoraCalma = new Date();
+    if (!activo) {
+      box.innerHTML = `
+        <div class="modo-avion-card">
+          <div class="modo-avion-icon">✈️</div>
+          <h2>Modo avión</h2>
+          <p>
+            Un botón simple para decir: no estoy disponible por ahora.
+            No hay fechas, no hay explicaciones largas y no hay presión.
+          </p>
 
-    const checkinPendiente =
-      proximoCheckinDate &&
-      !isNaN(proximoCheckinDate.getTime()) &&
-      ahoraCalma > proximoCheckinDate;
-
-    const estadoSenalHTML = checkinPendiente
-      ? `
-        <div class="calma-senal-status pendiente">
-          <strong>Aún no hay señal reciente.</strong>
-          <span>Puede que todavía necesite calma. Una señal pequeña puede dejarse cuando haya energía.</span>
-        </div>
-      `
-      : `
-        <div class="calma-senal-status tranquila">
-          <strong>Señal en calma.</strong>
-          <span>Si hace falta, una frase corta puede bastar para cuidar el vínculo.</span>
+          ${soyAdmin ? `
+            <div class="modo-avion-status tranquilo">
+              <strong>Modo avión desactivado.</strong>
+              <span>Nadie está en pausa por ahora.</span>
+            </div>
+          ` : `
+            <button class="btn-save modo-avion-main-btn" onclick="activarModoAvion()">
+              Activar modo avión
+            </button>
+          `}
         </div>
       `;
-    
+      return;
+    }
 
-    const puedeCerrar =
-      Number(c.usuario_id) === Number(state.currentUser?.id) ||
-      state.currentUser?.rol === 'administrador';
+    if (yoSoyQuienActivo) {
+      box.innerHTML = `
+        <div class="modo-avion-card activo">
+          <div class="modo-avion-icon">✈️</div>
+          <h2>Estás en modo avión</h2>
+          <p>
+            No estás disponible por ahora. Puedes volver cuando tú decidas.
+          </p>
 
-    const cerrarHTML = puedeCerrar
-      ? `
-        <button class="btn btn-sm btn-delete" onclick="cerrarModoCalma(${c.id})">
-          Cerrar modo
-        </button>
-      `
-      : `
-        <span class="calma-readonly">
-          Solo ${esc(c.display_name || c.nombre || c.usuario)} puede cerrar este modo
-        </span>
-      `;
-
-    const checkinsHTML = checkins.length
-      ? checkins.map(ch => `
-        <div class="calma-checkin-item">
-          <div class="calma-checkin-top">
-            <span class="calma-checkin-author" style="border-color:${esc(ch.color_perfil || '#22d3ee')}; color:${esc(ch.color_perfil || '#22d3ee')};">
-              ● ${esc(ch.display_name || ch.nombre || ch.usuario || 'Alguien')}
-            </span>
-
-            <span class="calma-checkin-date">${formatDate(ch.creado_en)}</span>
+          <div class="modo-avion-status activo">
+            <strong>Modo avión activo.</strong>
+            <span>${esc(modo.mensaje || 'Estoy en modo avión. No estoy disponible por ahora.')}</span>
           </div>
 
-          <div class="calma-checkin-text">${esc(ch.mensaje)}</div>
+          <button class="btn-save modo-avion-main-btn" onclick="desactivarModoAvion()">
+            Desactivar modo avión
+          </button>
         </div>
-      `).join('')
-      : `<div class="calma-empty-small">Aún no hay señales. Una frase corta basta.</div>`;
+      `;
+      return;
+    }
 
     box.innerHTML = `
-      <div class="calma-card-activa">
-        <div class="calma-card-header">
-          <div>
-            <div class="calma-chip" style="border-color:${esc(c.color_perfil || '#22d3ee')}; color:${esc(c.color_perfil || '#22d3ee')};">
-              ● ${esc(c.display_name || c.nombre || c.usuario)}
-            </div>
+      <div class="modo-avion-card activo">
+        <div class="modo-avion-icon">✈️</div>
+        <h2>${esc(modo.usuario_nombre || 'Esta persona')} está en modo avión</h2>
+        <p>
+          No está disponible por ahora. Puede volver cuando lo decida.
+        </p>
 
-            <h2>Modo calma activo 🌙</h2>
-            <p>${esc(c.estado_animo || 'necesita calma')}</p>
-          </div>
-
-          ${cerrarHTML}
+        <div class="modo-avion-status activo">
+          <strong>Modo avión activo.</strong>
+          <span>${esc(modo.mensaje || 'Estoy en modo avión. No estoy disponible por ahora.')}</span>
         </div>
 
-        <div class="calma-dates">
-          <div>
-            <span>Desde</span>
-            <strong>${formatDate(c.fecha_inicio)}</strong>
-          </div>
-
-          <div>
-            <span>Hasta</span>
-            <strong>${formatDate(c.fecha_fin)}</strong>
-          </div>
-
-          <div>
-            <span>Próxima señal</span>
-            <strong>${formatDate(data.proximo_checkin)}</strong>
-          </div>
-        </div>
-        ${estadoSenalHTML}
-
-        ${
-          c.mensaje
-            ? `
-              <div class="calma-message">
-                “${esc(c.mensaje)}”
-              </div>
-            `
-            : ''
-        }
-
-        <div class="calma-unlocked">
-          <div class="calma-unlocked-head">
-            <span>🌙</span>
-            <div>
-              <h3>Caja de calma desbloqueada</h3>
-              <p>Herramientas pequeñas para cuidar el vínculo sin presionar.</p>
-            </div>
-          </div>
-
-          <div class="calma-tools-grid">
-            <div class="calma-tool-card">
-              <h4>Contacto permitido</h4>
-              <p>${esc(c.contacto_permitido || 'Señales cortas en la app')}</p>
-            </div>
-
-            <div class="calma-tool-card">
-              <h4>Evitar por ahora</h4>
-              <p>${esc(c.evitar || 'Preguntas largas o presión')}</p>
-            </div>
-
-            <div class="calma-tool-card">
-              <h4>Energía emocional</h4>
-              <p>${esc(c.energia || '40% - Puedo leer, responder poquito')}</p>
-            </div>
-
-            <div class="calma-tool-card espera">
-              <h4>Modo espera segura</h4>
-              <p>
-                Dar espacio es una forma de amar.
-                Si hay una señal, hay vínculo.
-              </p>
-            </div>
-          </div>
-
-          <div class="calma-acuerdo">
-            <h4>Acuerdo de cuidado</h4>
-            <ul>
-              <li>No desaparecer sin una señal mínima.</li>
-              <li>No exigir explicación inmediata.</li>
-              <li>Una frase corta cada cierto tiempo puede bastar.</li>
-              <li>La calma no significa rechazo.</li>
-              <li>Volveran a hablar cuando ambos puedan hacerlo bien.</li>
-            </ul>
-          </div>
-
-          <div class="calma-actions">
-            <button class="btn-add" onclick="openCheckinCalma()">Dejar señal rápida ♡</button>
-            <button class="btn-add btn-soft" onclick="openCartaCalma()">Escribir carta para después 💌</button>
-          </div>
+        <div class="modo-avion-status tranquilo">
+          <strong>No puedes desactivarlo tú.</strong>
+          <span>Solo la persona que activó Modo avión puede quitarlo.</span>
         </div>
       </div>
-
-      <div class="calma-checkins">
-        <h3>Señales de cuidado</h3>
-        ${checkinsHTML}
-      </div>
-
-      <div id="calma-cartas-box"></div>
     `;
 
-    if (typeof loadCartasCalma === 'function') {
-  loadCartasCalma();
-}
-
   } catch (err) {
-    console.error(err);
-    box.innerHTML = '<div style="color:var(--danger);padding:20px;">Error al cargar Modo calma.</div>';
+    console.error('Error cargando Modo avión:', err);
+    box.innerHTML = `
+      <div class="calma-empty">
+        <div class="calma-empty-icon">✈️</div>
+        <h3>Error al cargar Modo avión</h3>
+        <p>Revisa la conexión o intenta actualizar la página.</p>
+      </div>
+    `;
   }
 }
-function openCheckinCalma() {
-  if (!calmaActual) {
-    toast('No hay Modo calma activo.');
-    return;
-  }
 
-  $('checkin-calma-mensaje').value = '';
-  $('modal-checkin-calma').classList.add('open');
-}
-
-async function guardarCheckinCalma() {
+async function activarModoAvion() {
   if (!state.currentUser || !state.currentUser.id) {
     toast('Primero inicia sesión.');
     return;
   }
 
-  if (!calmaActual) {
-    toast('No hay Modo calma activo.');
-    return;
-  }
-
-  const mensaje = $('checkin-calma-mensaje').value.trim();
-
-  if (!mensaje) {
-    toast('Escribe una señal corta.');
+  if (state.currentUser.rol === 'admin') {
+    toast('El admin no puede activar Modo avión.');
     return;
   }
 
   try {
-    const data = await api('POST', `/api/calma/${calmaActual.id}/checkin`, {
+    const data = await api('POST', '/api/calma/activar', {
       usuario_id: state.currentUser.id,
-      mensaje
+      mensaje: 'Estoy en modo avión. No estoy disponible por ahora.'
     });
 
-    if (data.error) {
-      toast(data.error);
+    if (!data.ok) {
+      toast(data.error || 'No se pudo activar Modo avión.');
       return;
     }
 
-    closeModal('modal-checkin-calma');
-
-    const puntos = Number(data.puntos_otorgados || 0);
-
-    if (puntos > 0) {
-      toast(`${data.mensaje_bonito || 'Señal guardada.'} +${puntos} pts 🌙`);
-    } else {
-      toast(data.mensaje_bonito || 'Señal guardada ♡');
-    }
-
+    toast(data.mensaje_bonito || 'Modo avión activado.');
     loadCalma();
-
-    if (typeof cargarProgresoGlobal === 'function') {
-      cargarProgresoGlobal();
-    }
-
-    if (typeof cargarProgresoMisiones === 'function') {
-      cargarProgresoMisiones();
-    }
-
-  } catch {
-    toast('Error al guardar la señal.');
+  } catch (err) {
+    console.error('Error activando Modo avión:', err);
+    toast('Error al activar Modo avión.');
   }
 }
 
-async function cerrarModoCalma(id) {
+async function desactivarModoAvion() {
   if (!state.currentUser || !state.currentUser.id) {
     toast('Primero inicia sesión.');
     return;
   }
 
-  if (!confirm('¿Cerrar Modo calma?')) return;
-
   try {
-    const data = await api('PUT', `/api/calma/${id}/cerrar`, {
+    const data = await api('POST', '/api/calma/desactivar', {
       usuario_id: state.currentUser.id
     });
 
-    if (data.error) {
-      toast(data.error);
+    if (!data.ok) {
+      toast(data.error || 'No se pudo desactivar Modo avión.');
       return;
     }
 
-    toast('Modo calma cerrado.');
+    toast(data.mensaje_bonito || 'Modo avión desactivado.');
     loadCalma();
-  } catch {
-    toast('Error al cerrar Modo calma.');
+  } catch (err) {
+    console.error('Error desactivando Modo avión:', err);
+    toast('Error al desactivar Modo avión.');
   }
 }
 
-function openCartaCalma() {
-  if (!calmaActual) {
-    toast('No hay Modo calma activo.');
-    return;
-  }
-
-  $('carta-calma-titulo').value = '';
-  $('carta-calma-contenido').value = '';
-  $('modal-carta-calma').classList.add('open');
-}
-async function guardarCartaCalma() {
-  if (!state.currentUser || !state.currentUser.id) {
-    toast('Primero inicia sesión.');
-    return;
-  }
-
-  if (!calmaActual) {
-    toast('No hay Modo calma activo.');
-    return;
-  }
-
-  const titulo = $('carta-calma-titulo').value.trim() || 'Carta para después';
-  const contenido = $('carta-calma-contenido').value.trim();
-
-  if (!contenido) {
-    toast('Escribe algo en la carta.');
-    return;
-  }
-
-  try {
-    const data = await api('POST', `/api/calma/${calmaActual.id}/carta`, {
-      usuario_id: state.currentUser.id,
-      titulo,
-      contenido,
-      visible_desde: normalizarFecha(calmaActual.fecha_fin)
-    });
-
-    if (data.error) {
-      toast(data.error);
-      return;
-    }
-
-    closeModal('modal-carta-calma');
-    toast('Carta guardada para cuando vuelva la calma 💌');
-    if (typeof loadCartasCalma === 'function') {
-  loadCartasCalma();
-}
-
-  } catch {
-    toast('Error al guardar carta.');
-  }
-}
-
-async function loadCartasCalma() {
-  const box = $('calma-cartas-box');
-  if (!box || !calmaActual) return;
-
-  try {
-    const cartas = await api('GET', `/api/calma/${calmaActual.id}/cartas`);
-
-    if (!cartas.length) {
-      box.innerHTML = '';
-      return;
-    }
-
-    const hoy = new Date();
-    const html = cartas.map(carta => {
-      const visibleDesde = new Date(normalizarFecha(carta.visible_desde) + 'T00:00:00');
-      const yaVisible = hoy >= visibleDesde;
-
-      return `
-        <div class="calma-carta-card">
-          <div class="calma-checkin-top">
-            <span class="calma-checkin-author" style="border-color:${esc(carta.color_perfil || '#22d3ee')}; color:${esc(carta.color_perfil || '#22d3ee')};">
-              ● ${esc(carta.display_name || carta.nombre || carta.usuario || 'Alguien')}
-            </span>
-            <span class="calma-checkin-date">${formatDate(carta.creado_en)}</span>
-          </div>
-
-          <h4>${esc(carta.titulo || 'Carta para después')}</h4>
-
-          ${
-            yaVisible
-              ? `<p>${esc(carta.contenido)}</p>`
-              : `<p class="calma-carta-bloqueada">Esta carta se abrirá cuando vuelva la calma: ${formatDate(carta.visible_desde)} 💌</p>`
-          }
-        </div>
-      `;
-    }).join('');
-
-    box.innerHTML = `
-      <div class="calma-cartas">
-        <h3>Cartas para después</h3>
-        ${html}
-      </div>
-    `;
-  } catch {
-    box.innerHTML = '';
-  }
-}
-   
-
-/* Refuerzo para que el menú cargue Modo calma */
+/* Refuerzo para que el menú cargue Modo avión */
 document.addEventListener('click', function(e) {
   const btn = e.target.closest('.nav-item');
   if (!btn) return;
 
-  if (btn.textContent.includes('Modo calma')) {
+  if (btn.textContent.includes('Modo avión') || btn.textContent.includes('Modo calma')) {
     setTimeout(() => {
       if (typeof loadCalma === 'function') loadCalma();
     }, 100);
@@ -2563,7 +2098,8 @@ document.addEventListener('click', function(e) {
 });
 
 window.loadCalma = loadCalma;
-
+window.activarModoAvion = activarModoAvion;
+window.desactivarModoAvion = desactivarModoAvion;
 
 function editarRecuerdoSeguro(id) {
   const r = (window.recuerdosCache || []).find(x => Number(x.id) === Number(id));
@@ -2625,4 +2161,3 @@ function editarRecuerdoSeguro(id) {
 
   window.mostrarPanelAdminSiCorresponde = mostrarPanelAdminSiCorresponde;
 })();
-
