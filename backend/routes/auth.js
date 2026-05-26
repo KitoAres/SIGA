@@ -4,7 +4,6 @@ const pool = require('../config/db');
 
 const {
   enviarEmail,
-  registrarNotificacionSiNoExiste,
   htmlBase,
   escapeHtml
 } = require('../utils/email');
@@ -69,27 +68,26 @@ async function registrarDebugLogin(usuario) {
 
 async function notificarAccesoElla(usuario) {
   try {
-    const watch = String(process.env.EMAIL_WATCH_USER || 'ella').toLowerCase().trim();
-
-    const usuarioLogin = String(usuario.usuario || '').toLowerCase();
-    const nombre = String(usuario.nombre || '').toLowerCase();
-    const display = String(usuario.display_name || '').toLowerCase();
-    const rol = String(usuario.rol || '').toLowerCase();
+    const rol = String(usuario.rol || '').toLowerCase().trim();
+    const usuarioLogin = String(usuario.usuario || '').toLowerCase().trim();
+    const nombre = String(usuario.nombre || '').toLowerCase().trim();
+    const display = String(usuario.display_name || '').toLowerCase().trim();
+    const watch = String(process.env.EMAIL_WATCH_USER || 'francin').toLowerCase().trim();
 
     const esElla =
       rol === 'ella' ||
+      usuarioLogin === 'francin' ||
       usuarioLogin === watch ||
-      nombre.includes(watch) ||
-      display.includes(watch) ||
       nombre.includes('francin') ||
       display.includes('francin');
 
-    console.log('DEBUG EMAIL ELLA:', {
-      watch,
+    console.log('DEBUG DETECCION ELLA:', {
+      id: usuario.id,
+      rol,
       usuarioLogin,
       nombre,
       display,
-      rol,
+      watch,
       esElla
     });
 
@@ -100,20 +98,21 @@ async function notificarAccesoElla(usuario) {
     // Máximo 1 correo por minuto para evitar spam por recargas.
     const minuto = ahora.toISOString().slice(0, 16);
     const clave = `acceso_ella_${usuario.id}_${minuto}`;
-
     const asunto = 'Francin entró a SIGA 🌿';
 
-    const registro = await registrarNotificacionSiNoExiste(pool, {
-      tipo: 'acceso_ella',
-      clave,
-      usuario_id: usuario.id,
-      enviado_a: process.env.EMAIL_TO,
-      asunto
-    });
-
-    console.log('DEBUG REGISTRO EMAIL:', registro);
-
-    if (!registro.nuevo) return;
+    await pool.query(
+      `INSERT INTO email_notificaciones
+        (tipo, clave, usuario_id, enviado_a, asunto)
+       VALUES ($1, $2, $3, $4, $5)
+       ON CONFLICT (clave) DO NOTHING`,
+      [
+        'acceso_ella',
+        clave,
+        usuario.id,
+        process.env.EMAIL_TO || null,
+        asunto
+      ]
+    );
 
     const fechaBonita = ahora.toLocaleString('es-BO', {
       dateStyle: 'medium',
@@ -133,10 +132,10 @@ async function notificarAccesoElla(usuario) {
       text: `Francin entró a SIGA. Hora: ${fechaBonita}`
     });
 
-    console.log('DEBUG RESULTADO EMAIL:', resultadoEmail);
+    console.log('DEBUG EMAIL ACCESO RESULTADO:', resultadoEmail);
 
   } catch (err) {
-    console.error('No se pudo enviar email de acceso:', err);
+    console.error('ERROR notificarAccesoElla:', err);
   }
 }
 
@@ -175,10 +174,10 @@ router.post('/login', async (req, res) => {
 
     await registrarAcceso(req, u);
 
-    // Este debug debe aparecer SIEMPRE que cualquier usuario inicie sesión.
+    // Debug temporal: confirma que este auth.js se está ejecutando.
     await registrarDebugLogin(u);
 
-    // Este solo enviará correo si detecta que es Francin / rol ella.
+    // Email si entra Francin / rol ella.
     await notificarAccesoElla(u);
 
     res.json({
@@ -229,6 +228,7 @@ router.get('/perfil/:id', async (req, res) => {
     });
 
   } catch (err) {
+    console.error('ERROR PERFIL:', err);
     res.status(500).json({
       ok: false,
       error: 'Error al obtener perfil'
@@ -352,7 +352,7 @@ router.put('/perfil/:id', async (req, res) => {
     });
 
   } catch (err) {
-    console.error(err);
+    console.error('ERROR ACTUALIZAR PERFIL:', err);
     res.status(500).json({
       ok: false,
       error: 'Error al actualizar perfil'
