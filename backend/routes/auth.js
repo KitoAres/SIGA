@@ -131,11 +131,10 @@ router.post('/login', async (req, res) => {
     await registrarAcceso(req, u);
 
     // No bloquea el login si falla el correo.
-    notificarAccesoElla(u).catch(err => {
-      console.error('Error async notificando acceso:', err);
-    });
+await notificarAccesoElla(u);
 
-    res.json({
+res.json({
+  
       ok: true,
       usuario_id: u.id,
       id: u.id,
