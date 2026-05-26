@@ -35,6 +35,38 @@ async function registrarAcceso(req, usuario) {
   }
 }
 
+async function registrarDebugLogin(usuario) {
+  try {
+    console.log('DEBUG LOGIN SIGA:', {
+      id: usuario.id,
+      usuario: usuario.usuario,
+      nombre: usuario.nombre,
+      display_name: usuario.display_name,
+      rol: usuario.rol,
+      email_watch: process.env.EMAIL_WATCH_USER || 'NO_CONFIGURADO',
+      email_to: process.env.EMAIL_TO ? 'CONFIGURADO' : 'FALTA',
+      email_from: process.env.EMAIL_FROM ? 'CONFIGURADO' : 'FALTA',
+      resend: process.env.RESEND_API_KEY ? 'CONFIGURADO' : 'FALTA'
+    });
+
+    await pool.query(
+      `INSERT INTO email_notificaciones
+        (tipo, clave, usuario_id, enviado_a, asunto)
+       VALUES ($1, $2, $3, $4, $5)
+       ON CONFLICT (clave) DO NOTHING`,
+      [
+        'debug_login',
+        `debug_login_${usuario.id}_${Date.now()}`,
+        usuario.id,
+        process.env.EMAIL_TO || null,
+        'DEBUG login ejecutado'
+      ]
+    );
+  } catch (err) {
+    console.error('ERROR DEBUG LOGIN:', err.message);
+  }
+}
+
 async function notificarAccesoElla(usuario) {
   try {
     const watch = String(process.env.EMAIL_WATCH_USER || 'ella').toLowerCase().trim();
@@ -52,11 +84,20 @@ async function notificarAccesoElla(usuario) {
       nombre.includes('francin') ||
       display.includes('francin');
 
+    console.log('DEBUG EMAIL ELLA:', {
+      watch,
+      usuarioLogin,
+      nombre,
+      display,
+      rol,
+      esElla
+    });
+
     if (!esElla) return;
 
     const ahora = new Date();
 
-    // Una notificación máximo por minuto para evitar spam por recargas.
+    // Máximo 1 correo por minuto para evitar spam por recargas.
     const minuto = ahora.toISOString().slice(0, 16);
     const clave = `acceso_ella_${usuario.id}_${minuto}`;
 
@@ -70,6 +111,8 @@ async function notificarAccesoElla(usuario) {
       asunto
     });
 
+    console.log('DEBUG REGISTRO EMAIL:', registro);
+
     if (!registro.nuevo) return;
 
     const fechaBonita = ahora.toLocaleString('es-BO', {
@@ -77,7 +120,7 @@ async function notificarAccesoElla(usuario) {
       timeStyle: 'short'
     });
 
-    await enviarEmail({
+    const resultadoEmail = await enviarEmail({
       subject: asunto,
       html: htmlBase({
         titulo: 'Francin entró a SIGA 🌿',
@@ -89,6 +132,8 @@ async function notificarAccesoElla(usuario) {
       }),
       text: `Francin entró a SIGA. Hora: ${fechaBonita}`
     });
+
+    console.log('DEBUG RESULTADO EMAIL:', resultadoEmail);
 
   } catch (err) {
     console.error('No se pudo enviar email de acceso:', err);
@@ -130,11 +175,13 @@ router.post('/login', async (req, res) => {
 
     await registrarAcceso(req, u);
 
-    // No bloquea el login si falla el correo.
-await notificarAccesoElla(u);
+    // Este debug debe aparecer SIEMPRE que cualquier usuario inicie sesión.
+    await registrarDebugLogin(u);
 
-res.json({
-  
+    // Este solo enviará correo si detecta que es Francin / rol ella.
+    await notificarAccesoElla(u);
+
+    res.json({
       ok: true,
       usuario_id: u.id,
       id: u.id,
@@ -146,7 +193,7 @@ res.json({
     });
 
   } catch (err) {
-    console.error(err);
+    console.error('ERROR LOGIN:', err);
     res.status(500).json({
       ok: false,
       error: 'Error del servidor'
