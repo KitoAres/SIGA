@@ -45,7 +45,6 @@ function normalizarFecha(value) {
 
 function normalizarHora(value) {
   if (!value) return '';
-
   return String(value).slice(0, 5);
 }
 
@@ -402,7 +401,6 @@ router.get('/coincidencias', async (req, res) => {
     }
 
     const tieneLugar = await columnaExiste('tiempo_disponibilidad', 'lugar');
-
     const vigente = `(a.fecha::date + LEAST(a.hora_fin,b.hora_fin)) >= NOW()`;
 
     if (usuario.rol === 'admin') {
@@ -466,10 +464,9 @@ router.get('/coincidencias', async (req, res) => {
         }
       }));
 
-      // No bloquea la respuesta si el email falla.
-      notificarMatchesPorEmail(coincidencias).catch(err => {
-        console.error('Error async notificando match:', err);
-      });
+      // IMPORTANTE:
+      // Esperamos para que Vercel no corte el proceso.
+      await notificarMatchesPorEmail(coincidencias);
 
       return res.json({
         coincidencias
@@ -527,10 +524,9 @@ router.get('/coincidencias', async (req, res) => {
       }
     }));
 
-    // No bloquea la respuesta si el email falla.
-    notificarMatchesPorEmail(coincidencias).catch(err => {
-      console.error('Error async notificando match:', err);
-    });
+    // IMPORTANTE:
+    // Esperamos para que Vercel no corte el proceso.
+    await notificarMatchesPorEmail(coincidencias);
 
     res.json({
       coincidencias
