@@ -8,11 +8,19 @@
 (function () {
   const saludosEntrada = [
     'SIGyyyyy siiuuu ✨',
+    'SIGy te ofrece una dona emocional. Tiene relleno de paciencia.',
     'Qué bonito verte por aquí.',
     'Volviste. SIGA se siente más vivo.',
+    'SIGy llegó con una playlist imaginaria para no colapsar.',
     'Hola, humano del código romántico.',
+    'SIGy trajo una almohadita para que descanses el corazón.',
+    'SIGy te ofrece un vasito de calma, edición limitada.',
+
     'SIGy reportándose con ternura.',
+    'SIGy viene con agüita, ternura y un poquito de sentido común.',
+
     'Hoy podemos hacer algo pequeño y bonito.',
+    'SIGy te trae un cargador emocional. No es rápido, pero funciona.',
     'Entraste y SIGy hizo: siuuuu 💜'
   ];
 
@@ -25,7 +33,8 @@
     'Una carta también puede respirar antes de compartirse.',
     'Podemos cuidar el vínculo sin perseguirlo.',
     'SIGyyyyy modo ternura activado.',
-    'Siuuu... pero con responsabilidad afectiva.',
+    'Chale... tengo hambre.',
+    'Agueeevooo... pero con responsabilidad afectiva.',
     'Aquí ando patrullando el amor sin invadir.'
   ];
 
