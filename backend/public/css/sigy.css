@@ -1,7 +1,7 @@
 /* ======================================================
-   SIGy CSS ✨
-   Mini mascota emocional de SIGA.
-   Ya tiene carita, globo y drama controlado.
+   SIGy CSS v3 ✨
+   Mascota flotante, mensajitos y botones bonitos.
+   El amor también necesita z-index.
    ====================================================== */
 
 #sigy-widget {
@@ -10,16 +10,17 @@
   bottom: 22px;
   z-index: 99999;
   font-family: inherit;
+  transition: left 0.85s ease, right 0.85s ease, bottom 0.85s ease;
 }
 
 .sigy-globo {
   position: absolute;
   right: 4px;
   bottom: 92px;
-  width: 230px;
+  width: 245px;
   padding: 12px 14px;
   border-radius: 18px 18px 4px 18px;
-  background: rgba(42, 31, 60, 0.96);
+  background: rgba(42, 31, 60, 0.97);
   color: rgba(255,255,255,0.92);
   font-size: 0.82rem;
   line-height: 1.35;
@@ -37,24 +38,26 @@
 }
 
 #sigy-burbuja {
-  width: 76px;
-  height: 86px;
-  border: none;
-  border-radius: 28px;
-  background: linear-gradient(145deg, #f7d7ff, #d8b4fe, #a78bfa);
-  box-shadow: 0 18px 45px rgba(98, 58, 162, 0.35);
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  animation: sigyFlotar 3.8s ease-in-out infinite;
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  width: 76px !important;
+  height: 86px !important;
+  border: none !important;
+  border-radius: 28px !important;
+  background: linear-gradient(145deg, #f7d7ff, #d8b4fe, #a78bfa) !important;
+  box-shadow: 0 18px 45px rgba(98, 58, 162, 0.35) !important;
+  cursor: pointer !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  animation: sigyFlotar 3.8s ease-in-out infinite !important;
+  transition: transform 0.25s ease, box-shadow 0.25s ease !important;
+  padding: 0 !important;
+  margin: 0 !important;
 }
 
 #sigy-burbuja:hover {
-  transform: translateY(-4px) scale(1.03);
-  box-shadow: 0 22px 55px rgba(98, 58, 162, 0.45);
+  transform: translateY(-4px) scale(1.03) !important;
+  box-shadow: 0 22px 55px rgba(98, 58, 162, 0.45) !important;
 }
 
 .sigy-carita {
@@ -115,6 +118,13 @@
   border-bottom: none;
   border-top: 3px solid #5b21b6;
   border-radius: 20px 20px 0 0;
+}
+
+.sigy-carita.sorpresa .sigy-boca {
+  width: 8px;
+  height: 8px;
+  border: 3px solid #5b21b6;
+  border-radius: 50%;
 }
 
 .sigy-carita.dormido .sigy-ojos span {
@@ -183,14 +193,16 @@
 }
 
 #sigy-cerrar {
-  width: 30px;
-  height: 30px;
-  border: none;
-  border-radius: 999px;
-  background: rgba(255,255,255,0.12);
-  color: #fff;
-  cursor: pointer;
-  font-size: 1.1rem;
+  width: 30px !important;
+  height: 30px !important;
+  border: none !important;
+  border-radius: 999px !important;
+  background: rgba(255,255,255,0.12) !important;
+  color: #fff !important;
+  cursor: pointer !important;
+  font-size: 1.1rem !important;
+  padding: 0 !important;
+  margin: 0 !important;
 }
 
 .sigy-modos,
@@ -201,28 +213,31 @@
   margin-bottom: 10px;
 }
 
-.sigy-modos button,
-.sigy-ayudas button {
-  border: 1px solid rgba(255,255,255,0.14);
-  background: rgba(255,255,255,0.08);
-  color: rgba(255,255,255,0.86);
-  border-radius: 999px;
-  padding: 7px 10px;
-  font-size: 0.72rem;
-  cursor: pointer;
-  transition: 0.2s ease;
+#sigy-widget .sigy-modos button,
+#sigy-widget .sigy-ayudas button {
+  border: 1px solid rgba(255,255,255,0.14) !important;
+  background: rgba(255,255,255,0.08) !important;
+  color: rgba(255,255,255,0.86) !important;
+  border-radius: 999px !important;
+  padding: 7px 10px !important;
+  font-size: 0.72rem !important;
+  cursor: pointer !important;
+  transition: 0.2s ease !important;
+  margin: 0 !important;
+  width: auto !important;
+  height: auto !important;
 }
 
-.sigy-ayudas button {
-  background: rgba(216, 180, 254, 0.12);
+#sigy-widget .sigy-ayudas button {
+  background: rgba(216, 180, 254, 0.14) !important;
 }
 
-.sigy-modos button.active,
-.sigy-modos button:hover,
-.sigy-ayudas button:hover {
-  background: rgba(216, 180, 254, 0.28);
-  border-color: rgba(216, 180, 254, 0.7);
-  color: #fff;
+#sigy-widget .sigy-modos button.active,
+#sigy-widget .sigy-modos button:hover,
+#sigy-widget .sigy-ayudas button:hover {
+  background: rgba(216, 180, 254, 0.32) !important;
+  border-color: rgba(216, 180, 254, 0.7) !important;
+  color: #fff !important;
 }
 
 #sigy-input {
@@ -252,23 +267,24 @@
 
 #sigy-enviar,
 #sigy-limpiar {
-  border: none;
-  border-radius: 999px;
-  padding: 10px 14px;
-  cursor: pointer;
-  font-weight: 800;
-  font-size: 0.82rem;
+  border: none !important;
+  border-radius: 999px !important;
+  padding: 10px 14px !important;
+  cursor: pointer !important;
+  font-weight: 800 !important;
+  font-size: 0.82rem !important;
+  margin: 0 !important;
 }
 
 #sigy-enviar {
-  background: linear-gradient(135deg, #d8b4fe, #a78bfa);
-  color: #26113d;
+  background: linear-gradient(135deg, #d8b4fe, #a78bfa) !important;
+  color: #26113d !important;
   flex: 1;
 }
 
 #sigy-limpiar {
-  background: rgba(255,255,255,0.10);
-  color: #fff;
+  background: rgba(255,255,255,0.10) !important;
+  color: #fff !important;
 }
 
 #sigy-respuesta {
@@ -321,8 +337,8 @@
   }
 
   #sigy-burbuja {
-    width: 68px;
-    height: 78px;
+    width: 68px !important;
+    height: 78px !important;
   }
 
   #sigy-panel {
