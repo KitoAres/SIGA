@@ -115,6 +115,7 @@ async function notificarAccesoElla(usuario) {
     );
 
     const fechaBonita = ahora.toLocaleString('es-BO', {
+      timeZone: 'America/La_Paz',
       dateStyle: 'medium',
       timeStyle: 'short'
     });
