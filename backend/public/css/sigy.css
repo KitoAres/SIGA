@@ -389,16 +389,30 @@
 }
 
 #sigy-respuesta {
-  margin-top: 12px;
-  min-height: 56px;
-  max-height: 230px;
-  overflow: auto;
-  padding: 12px;
-  border-radius: 18px;
-  background: rgba(255,255,255,0.08);
-  color: rgba(255,255,255,0.9);
-  font-size: 0.86rem;
-  line-height: 1.45;
+  margin-top: 14px !important;
+  padding: 14px 16px !important;
+  border-radius: 16px !important;
+  background: rgba(255, 255, 255, 0.07) !important;
+  color: rgba(255, 255, 255, 0.92) !important;
+  font-size: 14px !important;
+  line-height: 1.55 !important;
+
+  min-height: 58px !important;
+  max-height: 190px !important;
+  height: auto !important;
+
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+
+  white-space: normal !important;
+  word-break: normal !important;
+  overflow-wrap: break-word !important;
+}
+
+#sigy-respuesta span {
+  display: block !important;
+  white-space: normal !important;
+  line-height: 1.55 !important;
 }
 
 @keyframes sigyFlotar {
@@ -545,4 +559,15 @@
     transform: translateY(0) scale(1);
   }
 }
+#sigy-respuesta::-webkit-scrollbar {
+  width: 6px;
+}
 
+#sigy-respuesta::-webkit-scrollbar-thumb {
+  background: rgba(205, 170, 255, 0.45);
+  border-radius: 999px;
+}
+
+#sigy-respuesta::-webkit-scrollbar-track {
+  background: transparent;
+}
