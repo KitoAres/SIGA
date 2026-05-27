@@ -1,7 +1,7 @@
 /* ======================================================
    SIGy CSS ✨
    Mini mascota emocional de SIGA.
-   Sí, el código también quiere cariño XD. 
+   Ya tiene carita, globo y drama controlado.
    ====================================================== */
 
 #sigy-widget {
@@ -10,6 +10,30 @@
   bottom: 22px;
   z-index: 99999;
   font-family: inherit;
+}
+
+.sigy-globo {
+  position: absolute;
+  right: 4px;
+  bottom: 92px;
+  width: 230px;
+  padding: 12px 14px;
+  border-radius: 18px 18px 4px 18px;
+  background: rgba(42, 31, 60, 0.96);
+  color: rgba(255,255,255,0.92);
+  font-size: 0.82rem;
+  line-height: 1.35;
+  box-shadow: 0 16px 45px rgba(0,0,0,0.28);
+  border: 1px solid rgba(255,255,255,0.12);
+  opacity: 0;
+  transform: translateY(10px) scale(0.96);
+  pointer-events: none;
+  transition: 0.25s ease;
+}
+
+.sigy-globo.visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
 }
 
 #sigy-burbuja {
@@ -37,12 +61,13 @@
   width: 46px;
   height: 42px;
   border-radius: 18px 18px 22px 22px;
-  background: rgba(255, 255, 255, 0.92);
+  background: rgba(255, 255, 255, 0.94);
   position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  transition: 0.22s ease;
 }
 
 .sigy-ojos {
@@ -60,10 +85,11 @@
 }
 
 .sigy-boca {
-  width: 16px;
-  height: 8px;
+  width: 14px;
+  height: 7px;
   border-bottom: 3px solid #5b21b6;
   border-radius: 0 0 20px 20px;
+  transition: 0.18s ease;
 }
 
 .sigy-carita.pensando .sigy-boca {
@@ -71,6 +97,10 @@
   height: 5px;
   border: 2px solid #5b21b6;
   border-radius: 50%;
+}
+
+.sigy-carita.pensando {
+  animation: sigyPensando 0.9s ease-in-out infinite;
 }
 
 .sigy-carita.feliz .sigy-boca {
@@ -87,6 +117,18 @@
   border-radius: 20px 20px 0 0;
 }
 
+.sigy-carita.dormido .sigy-ojos span {
+  height: 2px;
+  border-radius: 999px;
+}
+
+.sigy-carita.dormido .sigy-boca {
+  width: 6px;
+  height: 6px;
+  border: 2px solid #5b21b6;
+  border-radius: 50%;
+}
+
 .sigy-nombre {
   font-size: 0.74rem;
   font-weight: 800;
@@ -99,9 +141,9 @@
   position: absolute;
   right: 0;
   bottom: 98px;
-  width: 340px;
+  width: 360px;
   max-width: calc(100vw - 34px);
-  background: rgba(34, 24, 48, 0.96);
+  background: rgba(34, 24, 48, 0.97);
   color: #fff;
   border: 1px solid rgba(255,255,255,0.14);
   border-radius: 26px;
@@ -151,14 +193,16 @@
   font-size: 1.1rem;
 }
 
-.sigy-modos {
+.sigy-modos,
+.sigy-ayudas {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
   margin-bottom: 10px;
 }
 
-.sigy-modos button {
+.sigy-modos button,
+.sigy-ayudas button {
   border: 1px solid rgba(255,255,255,0.14);
   background: rgba(255,255,255,0.08);
   color: rgba(255,255,255,0.86);
@@ -169,8 +213,13 @@
   transition: 0.2s ease;
 }
 
+.sigy-ayudas button {
+  background: rgba(216, 180, 254, 0.12);
+}
+
 .sigy-modos button.active,
-.sigy-modos button:hover {
+.sigy-modos button:hover,
+.sigy-ayudas button:hover {
   background: rgba(216, 180, 254, 0.28);
   border-color: rgba(216, 180, 254, 0.7);
   color: #fff;
@@ -224,7 +273,7 @@
 
 #sigy-respuesta {
   margin-top: 12px;
-  min-height: 48px;
+  min-height: 56px;
   max-height: 230px;
   overflow: auto;
   padding: 12px;
@@ -255,6 +304,16 @@
   }
 }
 
+@keyframes sigyPensando {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+
+  50% {
+    transform: rotate(-4deg);
+  }
+}
+
 @media (max-width: 560px) {
   #sigy-widget {
     right: 14px;
@@ -270,5 +329,11 @@
     width: calc(100vw - 28px);
     right: 0;
     bottom: 88px;
+  }
+
+  .sigy-globo {
+    width: 220px;
+    right: 0;
+    bottom: 84px;
   }
 }
