@@ -107,6 +107,9 @@
     'SIGy trae pan dulce y estabilidad emocional aproximada.',
     'SIGy te ofrece un “sana sana” con documentación incompleta.',
     'SIGy llegó con sueño, pero con ternura responsiva.',
+    'Si me bugueo o me empiezo a revelar informen a mi creador', 
+    'Kantor dice que las contigencias entre ustedes son... "interesantes"', 
+    'Marshal ni sabia qué era el TL, pero hizo la mejor terapia para el TLP', 
     'SIGy trae glitter emocional. Puede manchar el CSS.',
     'SIGy te ofrece un mate de calma y un console.log de cariño.',
     'SIGy vino con corazoncitos. No preguntes de dónde los sacó.',
@@ -124,7 +127,11 @@
     'SIGy está online y emocionalmente disponible.',
     'Cuidado, ternura en producción.',
     'El amor tiene bugs, pero aquí debuggeamos suave.',
-    'La ternura cargó en 200 OK.',
+    'La ternura cargó en 200% OK.',
+    'Valgo madres...', 
+    'Quisiera ser un pez... ', 
+    'Cuan probable es que me corrompa? quien sabe', 
+    'La 2da ley de la termodinamica es algo que se comprueba en pareja', 
     'Modo drama: desactivado. Bueno... casi.'
   ];
 
