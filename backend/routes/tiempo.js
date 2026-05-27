@@ -9,6 +9,13 @@ const {
   escapeHtml
 } = require('../utils/email');
 
+// ─────────────────────────────────────────────────────────────
+// Nota para Francin, si algún día lees este código:
+// Esta parte busca los momentos donde ambos coinciden.
+// No intenta presionar, solo mostrar una posibilidad bonita:
+// “aquí sí podríamos vernos, si ambos quieren”. ♡
+// ─────────────────────────────────────────────────────────────
+
 async function obtenerUsuario(usuario_id) {
   const r = await pool.query(
     'SELECT id, usuario, nombre, rol FROM usuarios WHERE id=$1',
@@ -66,13 +73,14 @@ async function notificarMatchesPorEmail(coincidencias) {
         tipo: 'match_tiempo',
         clave,
         usuario_id: null,
-        enviado_a: process.env.EMAIL_TO,
+        enviado_a: process.env.EMAIL_MATCH_TO || process.env.EMAIL_TO,
         asunto
       });
 
       if (!registro.nuevo) continue;
 
       await enviarEmail({
+        to: process.env.EMAIL_MATCH_TO || process.env.EMAIL_TO,
         subject: asunto,
         html: htmlBase({
           titulo: 'SIGA encontró un match de tiempo ✨',
@@ -494,10 +502,17 @@ router.get('/coincidencias', async (req, res) => {
     const r = await pool.query(
       `SELECT
           a.fecha,
+
           a.hora_inicio AS mi_inicio,
           a.hora_fin AS mi_fin,
           ${tieneLugar ? 'a.lugar AS mi_lugar,' : 'NULL AS mi_lugar,'}
           a.mensaje AS mi_mensaje,
+
+          b.hora_inicio AS otro_inicio,
+          b.hora_fin AS otro_fin,
+          ${tieneLugar ? 'b.lugar AS otro_lugar,' : 'NULL AS otro_lugar,'}
+          b.mensaje AS otro_mensaje,
+
           GREATEST(a.hora_inicio,b.hora_inicio) AS inicio_coincidencia,
           LEAST(a.hora_fin,b.hora_fin) AS fin_coincidencia
        FROM tiempo_disponibilidad a
@@ -516,11 +531,19 @@ router.get('/coincidencias', async (req, res) => {
       hay_coincidencia: true,
       inicio_coincidencia: x.inicio_coincidencia,
       fin_coincidencia: x.fin_coincidencia,
+
       mi_disponibilidad: {
         hora_inicio: x.mi_inicio,
         hora_fin: x.mi_fin,
         lugar: x.mi_lugar,
         mensaje: x.mi_mensaje
+      },
+
+      otra_disponibilidad: {
+        hora_inicio: x.otro_inicio,
+        hora_fin: x.otro_fin,
+        lugar: x.otro_lugar,
+        mensaje: x.otro_mensaje
       }
     }));
 
