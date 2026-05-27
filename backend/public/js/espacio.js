@@ -155,32 +155,52 @@
     toastLocal('Copiado ♡');
   }
 
-  function asegurarModal() {
-    if (qs('modal-espacio')) return;
+function asegurarModal() {
+  if (qs('modal-espacio')) return;
 
-    const modal = document.createElement('div');
-    modal.className = 'modal-overlay';
-    modal.id = 'modal-espacio';
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay';
+  modal.id = 'modal-espacio';
 
-    modal.innerHTML = `
-      <div class="modal espacio-modal">
-        <h2 class="modal-title" id="espacio-modal-title">Mi espacio</h2>
-        <div id="espacio-modal-body"></div>
+  modal.innerHTML = `
+    <div class="modal espacio-modal">
+      <!--
+        Para ti, si algún día entras al código:
+        este espacio no fue hecho para vigilarte.
+        Fue hecho para que puedas ordenar lo que sientes
+        y decidir, a tu ritmo, qué quieres compartir.
+      -->
 
-        <div class="modal-actions espacio-modal-actions">
-          <button class="btn-cancel" onclick="cerrarEspacioModal()">Cerrar</button>
-          <button class="btn" onclick="copiarMensajeEspacio()">Copiar</button>
-          <button class="btn-save" onclick="guardarHerramientaEspacio(true)">Guardar señal</button>
-        </div>
+      <h2 class="modal-title" id="espacio-modal-title">Mi espacio</h2>
+
+      <div id="espacio-modal-body"></div>
+
+      <div class="modal-actions espacio-modal-actions">
+        <button class="btn-cancel" onclick="cerrarEspacioModal()">
+          Cerrar
+        </button>
+
+        <button class="btn" onclick="copiarMensajeEspacio()">
+          Copiar
+        </button>
+
+        <button class="btn" onclick="guardarHerramientaEspacio(false)">
+          Guardar para mí
+        </button>
+
+        <button class="btn-save" onclick="guardarHerramientaEspacio(true)">
+          Compartir señal
+        </button>
       </div>
-    `;
+    </div>
+  `;
 
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal) cerrarEspacioModal();
-    });
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) cerrarEspacioModal();
+  });
 
-    document.body.appendChild(modal);
-  }
+  document.body.appendChild(modal);
+}
 
   function renderHerramientas() {
     const grid = qs('espacio-tools-grid');
@@ -378,8 +398,11 @@
         return toastLocal(data.error || 'No se pudo guardar.');
       }
 
-      toastLocal(data.mensaje_bonito || 'Guardado ♡');
-
+if (compartido) {
+  toastLocal(data.mensaje_bonito || 'Señal compartida ♡');
+} else {
+  toastLocal(data.mensaje_bonito || 'Guardado solo para ti ♡');
+}
       cerrarEspacioModal();
       cargarHistorialEspacio();
 
