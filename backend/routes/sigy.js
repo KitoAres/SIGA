@@ -165,8 +165,8 @@ router.post('/', async (req, res) => {
       seccion
     });
 
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
-
+const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`;
+     
     const respuestaGemini = await fetch(url, {
       method: 'POST',
       headers: {
