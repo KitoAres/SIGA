@@ -1,10 +1,21 @@
 /* SIGA v2.1 — Mi espacio
-   Herramientas personales, no invasivas:
-   - No diario íntimo.
-   - No diagnóstico.
-   - Mensajes cortos, copiables y compartibles solo si la persona quiere.
-   - Corrige pestaña duplicada.
+
+   Si alguien abre este código algún día:
+   sí, aquí hubo pelea contra bugs.
+   sí, se rompió varias veces.
+   sí, probablemente dije "¿por qué no guarda?" unas 40 veces.
+   Pero quedó con cariño.
+
+   Reglas:
+   - Guardar para mí: privado.
+   - Compartir señal: visible para ambos.
+   - Copiar: no guarda nada.
+
+   Este módulo no busca controlar a nadie.
+   Busca que alguien pueda ordenar lo que siente y decidir qué compartir.
+   Y si no pues a la...
 */
+
 (function () {
   const herramientas = {
     semaforo: {
@@ -155,52 +166,57 @@
     toastLocal('Copiado ♡');
   }
 
-function asegurarModal() {
-  if (qs('modal-espacio')) return;
+  function asegurarModal() {
+    if (qs('modal-espacio')) return;
 
-  const modal = document.createElement('div');
-  modal.className = 'modal-overlay';
-  modal.id = 'modal-espacio';
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.id = 'modal-espacio';
 
-  modal.innerHTML = `
-    <div class="modal espacio-modal">
-      <!--
-        Para ti, si algún día entras al código:
-        este espacio no fue hecho para vigilarte.
-        Fue hecho para que puedas ordenar lo que sientes
-        y decidir, a tu ritmo, qué quieres compartir.
-      -->
+    modal.innerHTML = `
+      <div class="modal espacio-modal">
+        <!--
+          Para ti, si algún día entras al código:
+          este espacio no fue hecho para vigilarte.
+          Fue hecho para que puedas ordenar lo que sientes
+          y decidir, a tu ritmo, qué quieres compartir.
 
-      <h2 class="modal-title" id="espacio-modal-title">Mi espacio</h2>
+          Para Franco del futuro:
+          si esto se rompe otra vez, respira.
+          No borres todo en un ataque de desesperación. XD
+          Soy amor y doy amor. 
+        -->
 
-      <div id="espacio-modal-body"></div>
+        <h2 class="modal-title" id="espacio-modal-title">Mi espacio</h2>
 
-      <div class="modal-actions espacio-modal-actions">
-        <button class="btn-cancel" onclick="cerrarEspacioModal()">
-          Cerrar
-        </button>
+        <div id="espacio-modal-body"></div>
 
-        <button class="btn" onclick="copiarMensajeEspacio()">
-          Copiar
-        </button>
+        <div class="modal-actions espacio-modal-actions">
+          <button class="btn-cancel" onclick="cerrarEspacioModal()">
+            Cerrar
+          </button>
 
-        <button class="btn" onclick="guardarHerramientaEspacio(false)">
-          Guardar para mí
-        </button>
+          <button class="btn" onclick="copiarMensajeEspacio()">
+            Copiar
+          </button>
 
-        <button class="btn-save" onclick="guardarHerramientaEspacio(true)">
-          Compartir señal
-        </button>
+          <button class="btn" onclick="guardarHerramientaEspacio(false)">
+            Guardar para mí
+          </button>
+
+          <button class="btn-save" onclick="guardarHerramientaEspacio(true)">
+            Compartir señal
+          </button>
+        </div>
       </div>
-    </div>
-  `;
+    `;
 
-  modal.addEventListener('click', (e) => {
-    if (e.target === modal) cerrarEspacioModal();
-  });
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) cerrarEspacioModal();
+    });
 
-  document.body.appendChild(modal);
-}
+    document.body.appendChild(modal);
+  }
 
   function renderHerramientas() {
     const grid = qs('espacio-tools-grid');
@@ -225,28 +241,94 @@ function asegurarModal() {
       const res = await fetch(`/api/espacio/historial?usuario_id=${encodeURIComponent(u.id)}&x=${Date.now()}`);
       const data = await res.json();
 
-      if (!data.ok || !data.items || !data.items.length) {
-        box.innerHTML = '<div class="espacio-empty">Todavía no hay señales guardadas. Puedes usar las herramientas sin presión.</div>';
+      if (!data.ok) {
+        box.innerHTML = '<div class="espacio-empty">No se pudo cargar el historial.</div>';
         return;
       }
 
-      box.innerHTML = data.items.slice(0, 6).map(item => {
-        const h = herramientas[item.herramienta] || { icon: '🌿', titulo: 'Mi espacio' };
-        const fecha = item.creado_en
-          ? new Date(item.creado_en).toLocaleString('es-BO', { dateStyle: 'short', timeStyle: 'short' })
-          : '—';
+      const privadas = data.privadas || [];
+      const compartidas = data.compartidas || [];
+
+      function nombrePersona(item) {
+        if (item.rol === 'ella') return 'Francin';
+        if (item.rol === 'yo') return 'Franco';
+        return item.nombre_visible || item.usuario || 'Alguien';
+      }
+
+      function fechaBonita(item) {
+        if (!item.creado_en) return '—';
+
+        return new Date(item.creado_en).toLocaleString('es-BO', {
+          timeZone: 'America/La_Paz',
+          dateStyle: 'short',
+          timeStyle: 'short'
+        });
+      }
+
+      function renderItem(item, mostrarPersona) {
+        const h = herramientas[item.herramienta] || {
+          icon: '🌿',
+          titulo: 'Mi espacio'
+        };
+
+        const fecha = fechaBonita(item);
+        const persona = nombrePersona(item);
 
         return `
           <div class="espacio-history-item">
             <span>${h.icon}</span>
             <div>
-              <strong>${escapeHtml(h.titulo)}</strong>
+              <strong>
+                ${escapeHtml(h.titulo)}
+                ${mostrarPersona ? ` · ${escapeHtml(persona)}` : ''}
+              </strong>
+
               <p>${escapeHtml(item.mensaje)}</p>
-              <small>${fecha}${item.compartido ? ' · señal guardada' : ''}</small>
+
+              <small>
+                ${fecha}
+                ${item.compartido ? ' · compartida' : ' · privada'}
+              </small>
             </div>
           </div>
         `;
-      }).join('');
+      }
+
+      const privadasHtml = privadas.length
+        ? privadas.map(item => renderItem(item, false)).join('')
+        : '<div class="espacio-empty">Todavía no guardaste señales privadas.</div>';
+
+      const compartidasHtml = compartidas.length
+        ? compartidas.map(item => renderItem(item, true)).join('')
+        : '<div class="espacio-empty">Todavía no hay señales compartidas.</div>';
+
+      box.innerHTML = `
+        <!--
+          Si algún día lees esto:
+          lo privado se queda privado.
+          lo compartido aparece aquí porque alguien decidió compartirlo.
+
+          Si esto funciona: milagro.
+          Si no funciona: probablemente olvidé un deploy.
+        -->
+
+        <div class="espacio-history-section">
+          <h3>Mis señales privadas</h3>
+          <p class="espacio-history-note">
+            Solo tú ves lo que guardas aquí.
+          </p>
+          ${privadasHtml}
+        </div>
+
+        <div class="espacio-history-section">
+          <h3>Señales compartidas</h3>
+          <p class="espacio-history-note">
+            Aquí aparecen solo las señales que alguien decidió compartir.
+          </p>
+          ${compartidasHtml}
+        </div>
+      `;
+
     } catch (err) {
       console.warn('No se pudo cargar historial de Mi espacio:', err);
       box.innerHTML = '<div class="espacio-empty">No se pudo cargar el historial.</div>';
@@ -398,17 +480,19 @@ function asegurarModal() {
         return toastLocal(data.error || 'No se pudo guardar.');
       }
 
-if (compartido) {
-  toastLocal(data.mensaje_bonito || 'Señal compartida ♡');
-} else {
-  toastLocal(data.mensaje_bonito || 'Guardado solo para ti ♡');
-}
+      if (compartido) {
+        toastLocal(data.mensaje_bonito || 'Señal compartida ♡');
+      } else {
+        toastLocal(data.mensaje_bonito || 'Guardado solo para ti ♡');
+      }
+
       cerrarEspacioModal();
       cargarHistorialEspacio();
 
       if (typeof cargarProgresoGlobal === 'function') {
         cargarProgresoGlobal();
       }
+
     } catch (err) {
       console.error('Error al guardar herramienta:', err);
       toastLocal('Error al guardar herramienta.');
