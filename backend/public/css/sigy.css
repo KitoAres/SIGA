@@ -1,7 +1,6 @@
 /* ======================================================
-   SIGy CSS v3 ✨
-   Mascota flotante, mensajitos y botones bonitos.
-   El amor también necesita z-index.
+   SIGy CSS v4 ✨
+   Más limpio, menos botones, menos ruido visual.
    ====================================================== */
 
 #sigy-widget {
@@ -205,22 +204,20 @@
   margin: 0 !important;
 }
 
-.sigy-modos,
 .sigy-ayudas {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: 10px;
+  gap: 8px;
+  margin-bottom: 12px;
 }
 
-#sigy-widget .sigy-modos button,
 #sigy-widget .sigy-ayudas button {
   border: 1px solid rgba(255,255,255,0.14) !important;
   background: rgba(255,255,255,0.08) !important;
-  color: rgba(255,255,255,0.86) !important;
+  color: rgba(255,255,255,0.90) !important;
   border-radius: 999px !important;
-  padding: 7px 10px !important;
-  font-size: 0.72rem !important;
+  padding: 8px 12px !important;
+  font-size: 0.74rem !important;
   cursor: pointer !important;
   transition: 0.2s ease !important;
   margin: 0 !important;
@@ -228,15 +225,10 @@
   height: auto !important;
 }
 
-#sigy-widget .sigy-ayudas button {
-  background: rgba(216, 180, 254, 0.14) !important;
-}
-
-#sigy-widget .sigy-modos button.active,
-#sigy-widget .sigy-modos button:hover,
-#sigy-widget .sigy-ayudas button:hover {
-  background: rgba(216, 180, 254, 0.32) !important;
-  border-color: rgba(216, 180, 254, 0.7) !important;
+#sigy-widget .sigy-ayudas button:hover,
+#sigy-widget .sigy-ayudas button.active {
+  background: rgba(216, 180, 254, 0.30) !important;
+  border-color: rgba(216, 180, 254, 0.75) !important;
   color: #fff !important;
 }
 
@@ -262,7 +254,7 @@
 .sigy-actions {
   display: flex;
   gap: 8px;
-  margin-top: 10px;
+  margin-top: 12px;
 }
 
 #sigy-enviar,
@@ -304,7 +296,6 @@
   0%, 100% {
     transform: translateY(0);
   }
-
   50% {
     transform: translateY(-7px);
   }
@@ -314,7 +305,6 @@
   0%, 92%, 100% {
     transform: scaleY(1);
   }
-
   95% {
     transform: scaleY(0.15);
   }
@@ -324,7 +314,6 @@
   0%, 100% {
     transform: rotate(0deg);
   }
-
   50% {
     transform: rotate(-4deg);
   }
