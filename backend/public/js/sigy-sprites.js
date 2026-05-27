@@ -1,6 +1,6 @@
 /* ======================================================
-   SIGy Sprites v3 ✨
-   Ahora sí: más vivo, más expresivo y menos patrón repetitivo.
+   SIGy Sprites v4 ✨
+   Más expresivo, acciones más largas y movimiento más suave.
    Programar esto fue sufrir, pero con amor.
    ====================================================== */
 
@@ -59,6 +59,21 @@
     }
   };
 
+  const DURACION = {
+    cafe: 7600,
+    manta: 7600,
+    leer: 5200,
+    pensar: 5200,
+    amor: 5600,
+    saludo: 4200,
+    celebrar: 5600,
+    tristeza: 5200,
+    sorpresa: 4200,
+    acompanamiento: 5600,
+    escribir: 1800,
+    mover: 1700
+  };
+
   const state = {
     img: null,
     interval: null,
@@ -66,14 +81,20 @@
     ambientTimeout: null,
     movementTimeout: null,
     typingTimeout: null,
+
     lastTextSeen: '',
     lastAmbientKey: '',
     lastInteractionAt: Date.now(),
+
     lastLeft: null,
     lastTop: null,
+
     isPanelOpen: false,
     isMoving: false,
-    currentMode: 'idle'
+    currentMode: 'idle',
+
+    // Mientras esto esté activo, ninguna microacción random interrumpe café/manta/etc.
+    actionLockUntil: 0
   };
 
   function $(selector) {
@@ -102,6 +123,22 @@
 
   function randomEntre(min, max) {
     return Math.floor(min + Math.random() * (max - min + 1));
+  }
+
+  function normalizarTexto(textoCrudo) {
+    return String(textoCrudo || '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim();
+  }
+
+  function estaBloqueadoPorAccion() {
+    return Date.now() < state.actionLockUntil;
+  }
+
+  function bloquearAcciones(ms) {
+    state.actionLockUntil = Date.now() + ms;
   }
 
   function limpiarTemporizadoresPrincipales() {
@@ -140,6 +177,11 @@
     observarMovimiento();
     enlazarEventosUI();
     iniciarVidaIdle();
+
+    // Saludo suave al cargar.
+    setTimeout(() => {
+      mostrarAccion(SIGY_ASSETS.actions.hello, 3000, true, true);
+    }, 600);
   }
 
   function setImage(src) {
@@ -147,13 +189,17 @@
     state.img.src = src;
   }
 
-  function reproducirFrames(tipo = 'idle', velocidad = 280, duracion = null) {
+  function reproducirFrames(tipo = 'idle', velocidad = 280, duracion = null, bloquear = false) {
     if (!state.img) return;
 
     const frames = SIGY_ASSETS[tipo];
     if (!frames || !Array.isArray(frames) || frames.length === 0) return;
 
     limpiarTemporizadoresPrincipales();
+
+    if (bloquear && duracion) {
+      bloquearAcciones(duracion);
+    }
 
     state.currentMode = tipo;
     let frame = 0;
@@ -171,10 +217,15 @@
     }
   }
 
-  function mostrarAccion(src, duracion = 2600, volver = true) {
+  function mostrarAccion(src, duracion = 3000, volver = true, bloquear = true) {
     if (!state.img || !src) return;
 
     limpiarTemporizadoresPrincipales();
+
+    if (bloquear) {
+      bloquearAcciones(duracion);
+    }
+
     state.currentMode = 'action';
     setImage(src);
 
@@ -187,58 +238,52 @@
 
   function volverAEstadoNatural() {
     if (state.isMoving) {
-      reproducirFrames('float', 180);
+      reproducirFrames('float', 190);
       return;
     }
 
-    if (state.isPanelOpen) {
-      reproducirFrames('idle', 280);
-      return;
-    }
-
-    reproducirFrames('idle', 280);
+    reproducirFrames('idle', 300);
   }
 
   function reaccionarPorTexto(textoCrudo) {
     if (!textoCrudo || !state.img) return;
 
-    const texto = String(textoCrudo)
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .trim();
+    const texto = normalizarTexto(textoCrudo);
 
     if (!texto || texto === state.lastTextSeen) return;
-    state.lastTextSeen = texto;
 
+    state.lastTextSeen = texto;
     tocar();
 
-    // café
+    // Café / tacita / chocolatito
     if (
       texto.includes('cafe') ||
       texto.includes('cafecito') ||
       texto.includes('tacita') ||
       texto.includes('chocolatito') ||
-      texto.includes('te imagina') ||
-      texto.includes('te ofrezco un cafe')
+      texto.includes('te ofrezco un cafe') ||
+      texto.includes('sigy te ofrece un cafe') ||
+      texto.includes('cafe imaginario')
     ) {
-      mostrarAccion(SIGY_ASSETS.actions.coffee, 3400);
+      mostrarAccion(SIGY_ASSETS.actions.coffee, DURACION.cafe, true, true);
       return;
     }
 
-    // mantita / cobija
+    // Mantita / cobija / almohadita
     if (
       texto.includes('mantita') ||
       texto.includes('cobijita') ||
       texto.includes('frazadita') ||
       texto.includes('almohadita') ||
-      texto.includes('cobijita emocional')
+      texto.includes('mantita emocional') ||
+      texto.includes('cobijita emocional') ||
+      texto.includes('frazadita para el alma')
     ) {
-      mostrarAccion(SIGY_ASSETS.actions.blanket, 3400);
+      mostrarAccion(SIGY_ASSETS.actions.blanket, DURACION.manta, true, true);
       return;
     }
 
-    // leer / carta / mensaje
+    // Leer / carta / mensaje
     if (
       texto.includes('carta') ||
       texto.includes('mensaje') ||
@@ -247,11 +292,11 @@
       texto.includes('texto') ||
       texto.includes('respuesta')
     ) {
-      mostrarAccion(SIGY_ASSETS.actions.reading, 3000);
+      mostrarAccion(SIGY_ASSETS.actions.reading, DURACION.leer, true, true);
       return;
     }
 
-    // pensar / decidir
+    // Pensar / decidir
     if (
       texto.includes('pensar') ||
       texto.includes('pensando') ||
@@ -259,13 +304,14 @@
       texto.includes('analizando') ||
       texto.includes('conviene') ||
       texto.includes('enviar') ||
-      texto.includes('no mandes')
+      texto.includes('no mandes') ||
+      texto.includes('primero respira')
     ) {
-      mostrarAccion(SIGY_ASSETS.actions.thinking, 3000);
+      mostrarAccion(SIGY_ASSETS.actions.thinking, DURACION.pensar, true, true);
       return;
     }
 
-    // amor / corazones / ternura
+    // Amor / corazones / ternura
     if (
       texto.includes('amor') ||
       texto.includes('corazon') ||
@@ -276,11 +322,11 @@
       texto.includes('te quiero') ||
       texto.includes('enamorado')
     ) {
-      reproducirFrames('love', 220, 3600);
+      reproducirFrames('love', 230, DURACION.amor, true);
       return;
     }
 
-    // saludo / bienvenida
+    // Saludo / bienvenida
     if (
       texto.includes('hola') ||
       texto.includes('volviste') ||
@@ -288,49 +334,50 @@
       texto.includes('que bonito verte') ||
       texto.includes('verte por aqui')
     ) {
-      mostrarAccion(SIGY_ASSETS.actions.hello, 2500);
+      mostrarAccion(SIGY_ASSETS.actions.hello, DURACION.saludo, true, true);
       return;
     }
 
-    // celebrar / siuuu
+    // Celebración / siuuu
     if (
       texto.includes('sigyyyy') ||
       texto.includes('siiuuu') ||
       texto.includes('siuuuu') ||
       texto.includes('celebrando') ||
       texto.includes('fiesta') ||
-      texto.includes('agueevo') ||
-      texto.includes('deploy exitoso')
+      texto.includes('deploy exitoso') ||
+      texto.includes('200 ok')
     ) {
-      mostrarAccion(SIGY_ASSETS.actions.celebrating, 2900);
+      mostrarAccion(SIGY_ASSETS.actions.celebrating, DURACION.celebrar, true, true);
       return;
     }
 
-    // tristeza / dolor
+    // Tristeza / dolor
     if (
       texto.includes('triste') ||
       texto.includes('duele') ||
       texto.includes('llorar') ||
       texto.includes('pesado') ||
-      texto.includes('me trabe') ||
-      texto.includes('mal')
+      texto.includes('mal') ||
+      texto.includes('me trabe')
     ) {
-      mostrarAccion(SIGY_ASSETS.expressions.sad, 2800);
+      mostrarAccion(SIGY_ASSETS.expressions.sad, DURACION.tristeza, true, true);
       return;
     }
 
-    // sorpresa
+    // Sorpresa
     if (
       texto.includes('sorpresa') ||
       texto.includes('wow') ||
       texto.includes('wtf') ||
-      texto.includes('no manches')
+      texto.includes('no manches') ||
+      texto.includes('el diablo')
     ) {
-      mostrarAccion(SIGY_ASSETS.expressions.surprised, 2400);
+      mostrarAccion(SIGY_ASSETS.expressions.surprised, DURACION.sorpresa, true, true);
       return;
     }
 
-    // acompañamiento / calma
+    // Acompañamiento / calma
     if (
       texto.includes('acompanar') ||
       texto.includes('acompañar') ||
@@ -338,9 +385,10 @@
       texto.includes('sin presion') ||
       texto.includes('sin presión') ||
       texto.includes('calma') ||
-      texto.includes('tranqui')
+      texto.includes('tranqui') ||
+      texto.includes('no hace falta explicar')
     ) {
-      mostrarAccion(SIGY_ASSETS.actions.accompanying, 2800);
+      mostrarAccion(SIGY_ASSETS.actions.accompanying, DURACION.acompanamiento, true, true);
       return;
     }
   }
@@ -377,12 +425,12 @@
         tocar();
 
         if (abierto) {
-          mostrarAccion(SIGY_ASSETS.actions.hello, 1600);
+          mostrarAccion(SIGY_ASSETS.actions.hello, 3000, true, true);
 
           clearTimeout(state.timeout);
           state.timeout = setTimeout(() => {
-            mostrarAccion(SIGY_ASSETS.actions.accompanying, 2300);
-          }, 1700);
+            mostrarAccion(SIGY_ASSETS.actions.accompanying, 4200, true, true);
+          }, 3100);
         } else {
           volverAEstadoNatural();
         }
@@ -397,23 +445,27 @@
 
   function activarMovimientoTemporal() {
     tocar();
+
+    if (estaBloqueadoPorAccion()) {
+      return;
+    }
+
     state.isMoving = true;
 
     clearTimeout(state.movementTimeout);
 
-    // pequeño arranque con pose de avanzar
-    mostrarAccion(SIGY_ASSETS.actions.moving, 180, false);
+    mostrarAccion(SIGY_ASSETS.actions.moving, 240, false, false);
 
     setTimeout(() => {
-      if (state.isMoving) {
-        reproducirFrames('float', 170);
+      if (state.isMoving && !estaBloqueadoPorAccion()) {
+        reproducirFrames('float', 180);
       }
-    }, 170);
+    }, 230);
 
     state.movementTimeout = setTimeout(() => {
       state.isMoving = false;
       volverAEstadoNatural();
-    }, 1000);
+    }, DURACION.mover);
   }
 
   function observarMovimiento() {
@@ -435,7 +487,7 @@
         state.lastTop = top;
         activarMovimientoTemporal();
       }
-    }, 120);
+    }, 140);
   }
 
   function enlazarEventosUI() {
@@ -444,9 +496,10 @@
     if (r.bubble) {
       r.bubble.addEventListener('click', () => {
         tocar();
+
         setTimeout(() => {
           if (refs().panel?.classList.contains('visible')) {
-            mostrarAccion(SIGY_ASSETS.actions.hello, 2200);
+            mostrarAccion(SIGY_ASSETS.actions.hello, 3200, true, true);
           }
         }, 80);
       });
@@ -462,19 +515,20 @@
     if (r.limpiar) {
       r.limpiar.addEventListener('click', () => {
         tocar();
-        mostrarAccion(SIGY_ASSETS.expressions.funny, 2200);
+        mostrarAccion(SIGY_ASSETS.expressions.funny, 3200, true, true);
       });
     }
 
     if (r.enviar) {
       r.enviar.addEventListener('click', () => {
         tocar();
-        mostrarAccion(SIGY_ASSETS.actions.reading, 1200);
+
+        mostrarAccion(SIGY_ASSETS.actions.reading, 2200, true, true);
 
         clearTimeout(state.timeout);
         state.timeout = setTimeout(() => {
-          mostrarAccion(SIGY_ASSETS.actions.thinking, 2200);
-        }, 1200);
+          mostrarAccion(SIGY_ASSETS.actions.thinking, 3600, true, true);
+        }, 2200);
       });
     }
 
@@ -484,19 +538,23 @@
 
         clearTimeout(state.typingTimeout);
 
+        if (estaBloqueadoPorAccion()) {
+          return;
+        }
+
         const valor = r.input.value.trim();
 
         if (!valor) {
           state.typingTimeout = setTimeout(() => {
             volverAEstadoNatural();
-          }, 500);
+          }, 600);
           return;
         }
 
         if (valor.includes('?') || valor.length > 120) {
-          mostrarAccion(SIGY_ASSETS.actions.thinking, 1200);
+          mostrarAccion(SIGY_ASSETS.actions.thinking, DURACION.escribir, true, false);
         } else {
-          mostrarAccion(SIGY_ASSETS.actions.reading, 1200);
+          mostrarAccion(SIGY_ASSETS.actions.reading, DURACION.escribir, true, false);
         }
       });
     }
@@ -507,29 +565,30 @@
           tocar();
 
           const modo = btn.dataset.ui || '';
+          const texto = normalizarTexto(btn.innerText || '');
 
-          if (modo === 'suavizar') {
-            mostrarAccion(SIGY_ASSETS.actions.thinking, 2400);
+          if (modo === 'suavizar' || texto.includes('reclamo')) {
+            mostrarAccion(SIGY_ASSETS.actions.thinking, 4200, true, true);
             return;
           }
 
-          if (modo === 'senal') {
-            reproducirFrames('love', 220, 3200);
+          if (modo === 'senal' || texto.includes('senal') || texto.includes('señal')) {
+            reproducirFrames('love', 230, DURACION.amor, true);
             return;
           }
 
-          if (modo === 'decidir') {
-            mostrarAccion(SIGY_ASSETS.actions.thinking, 2400);
+          if (modo === 'decidir' || texto.includes('enviar')) {
+            mostrarAccion(SIGY_ASSETS.actions.thinking, 4200, true, true);
             return;
           }
 
-          if (modo === 'carta') {
-            mostrarAccion(SIGY_ASSETS.actions.reading, 2600);
+          if (modo === 'carta' || texto.includes('carta')) {
+            mostrarAccion(SIGY_ASSETS.actions.reading, 4600, true, true);
             return;
           }
 
           if (modo === 'libre') {
-            mostrarAccion(SIGY_ASSETS.actions.accompanying, 2400);
+            mostrarAccion(SIGY_ASSETS.actions.accompanying, 4600, true, true);
           }
         });
       });
@@ -542,32 +601,35 @@
   }
 
   function hacerMicroAccionViva() {
+    if (estaBloqueadoPorAccion()) {
+      return;
+    }
+
     const ahora = Date.now();
-    const inactivoMucho = ahora - state.lastInteractionAt > 45000;
+    const inactivoMucho = ahora - state.lastInteractionAt > 50000;
 
     const opciones = [
-      { key: 'happy', run: () => mostrarAccion(SIGY_ASSETS.expressions.happy, 1900) },
-      { key: 'funny', run: () => mostrarAccion(SIGY_ASSETS.expressions.funny, 1900) },
-      { key: 'surprised', run: () => mostrarAccion(SIGY_ASSETS.expressions.surprised, 1800) },
-      { key: 'accompanying', run: () => mostrarAccion(SIGY_ASSETS.actions.accompanying, 2200) },
-      { key: 'hello', run: () => mostrarAccion(SIGY_ASSETS.actions.hello, 1800) },
-      { key: 'reading', run: () => mostrarAccion(SIGY_ASSETS.actions.reading, 1800) },
-      { key: 'thinking', run: () => mostrarAccion(SIGY_ASSETS.actions.thinking, 1900) },
-      { key: 'love', run: () => reproducirFrames('love', 220, 2600) }
+      { key: 'happy', run: () => mostrarAccion(SIGY_ASSETS.expressions.happy, 2600, true, false) },
+      { key: 'funny', run: () => mostrarAccion(SIGY_ASSETS.expressions.funny, 2600, true, false) },
+      { key: 'surprised', run: () => mostrarAccion(SIGY_ASSETS.expressions.surprised, 2300, true, false) },
+      { key: 'accompanying', run: () => mostrarAccion(SIGY_ASSETS.actions.accompanying, 3000, true, false) },
+      { key: 'hello', run: () => mostrarAccion(SIGY_ASSETS.actions.hello, 2600, true, false) },
+      { key: 'reading', run: () => mostrarAccion(SIGY_ASSETS.actions.reading, 2600, true, false) },
+      { key: 'thinking', run: () => mostrarAccion(SIGY_ASSETS.actions.thinking, 2700, true, false) },
+      { key: 'love', run: () => reproducirFrames('love', 240, 3200, false) }
     ];
 
     if (inactivoMucho) {
       opciones.push({
         key: 'sleepy',
-        run: () => mostrarAccion(SIGY_ASSETS.expressions.sleepy, 2600)
+        run: () => mostrarAccion(SIGY_ASSETS.expressions.sleepy, 3600, true, false)
       });
     }
 
     let elegida = elegirRandom(opciones);
 
-    // evitar repetir lo mismo seguido
     let intentos = 0;
-    while (elegida.key === state.lastAmbientKey && intentos < 6) {
+    while (elegida.key === state.lastAmbientKey && intentos < 8) {
       elegida = elegirRandom(opciones);
       intentos++;
     }
@@ -581,13 +643,12 @@
 
     function loop() {
       state.ambientTimeout = setTimeout(() => {
-        // si está moviéndose, lo dejamos en paz
-        if (!state.isMoving) {
+        if (!state.isMoving && !estaBloqueadoPorAccion()) {
           hacerMicroAccionViva();
         }
 
         loop();
-      }, randomEntre(9000, 17000));
+      }, randomEntre(14000, 26000));
     }
 
     loop();
@@ -595,48 +656,48 @@
 
   window.SIGySprites = {
     idle() {
-      reproducirFrames('idle', 280);
+      reproducirFrames('idle', 300);
     },
 
     float() {
-      reproducirFrames('float', 180);
+      reproducirFrames('float', 190);
     },
 
     love() {
-      reproducirFrames('love', 220, 3200);
+      reproducirFrames('love', 230, DURACION.amor, true);
     },
 
     hello() {
-      mostrarAccion(SIGY_ASSETS.actions.hello, 2500);
+      mostrarAccion(SIGY_ASSETS.actions.hello, DURACION.saludo, true, true);
     },
 
     thinking() {
-      mostrarAccion(SIGY_ASSETS.actions.thinking, 2600);
+      mostrarAccion(SIGY_ASSETS.actions.thinking, DURACION.pensar, true, true);
     },
 
     reading() {
-      mostrarAccion(SIGY_ASSETS.actions.reading, 2600);
+      mostrarAccion(SIGY_ASSETS.actions.reading, DURACION.leer, true, true);
     },
 
     coffee() {
-      mostrarAccion(SIGY_ASSETS.actions.coffee, 3400);
+      mostrarAccion(SIGY_ASSETS.actions.coffee, DURACION.cafe, true, true);
     },
 
     blanket() {
-      mostrarAccion(SIGY_ASSETS.actions.blanket, 3400);
+      mostrarAccion(SIGY_ASSETS.actions.blanket, DURACION.manta, true, true);
     },
 
     celebrating() {
-      mostrarAccion(SIGY_ASSETS.actions.celebrating, 2800);
+      mostrarAccion(SIGY_ASSETS.actions.celebrating, DURACION.celebrar, true, true);
     },
 
     accompany() {
-      mostrarAccion(SIGY_ASSETS.actions.accompanying, 2600);
+      mostrarAccion(SIGY_ASSETS.actions.accompanying, DURACION.acompanamiento, true, true);
     },
 
     expression(nombre) {
       const src = SIGY_ASSETS.expressions[nombre];
-      if (src) mostrarAccion(src, 2600);
+      if (src) mostrarAccion(src, 4200, true, true);
     }
   };
 
