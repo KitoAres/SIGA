@@ -1,7 +1,7 @@
 /* ======================================================
-   SIGy Widget v5 ✨
-   Más vivo, más fluido, menos teletransporte.
-   Se mueve como mascotita, cambia caritas y saca corazones.
+   SIGy Widget v6 ✨
+   Mensajes más rápidos, más vivos y globo ajustado.
+   Ya no se corta cuando SIGy se va a la izquierda.
    Programar esto fue sufrir, pero con amor.
    ====================================================== */
 
@@ -15,10 +15,8 @@
     'Hola, humano del código romántico.',
     'SIGy trajo una almohadita para que descanses el corazón.',
     'SIGy te ofrece un vasito de calma, edición limitada.',
-
     'SIGy reportándose con ternura.',
     'SIGy viene con agüita, ternura y un poquito de sentido común.',
-
     'Hoy podemos hacer algo pequeño y bonito.',
     'SIGy te trae un cargador emocional. No es rápido, pero funciona.',
     'Entraste y SIGy hizo: siuuuu 💜'
@@ -32,10 +30,102 @@
     'Si dudas, vemos si conviene enviar, esperar o guardar.',
     'Una carta también puede respirar antes de compartirse.',
     'Podemos cuidar el vínculo sin perseguirlo.',
+    'Pega una frase intensa y la vuelvo más respirable.',
+    'Si estás por mandar algo desde el incendio, yo traigo extintor.',
+    'Podemos hacer que duela menos al escribirlo.',
+    'A veces la mejor respuesta es esperar diez minutos.',
+    'Si no sabes qué decir, podemos empezar por una señal pequeña.',
+    'No hace falta escribir perfecto. Solo escribir más claro.',
+    'Yo puedo ayudarte a bajar el volumen sin apagar lo que sientes.',
+    'Podemos convertir reclamo en vulnerabilidad.',
+    'Podemos hacer una carta bonita, pero sin peso encima.',
+    'Si algo suena muy fuerte, lo suavizamos sin mentir.',
+    'Yo reviso el tono. Tú pones el corazón.',
+    'Podemos escribir algo que cuide, no que hiera.',
+    'Respira tantito. Luego escribimos.',
+
+    'SIGy te ofrece un café imaginario, pero cargado de amor ☕💜',
+    'SIGy te trajo una cobijita emocional recién compilada.',
+    'SIGy apareció con pan dulce virtual y cero presión.',
+    'SIGy te dejó una tacita de calma en la esquina.',
+    'SIGy te preparó un matecito de paciencia.',
+    'SIGy llegó con un abrazo en formato beta.',
+    'SIGy te trae una galletita emocional. No cura todo, pero ayuda.',
+    'SIGy puso musiquita suave en el backend.',
+    'SIGy te ofrece un chocolatito imaginario para bajar el drama.',
+    'SIGy llegó con flores digitales y bugs corregidos.',
+    'SIGy trajo una almohadita para que descanses el corazón.',
+    'SIGy te preparó un té de “no mandes eso todavía”.',
+    'SIGy te ofrece una pausa con glitter.',
+    'SIGy llegó con una linternita para ordenar el caos.',
+    'SIGy preparó una sopita emocional. Calientita, no invasiva.',
+    'SIGy te ofrece un paraguas por si llueve en el pecho.',
+    'SIGy vino con una cajita de “respira primero”.',
+    'SIGy llegó con una curita para palabras impulsivas.',
+    'SIGy trae un extintor para mensajes escritos desde el incendio.',
+    'SIGy te ofrece un café con 2 de azúcar y 0 de reclamo.',
+    'SIGy preparó una mesa chiquita para hablar sin pelear.',
+    'SIGy te trae un mapa para no perderte en la emoción.',
+    'SIGy llegó con una mantita de “todo a su ritmo”.',
+    'SIGy te ofrece un vasito de calma, edición limitada.',
+    'SIGy puso el corazón en modo ahorro de ansiedad.',
+    'SIGy te trae corazoncitos, pero con límites sanos.',
+    'SIGy llegó con una playlist imaginaria para no colapsar.',
+    'SIGy te ofrece una dona emocional. Tiene relleno de paciencia.',
+    'SIGy trajo café, ternura y un mini firewall contra impulsos.',
+    'SIGy te dejó una nota: “primero respira, luego escribes”.',
+    'SIGy llegó con una silla cómoda para pensar sin apurarse.',
+    'SIGy te trae un cargador emocional. No es rápido, pero funciona.',
+    'SIGy preparó un juguito de claridad.',
+    'SIGy te ofrece una frazadita para el alma y otra para el CSS.',
+    'SIGy vino con flores, pero no de esas intensas, de las tranquilas.',
+    'SIGy te trajo una taza que dice: “no todo se responde hoy”.',
+    'SIGy llegó con un botiquín para cartas demasiado intensas.',
+    'SIGy ofrece café imaginario y validación no invasiva.',
+    'SIGy te trae un pastelito de “vamos por partes”.',
+    'SIGy llegó con un cartelito: “bajar intensidad no es dejar de sentir”.',
+    'SIGy te ofrece una nube blandita para descansar ideas.',
+    'SIGy preparó una bebida llamada “no lo mandes en caliente”.',
+    'SIGy te trae un pan con amor y sin manipulación.',
+    'SIGy apareció con una bolsita de calma y un sticker de corazoncito.',
+    'SIGy te ofrece un abrazo comprimido en ZIP.',
+    'SIGy te trajo una flor pixelada, pero sincera.',
+    'SIGy llegó con una taza de “sí se puede, pero suave”.',
+
     'SIGyyyyy modo ternura activado.',
     'Chale... tengo hambre.',
     'Agueeevooo... pero con responsabilidad afectiva.',
-    'Aquí ando patrullando el amor sin invadir.'
+    'Aquí ando patrullando el amor sin invadir.',
+    'SIGy te trajo café. Se le cayó en producción, pero cuenta.',
+    'SIGy llegó tarde porque estaba peleando con un div.',
+    'SIGy intentó traer flores, pero las convirtió en JSON.',
+    'SIGy te preparó un té. El té está en beta.',
+    'SIGy llegó caminando. Nada de teletransporte, aprendió la lección.',
+    'SIGy trajo un abrazo, pero Vercel lo puso en serverless.',
+    'SIGy te ofrece un cafecito con aroma a deploy exitoso.',
+    'SIGy venía a saludar y terminó debuggeando sentimientos.',
+    'SIGy trae pan dulce y estabilidad emocional aproximada.',
+    'SIGy te ofrece un “sana sana” con documentación incompleta.',
+    'SIGy llegó con sueño, pero con ternura responsiva.',
+    'SIGy trae glitter emocional. Puede manchar el CSS.',
+    'SIGy te ofrece un mate de calma y un console.log de cariño.',
+    'SIGy vino con corazoncitos. No preguntes de dónde los sacó.',
+    'SIGy trajo una mantita, pero primero tuvo que importar el módulo.',
+    'SIGy te ofrece café imaginario porque presupuesto real no hay.',
+    'SIGy llegó con un abrazo, pero pesa menos que node_modules.',
+    'SIGy te trae calma. Si falla, revisa la API key.',
+    'SIGy ofrece una galleta emocional. No tiene gluten ni dependencia afectiva.',
+    'SIGy te preparó un té de manzanilla y un rollback por si acaso.',
+    'SIGy trae amor, pero con rate limit.',
+    'SIGy te ofrece una flor. Si no carga, refresca la ternura.',
+    'SIGy llegó con pan, café y un “no escribas desde el incendio”.',
+    'SIGy te ofrece un sticker invisible de “lo estás intentando”.',
+    'SIGy dice: 200 OK, corazón encontrado.',
+    'SIGy está online y emocionalmente disponible.',
+    'Cuidado, ternura en producción.',
+    'El amor tiene bugs, pero aquí debuggeamos suave.',
+    'La ternura cargó en 200 OK.',
+    'Modo drama: desactivado. Bueno... casi.'
   ];
 
   const frasesPorSeccion = {
@@ -88,8 +178,31 @@
   let destinoY = null;
   let rafId = null;
 
+  let idleTimeout = null;
+  let ultimoMensajeIdle = '';
+
   function elegirRandom(lista) {
     return lista[Math.floor(Math.random() * lista.length)];
+  }
+
+  function elegirRandomSinRepetir(lista) {
+    let elegido = elegirRandom(lista);
+
+    if (lista.length > 1) {
+      let intentos = 0;
+
+      while (elegido === ultimoMensajeIdle && intentos < 8) {
+        elegido = elegirRandom(lista);
+        intentos++;
+      }
+    }
+
+    ultimoMensajeIdle = elegido;
+    return elegido;
+  }
+
+  function randomEntre(min, max) {
+    return Math.floor(min + Math.random() * (max - min + 1));
   }
 
   function clamp(n, min, max) {
@@ -180,29 +293,44 @@
       });
     });
 
-    window.addEventListener('resize', mantenerEnPantalla);
+    window.addEventListener('resize', function () {
+      mantenerEnPantalla();
+      ajustarGloboEnPantalla();
+    });
 
-    setTimeout(() => {
-      mostrarGlobo(elegirRandom(saludosEntrada), 7000, 'enamorado');
+    setTimeout(function () {
+      mostrarGlobo(elegirRandom(saludosEntrada), 6500, 'enamorado');
       soltarCorazones();
-    }, 800);
+    }, 180);
 
-    // Mensajitos lentos para que no hostigue.
-    setInterval(() => {
+    programarMensajitoIdle(9000);
+
+    setInterval(function () {
+      if (!abierto) {
+        moverSigyFluido();
+      }
+    }, 26000);
+  }
+
+  function programarMensajitoIdle(delay) {
+    if (idleTimeout) {
+      clearTimeout(idleTimeout);
+    }
+
+    const tiempo = delay || randomEntre(18000, 28000);
+
+    idleTimeout = setTimeout(function () {
       if (!abierto) {
         const cara = elegirRandom(['feliz', 'pensando', 'enamorado', 'sorpresa']);
-        mostrarGlobo(elegirRandom(mensajitosIdle), 7000, cara);
+        mostrarGlobo(elegirRandomSinRepetir(mensajitosIdle), 6500, cara);
 
         if (cara === 'enamorado') {
           soltarCorazones();
         }
       }
-    }, 52000);
 
-    // Movimiento fluido. No teletransporte, ahora camina/desliza.
-    setInterval(() => {
-      if (!abierto) moverSigyFluido();
-    }, 26000);
+      programarMensajitoIdle();
+    }, tiempo);
   }
 
   function inicializarPosicion() {
@@ -223,16 +351,57 @@
     widget.style.top = `${posY}px`;
     widget.style.right = 'auto';
     widget.style.bottom = 'auto';
+
+    ajustarGloboEnPantalla();
   }
 
   function mantenerEnPantalla() {
     const maxX = window.innerWidth - 96;
     const maxY = window.innerHeight - 100;
 
-    posX = clamp(posX ?? maxX, 12, maxX);
-    posY = clamp(posY ?? maxY, 12, maxY);
+    posX = clamp(posX || maxX, 12, maxX);
+    posY = clamp(posY || maxY, 12, maxY);
 
     aplicarPosicion();
+  }
+
+  function ajustarGloboEnPantalla() {
+    const globo = document.getElementById('sigy-globo');
+    const widget = document.getElementById('sigy-widget');
+
+    if (!globo || !widget) return;
+
+    globo.style.left = '';
+    globo.style.right = '4px';
+    globo.style.width = '';
+    globo.style.transformOrigin = 'bottom right';
+
+    requestAnimationFrame(function () {
+      const rect = globo.getBoundingClientRect();
+      const widgetRect = widget.getBoundingClientRect();
+      const margen = 12;
+
+      if (rect.left < margen) {
+        globo.style.right = 'auto';
+        globo.style.left = '0px';
+        globo.style.transformOrigin = 'bottom left';
+      }
+
+      if (rect.right > window.innerWidth - margen) {
+        globo.style.left = 'auto';
+        globo.style.right = '4px';
+        globo.style.transformOrigin = 'bottom right';
+      }
+
+      const nuevoRect = globo.getBoundingClientRect();
+
+      if (nuevoRect.left < margen && nuevoRect.right > window.innerWidth - margen) {
+        globo.style.left = `${margen - widgetRect.left}px`;
+        globo.style.right = 'auto';
+        globo.style.width = `${window.innerWidth - margen * 2}px`;
+        globo.style.transformOrigin = 'bottom center';
+      }
+    });
   }
 
   function moverSigyFluido() {
@@ -290,7 +459,10 @@
       }
     }
 
-    if (rafId) cancelAnimationFrame(rafId);
+    if (rafId) {
+      cancelAnimationFrame(rafId);
+    }
+
     rafId = requestAnimationFrame(animar);
   }
 
@@ -300,7 +472,7 @@
 
     widget.classList.add('sigy-caminando');
 
-    setTimeout(() => {
+    setTimeout(function () {
       widget.classList.remove('sigy-caminando');
     }, 4300);
   }
@@ -308,14 +480,16 @@
   function cambiarModoUI(nuevoModo) {
     modoUI = nuevoModo;
 
-    document.querySelectorAll('.sigy-ayudas button').forEach(b => {
+    document.querySelectorAll('.sigy-ayudas button').forEach(function (b) {
       b.classList.toggle('active', b.dataset.ui === nuevoModo);
     });
 
     const input = document.getElementById('sigy-input');
     const respuesta = document.getElementById('sigy-respuesta');
 
-    if (input) input.placeholder = placeholders[nuevoModo] || placeholders.libre;
+    if (input) {
+      input.placeholder = placeholders[nuevoModo] || placeholders.libre;
+    }
 
     if (respuesta) {
       respuesta.dataset.tocado = '';
@@ -332,20 +506,65 @@
     }
   }
 
+  function moverSigyA(x, y, duracion) {
+    if (rafId) {
+      cancelAnimationFrame(rafId);
+    }
+
+    const maxX = window.innerWidth - 96;
+    const maxY = window.innerHeight - 102;
+
+    const inicioX = posX;
+    const inicioY = posY;
+
+    const finalX = clamp(x, 12, maxX);
+    const finalY = clamp(y, 12, maxY);
+
+    const dx = finalX - inicioX;
+    const dy = finalY - inicioY;
+    const inicio = performance.now();
+
+    moviendose = true;
+    mostrarPisaditas();
+
+    function animar(t) {
+      const p = clamp((t - inicio) / duracion, 0, 1);
+      const ease = 1 - Math.pow(1 - p, 3);
+
+      posX = inicioX + dx * ease;
+      posY = inicioY + dy * ease;
+
+      aplicarPosicion();
+
+      if (p < 1) {
+        rafId = requestAnimationFrame(animar);
+      } else {
+        posX = finalX;
+        posY = finalY;
+        aplicarPosicion();
+        moviendose = false;
+      }
+    }
+
+    rafId = requestAnimationFrame(animar);
+  }
+
   function abrirSigy() {
     abierto = true;
 
     const panel = document.getElementById('sigy-panel');
     const globo = document.getElementById('sigy-globo');
 
-    if (panel) panel.classList.add('visible');
-    if (globo) globo.classList.remove('visible');
+    if (panel) {
+      panel.classList.add('visible');
+    }
 
-    // Si está muy a la izquierda, camina suave a la derecha para no tapar el panel.
+    if (globo) {
+      globo.classList.remove('visible');
+    }
+
     if (posX < window.innerWidth * 0.45) {
-      posX = window.innerWidth - 104;
-      posY = window.innerHeight - 112;
-      aplicarPosicion();
+      moverSigyA(window.innerWidth - 104, window.innerHeight - 112, 900);
     }
 
     setEstadoCarita('feliz');
@@ -353,30 +572,42 @@
 
   function toggleSigy() {
     abierto = !abierto;
-    abierto ? abrirSigy() : cerrarSigy();
+
+    if (abierto) {
+      abrirSigy();
+    } else {
+      cerrarSigy();
+    }
   }
 
   function cerrarSigy() {
     abierto = false;
 
     const panel = document.getElementById('sigy-panel');
-    if (panel) panel.classList.remove('visible');
+
+    if (panel) {
+      panel.classList.remove('visible');
+    }
 
     setEstadoCarita('');
+    programarMensajitoIdle(10000);
   }
 
-  function mostrarGlobo(texto, duracion = 6000, cara = 'feliz') {
+  function mostrarGlobo(texto, duracion, cara) {
     const globo = document.getElementById('sigy-globo');
+
     if (!globo || abierto) return;
 
     globo.textContent = texto;
     globo.classList.add('visible');
-    setEstadoCarita(cara);
 
-    setTimeout(() => {
+    setEstadoCarita(cara || 'feliz');
+    ajustarGloboEnPantalla();
+
+    setTimeout(function () {
       globo.classList.remove('visible');
       setEstadoCarita('');
-    }, duracion);
+    }, duracion || 6000);
   }
 
   function setEstadoCarita(estado) {
@@ -385,7 +616,9 @@
 
     carita.classList.remove('pensando', 'feliz', 'triste', 'dormido', 'sorpresa', 'enamorado');
 
-    if (estado) carita.classList.add(estado);
+    if (estado) {
+      carita.classList.add(estado);
+    }
   }
 
   function soltarCorazones() {
@@ -402,7 +635,7 @@
 
       widget.appendChild(heart);
 
-      setTimeout(() => {
+      setTimeout(function () {
         heart.remove();
       }, 1900);
     }
@@ -466,7 +699,9 @@
     respuestaDiv.innerHTML = `<span>${fraseContextual()}</span>`;
     setEstadoCarita('feliz');
 
-    setTimeout(() => setEstadoCarita(''), 1400);
+    setTimeout(function () {
+      setEstadoCarita('');
+    }, 1400);
   }
 
   function escapeHtml(texto) {
