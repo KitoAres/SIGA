@@ -1,22 +1,27 @@
 /* ======================================================
-   SIGy CSS v4 ✨
-   Más limpio, menos botones, menos ruido visual.
+   SIGy CSS v5 ✨
+   Movimiento fluido, carita enamorada y corazoncitos.
+   El amor también necesita animaciones decentes.
    ====================================================== */
 
 #sigy-widget {
   position: fixed;
+  left: auto;
+  top: auto;
   right: 22px;
   bottom: 22px;
   z-index: 99999;
   font-family: inherit;
-  transition: left 0.85s ease, right 0.85s ease, bottom 0.85s ease;
+  width: 78px;
+  height: 88px;
+  will-change: left, top, transform;
 }
 
 .sigy-globo {
   position: absolute;
   right: 4px;
-  bottom: 92px;
-  width: 245px;
+  bottom: 96px;
+  width: 250px;
   padding: 12px 14px;
   border-radius: 18px 18px 4px 18px;
   background: rgba(42, 31, 60, 0.97);
@@ -37,6 +42,7 @@
 }
 
 #sigy-burbuja {
+  position: relative;
   width: 76px !important;
   height: 86px !important;
   border: none !important;
@@ -52,11 +58,16 @@
   transition: transform 0.25s ease, box-shadow 0.25s ease !important;
   padding: 0 !important;
   margin: 0 !important;
+  overflow: visible !important;
 }
 
 #sigy-burbuja:hover {
   transform: translateY(-4px) scale(1.03) !important;
   box-shadow: 0 22px 55px rgba(98, 58, 162, 0.45) !important;
+}
+
+.sigy-caminando #sigy-burbuja {
+  animation: sigyCaminata 0.55s ease-in-out infinite !important;
 }
 
 .sigy-carita {
@@ -92,6 +103,33 @@
   border-bottom: 3px solid #5b21b6;
   border-radius: 0 0 20px 20px;
   transition: 0.18s ease;
+}
+
+.sigy-mejillas {
+  position: absolute;
+  width: 100%;
+  height: 8px;
+  top: 22px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.sigy-mejillas::before,
+.sigy-mejillas::after {
+  content: "";
+  position: absolute;
+  width: 8px;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(244, 114, 182, 0.55);
+}
+
+.sigy-mejillas::before {
+  left: 7px;
+}
+
+.sigy-mejillas::after {
+  right: 7px;
 }
 
 .sigy-carita.pensando .sigy-boca {
@@ -138,12 +176,83 @@
   border-radius: 50%;
 }
 
+.sigy-carita.enamorado {
+  background: linear-gradient(145deg, #fff, #ffe4f3);
+}
+
+.sigy-carita.enamorado .sigy-ojos span {
+  width: 8px;
+  height: 8px;
+  background: #db2777;
+  transform: rotate(45deg);
+  border-radius: 2px 2px 0 2px;
+  animation: sigyLatidoOjos 1s ease-in-out infinite;
+}
+
+.sigy-carita.enamorado .sigy-ojos span::before,
+.sigy-carita.enamorado .sigy-ojos span::after {
+  content: "";
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: #db2777;
+  border-radius: 50%;
+}
+
+.sigy-carita.enamorado .sigy-ojos span::before {
+  left: -4px;
+  top: 0;
+}
+
+.sigy-carita.enamorado .sigy-ojos span::after {
+  left: 0;
+  top: -4px;
+}
+
+.sigy-carita.enamorado .sigy-boca {
+  width: 22px;
+  height: 11px;
+  border-bottom: 3px solid #db2777;
+}
+
+.sigy-carita.enamorado .sigy-mejillas {
+  opacity: 1;
+}
+
 .sigy-nombre {
   font-size: 0.74rem;
   font-weight: 800;
   color: #ffffff;
   margin-top: 5px;
   text-shadow: 0 1px 8px rgba(0,0,0,0.22);
+}
+
+.sigy-corazon {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+  font-size: 1rem;
+}
+
+.sigy-corazon-1 {
+  top: -10px;
+  left: 4px;
+  animation: sigyMiniHeart 4.8s ease-in-out infinite;
+}
+
+.sigy-corazon-2 {
+  top: -8px;
+  right: 6px;
+  animation: sigyMiniHeart 5.6s ease-in-out infinite 1.2s;
+}
+
+.sigy-heart-pop {
+  position: absolute;
+  bottom: 70px;
+  font-size: 1rem;
+  pointer-events: none;
+  animation: sigyHeartPop 1.8s ease-out forwards;
+  --sigy-heart-x: 0px;
 }
 
 #sigy-panel {
@@ -301,6 +410,21 @@
   }
 }
 
+@keyframes sigyCaminata {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-5px) rotate(-3deg);
+  }
+  50% {
+    transform: translateY(0) rotate(0deg);
+  }
+  75% {
+    transform: translateY(-5px) rotate(3deg);
+  }
+}
+
 @keyframes sigyParpadeo {
   0%, 92%, 100% {
     transform: scaleY(1);
@@ -319,10 +443,48 @@
   }
 }
 
+@keyframes sigyLatidoOjos {
+  0%, 100% {
+    transform: rotate(45deg) scale(1);
+  }
+  50% {
+    transform: rotate(45deg) scale(1.18);
+  }
+}
+
+@keyframes sigyMiniHeart {
+  0%, 75%, 100% {
+    opacity: 0;
+    transform: translateY(4px) scale(0.6);
+  }
+  82% {
+    opacity: 1;
+    transform: translateY(-6px) scale(1);
+  }
+  92% {
+    opacity: 0.2;
+    transform: translateY(-16px) scale(1.2);
+  }
+}
+
+@keyframes sigyHeartPop {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0.6);
+  }
+  15% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--sigy-heart-x), -90px) scale(1.4) rotate(18deg);
+  }
+}
+
 @media (max-width: 560px) {
   #sigy-widget {
-    right: 14px;
-    bottom: 14px;
+    width: 70px;
+    height: 80px;
   }
 
   #sigy-burbuja {
