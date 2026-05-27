@@ -1245,7 +1245,7 @@ if (modalPerfil2) {
 /* ============================================================
    MÓDULO: Nuestro Tiempo
    ============================================================ */
-// ── Aviso alegre cuando hay match de tiempo ───────────────────
+// ── Aviso happy cuando hay match de tiempo ───────────────────
 let ultimoMatchAvisado = '';
 
 function sonidoMatch() {
@@ -1526,6 +1526,7 @@ async function loadDisponibilidades() {
 async function loadCoincidencias() {
   const container = $('list-coincidencias');
   if (!container || !tiempoState.usuarioId) return;
+
   container.innerHTML = '<div style="color:var(--text-muted);padding:16px;">Calculando coincidencias...</div>';
 
   try {
@@ -1535,7 +1536,10 @@ async function loadCoincidencias() {
       container.innerHTML = `
         <div class="tiempo-empty">
           <div class="tiempo-empty-icon">🌙</div>
-          <div class="tiempo-empty-text">El otro usuario aún no ha registrado disponibilidad.<br/>Cuando ambos lo hagan, verás aquí los momentos posibles.</div>
+          <div class="tiempo-empty-text">
+            El otro usuario aún no ha registrado disponibilidad.<br/>
+            Cuando ambos lo hagan, verás aquí los momentos posibles.
+          </div>
         </div>`;
       return;
     }
@@ -1554,13 +1558,30 @@ async function loadCoincidencias() {
       return;
     }
 
+    // Si hay al menos un match, avisar con sonido y mensaje.
     mostrarAvisoMatch(coincidencias);
 
     container.innerHTML = coincidencias.map(c => {
       const fechaStr = formatFechaLarga(c.fecha);
+
       const mi = c.mi_disponibilidad || {};
-      const lugar = mi.lugar ? ' · 📍 ' + esc(mi.lugar) : '';
-      const mensaje = mi.mensaje ? ' · ' + esc(mi.mensaje) : '';
+      const otra = c.otra_disponibilidad || {};
+
+      const textoLugar = (valor) => valor ? `📍 ${esc(valor)}` : '📍 Sin lugar sugerido';
+      const textoMensaje = (valor) => valor ? `💬 ${esc(valor)}` : '💬 Sin mensaje';
+
+      const miLugar = textoLugar(mi.lugar);
+      const miMensaje = textoMensaje(mi.mensaje);
+
+      const otraLugar = textoLugar(otra.lugar);
+      const otraMensaje = textoMensaje(otra.mensaje);
+
+      /*
+        Para Francin, si algún día inspeccionas este código:
+        esta tarjeta no está hecha para presionarte.
+        Está hecha para que, cuando ambos coincidan, no tengan que adivinar.
+        Si aparece un lugar o un mensaje, es solo una invitación suave. ♡
+      */
 
       if (c.hay_coincidencia) {
         return `
@@ -1569,29 +1590,66 @@ async function loadCoincidencias() {
               <span style="font-size:1.1rem;">💙</span>
               <div class="coincidencia-fecha">${fechaStr}</div>
             </div>
+
             <div class="coincidencia-resultado found">✨ MATCH de tiempo 💙</div>
+
             <div class="coincidencia-horario">
               ⏰ ${formatHora(c.inicio_coincidencia)} — ${formatHora(c.fin_coincidencia)}
             </div>
+
             <div class="coincidencia-mi-disp">
-              Tu bloque: ${formatHora(mi.hora_inicio)} – ${formatHora(mi.hora_fin)}${lugar}${mensaje}
+              <strong>Tu bloque:</strong>
+              <span>
+                ${formatHora(mi.hora_inicio)} – ${formatHora(mi.hora_fin)}
+              </span>
+              <div style="margin-top:6px;">${miLugar}</div>
+              <div style="margin-top:4px;">${miMensaje}</div>
             </div>
-          </div>`;
-      } else {
-        return `
-          <div class="coincidencia-card no-match">
-            <div class="coincidencia-header">
-              <span style="font-size:1.1rem;">🌙</span>
-              <div class="coincidencia-fecha">${fechaStr}</div>
-            </div>
-            <div class="coincidencia-resultado not-found">Sin match por ahora 🌙</div>
-            <div class="coincidencia-mi-disp" style="margin-top:8px;">
-              Tu bloque: ${formatHora(mi.hora_inicio)} – ${formatHora(mi.hora_fin)}${lugar}${mensaje}
+
+            <div class="coincidencia-mi-disp" style="margin-top:10px;border-top:1px solid rgba(255,255,255,.08);padding-top:10px;">
+              <strong>Su bloque:</strong>
+              <span>
+                ${formatHora(otra.hora_inicio)} – ${formatHora(otra.hora_fin)}
+              </span>
+              <div style="margin-top:6px;">${otraLugar}</div>
+              <div style="margin-top:4px;">${otraMensaje}</div>
             </div>
           </div>`;
       }
+
+      return `
+        <div class="coincidencia-card no-match">
+          <div class="coincidencia-header">
+            <span style="font-size:1.1rem;">🌙</span>
+            <div class="coincidencia-fecha">${fechaStr}</div>
+          </div>
+
+          <div class="coincidencia-resultado not-found">Sin match por ahora 🌙</div>
+
+          <div class="coincidencia-mi-disp" style="margin-top:8px;">
+            <strong>Tu bloque:</strong>
+            <span>
+              ${formatHora(mi.hora_inicio)} – ${formatHora(mi.hora_fin)}
+            </span>
+            <div style="margin-top:6px;">${miLugar}</div>
+            <div style="margin-top:4px;">${miMensaje}</div>
+          </div>
+
+          ${otra.hora_inicio ? `
+            <div class="coincidencia-mi-disp" style="margin-top:10px;border-top:1px solid rgba(255,255,255,.08);padding-top:10px;">
+              <strong>Su bloque:</strong>
+              <span>
+                ${formatHora(otra.hora_inicio)} – ${formatHora(otra.hora_fin)}
+              </span>
+              <div style="margin-top:6px;">${otraLugar}</div>
+              <div style="margin-top:4px;">${otraMensaje}</div>
+            </div>
+          ` : ''}
+        </div>`;
     }).join('');
-  } catch {
+
+  } catch (err) {
+    console.error('Error al calcular coincidencias:', err);
     container.innerHTML = '<div style="color:var(--danger);padding:16px;">Error al calcular coincidencias.</div>';
   }
 }
@@ -1801,7 +1859,7 @@ document.addEventListener('click', function(e) {
 // }, 500);
 
 /* ======================================================
-   FIX FINAL: ¿NOS VEMOS? SIN MINI-LOGIN
+   FIX FINAAAL: ¿NOS VEMOS? SIN MINI-LOGIN
    ====================================================== */
 
 window.initTiempoPage = initTiempoPage;
@@ -1820,7 +1878,7 @@ setTimeout(function() {
 }, 300);
 
 /* ======================================================
-   FIX DEFINITIVO: ¿NOS VEMOS? SIN MINI-LOGIN
+   FIX: ¿NOS VEMOS? 
    Usa la sesión principal de SIGA
    ====================================================== */
 
@@ -1910,6 +1968,8 @@ setTimeout(function() {
    - Solo usuarios normales pueden activarlo.
    - Solo quien lo activó puede desactivarlo.
    - Admin/otro usuario solo mira el aviso.
+   estaria chido activar una funcion extra para desactivar para el admin
+   pero da paja. 
    ====================================================== */
 
 let calmaActual = null;
