@@ -184,7 +184,7 @@ router.post('/', async (req, res) => {
         ],
         generationConfig: {
           temperature: 0.78,
-          maxOutputTokens: 1400,
+          maxOutputTokens: 4096,
           topP: 0.9,
           topK: 40
         }
@@ -198,7 +198,8 @@ router.post('/', async (req, res) => {
 
       return res.status(500).json({
         ok: false,
-        error: 'Gemini no respondió bien. Revisa la API key o el modelo.'
+        error: 'Gemini no respondió bien. Revisa la API key o el modelo.',
+        detalle: data
       });
     }
 
@@ -214,6 +215,7 @@ router.post('/', async (req, res) => {
 
     if (finishReason === 'MAX_TOKENS') {
       console.warn('SIGy fue cortado por MAX_TOKENS:', data);
+
       texto = texto.trim();
 
       if (!/[.!?…]"?$/.test(texto)) {
@@ -221,10 +223,14 @@ router.post('/', async (req, res) => {
       }
     }
 
+    console.log('SIGy finishReason:', finishReason);
+    console.log('SIGy usageMetadata:', data.usageMetadata || null);
+
     return res.json({
       ok: true,
       respuesta: texto,
-      finishReason
+      finishReason,
+      usageMetadata: data.usageMetadata || null
     });
 
   } catch (error) {
