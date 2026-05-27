@@ -43,7 +43,7 @@
     'Yo reviso el tono. Tú pones el corazón.',
     'Podemos escribir algo que cuide, no que hiera.',
     'Respira tantito. Luego escribimos.',
-
+    'El Admin dice que te quiere. Yo tambien.',
     'SIGy te ofrece un café imaginario, pero cargado de amor ☕💜',
     'SIGy te trajo una cobijita emocional recién compilada.',
     'SIGy apareció con pan dulce virtual y cero presión.',
