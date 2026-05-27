@@ -1,23 +1,18 @@
 /* ======================================================
    SIGy ✨
    Mini IA emocional para SIGA.
-   No diagnostica, no presiona, no controla.
-   Solo acompaña con calma.
+   Sin SDK, porque Vercel a veces se pone dramático.
+   Programar esto fue sufrir, pero con amor.
    ====================================================== */
 
 const express = require('express');
 const router = express.Router();
-const { GoogleGenAI } = require('@google/genai');
-
-const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY
-});
 
 function limpiarTexto(texto) {
   return String(texto || '').trim();
 }
 
-function limitarTexto(texto, max = 2000) {
+function limitarTexto(texto, max = 2500) {
   const limpio = limpiarTexto(texto);
   return limpio.length > max ? limpio.slice(0, max) : limpio;
 }
@@ -66,21 +61,12 @@ Contexto actual:
 - Sección: ${seccion || 'general'}
 - Modo pedido: ${modo || 'acompañar'}
 
-Formas de responder según el modo:
-1. acompañar:
-   Responde como una presencia cálida, breve y clara.
-
-2. suavizar:
-   Reescribe el mensaje para que suene menos reclamo, menos intenso y más cuidadoso.
-
-3. carta:
-   Ayuda a convertir la idea en una carta bonita, íntima y segura.
-
-4. señal:
-   Crea una señal pequeña, tipo mensaje corto, sin presión.
-
-5. decidir:
-   Ayuda a decidir si conviene enviar, guardar, esperar o reescribir.
+Modos:
+1. acompañar: responde como una presencia cálida, breve y clara.
+2. suavizar: reescribe el mensaje para que suene menos reclamo y más cuidadoso.
+3. carta: ayuda a convertir la idea en una carta bonita, íntima y segura.
+4. señal: crea una señal pequeña, tipo mensaje corto, sin presión.
+5. decidir: ayuda a decidir si conviene enviar, guardar, esperar o reescribir.
 
 Mensaje del usuario:
 """${mensaje}"""
@@ -93,24 +79,20 @@ No escribas demasiado.
 
 /* ======================================================
    POST /api/sigy
-   Body:
-   {
-     "mensaje": "texto",
-     "modo": "acompañar | suavizar | carta | señal | decidir",
-     "seccion": "dashboard | carta | tiempo | espacio | etc"
-   }
    ====================================================== */
 
 router.post('/', async (req, res) => {
   try {
-    if (!process.env.GEMINI_API_KEY) {
+    const apiKey = process.env.GEMINI_API_KEY;
+
+    if (!apiKey) {
       return res.status(500).json({
         ok: false,
-        error: 'Falta GEMINI_API_KEY en variables de entorno.'
+        error: 'Falta GEMINI_API_KEY en Vercel.'
       });
     }
 
-    const mensaje = limitarTexto(req.body.mensaje, 2500);
+    const mensaje = limitarTexto(req.body.mensaje);
     const modo = limpiarTexto(req.body.modo || 'acompañar');
     const seccion = limpiarTexto(req.body.seccion || 'general');
 
@@ -127,16 +109,48 @@ router.post('/', async (req, res) => {
       seccion
     });
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: prompt
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+
+    const respuestaGemini = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [
+              {
+                text: prompt
+              }
+            ]
+          }
+        ],
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 500
+        }
+      })
     });
 
-    const respuesta = limpiarTexto(response.text);
+    const data = await respuestaGemini.json();
+
+    if (!respuestaGemini.ok) {
+      console.error('Error Gemini:', data);
+
+      return res.status(500).json({
+        ok: false,
+        error: 'Gemini no respondió bien. Revisa la API key o el modelo.'
+      });
+    }
+
+    const texto =
+      data?.candidates?.[0]?.content?.parts?.[0]?.text ||
+      'Estoy aquí. Podemos ir despacio, sin presión.';
 
     return res.json({
       ok: true,
-      respuesta: respuesta || 'Estoy aquí. Podemos ir despacio, sin presión.'
+      respuesta: texto
     });
 
   } catch (error) {
