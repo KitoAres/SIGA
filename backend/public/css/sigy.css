@@ -504,3 +504,45 @@
     bottom: 84px;
   }
 }
+
+/* ======================================================
+   SIGy Sprite v1
+   Imagen real de SIGy encima del widget.
+   ====================================================== */
+
+.sigy-sprite-box {
+  width: 120px !important;
+  height: 120px !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.sigy-sprite-img {
+  width: 135px;
+  height: 135px;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+  filter: drop-shadow(0 12px 18px rgba(126, 76, 170, 0.25));
+  animation: sigySpriteRespira 2.8s ease-in-out infinite;
+}
+
+@keyframes sigySpriteRespira {
+  0% {
+    transform: translateY(0) scale(1);
+  }
+
+  50% {
+    transform: translateY(-4px) scale(1.025);
+  }
+
+  100% {
+    transform: translateY(0) scale(1);
+  }
+}
+
