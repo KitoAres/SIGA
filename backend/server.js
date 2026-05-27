@@ -34,7 +34,7 @@ app.use('/api/puntos', require('./routes/puntos'));
 app.use('/api/espacio', require('./routes/espacio'));
 
 /* ======================================================
-   SIGy — la mini IA emocional de SIGA ✨ que boniiitooo
+   SIGy — IA suave de SIGA ✨
    ====================================================== */
 app.use('/api/sigy', require('./routes/sigy'));
 
