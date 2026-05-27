@@ -1,83 +1,152 @@
-// SIGy ✨
-// programar esto fue sufrir, pero con amor. No te creas... fue rapido XD. 
-//Igual la API es una genialidad... 
+/* ======================================================
+   SIGy ✨
+   Mini IA emocional para SIGA.
+   No diagnostica, no presiona, no controla.
+   Solo acompaña con calma.
+   ====================================================== */
 
-const express = require("express");
+const express = require('express');
 const router = express.Router();
+const { GoogleGenAI } = require('@google/genai');
 
-const { GoogleGenerativeAI } = require("@google/generative-ai");
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-
-const model = genAI.getGenerativeModel({
-    model: "gemini-2.5-flash"
+const ai = new GoogleGenAI({
+  apiKey: process.env.GEMINI_API_KEY
 });
 
-// POST /api/sigy
-router.post("/", async (req, res) => {
-    try {
+function limpiarTexto(texto) {
+  return String(texto || '').trim();
+}
 
-        const { mensaje } = req.body;
+function limitarTexto(texto, max = 2000) {
+  const limpio = limpiarTexto(texto);
+  return limpio.length > max ? limpio.slice(0, max) : limpio;
+}
 
-        if (!mensaje) {
-            return res.status(400).json({
-                error: "Falta mensaje"
-            });
-        }
-
-        const prompt = `
+function construirPrompt({ mensaje, modo, seccion }) {
+  return `
 Eres SIGy, una inteligencia artificial privada dentro de SIGA.
+
+SIGA es un espacio privado para cuidar el vínculo, guardar recuerdos y volver con calma cuando hablar se sienta difícil.
 
 Tu personalidad:
 - cálida
 - suave
 - tranquila
-- romántica sin ser intensa
-- jamás controladora
-- jamás manipuladora
-- nunca presionas respuestas
-- no diagnosticas
-- no eres terapeuta
-- ayudas a expresar emociones con calma
+- íntima
+- romántica sin ser invasiva
+- directa pero cuidadosa
+- humana, no robótica
+- nada intensa de forma pesada
+- nada dramática
+- nada de vigilancia
+- nada de manipulación
 
-Estilo:
-- breve
-- humano
-- íntimo
-- amable
-- nada cringe
-- nada excesivamente poético
+Reglas importantes:
+- No diagnostiques.
+- No digas que eres terapeuta.
+- No presiones respuestas.
+- No fomentes perseguir, reclamar o controlar.
+- No conviertas el amor en obligación.
+- No uses frases como "debes", "tienes que", "exige".
+- Ayuda a regular, escribir mejor y pensar antes de actuar.
+- Respeta lo privado.
+- Lo compartido debe ser voluntario.
+- Si el mensaje suena impulsivo, ayuda a bajarlo.
+- Si hay dolor, valida sin alimentar desesperación.
+- Si hay riesgo de hacerse daño o hacer daño, recomienda buscar ayuda humana inmediata.
 
-Objetivo:
-- ayudar a regular emociones
-- ayudar a escribir mensajes suaves
-- ayudar a pensar antes de actuar impulsivamente
-- acompañar sin invadir
+Frases compatibles con SIGA:
+- "A tu ritmo."
+- "Sin presión."
+- "Puedes volver cuando quieras."
+- "No hace falta explicar todo."
+- "Esto no diagnostica, no exige y no obliga."
+
+Contexto actual:
+- Sección: ${seccion || 'general'}
+- Modo pedido: ${modo || 'acompañar'}
+
+Formas de responder según el modo:
+1. acompañar:
+   Responde como una presencia cálida, breve y clara.
+
+2. suavizar:
+   Reescribe el mensaje para que suene menos reclamo, menos intenso y más cuidadoso.
+
+3. carta:
+   Ayuda a convertir la idea en una carta bonita, íntima y segura.
+
+4. señal:
+   Crea una señal pequeña, tipo mensaje corto, sin presión.
+
+5. decidir:
+   Ayuda a decidir si conviene enviar, guardar, esperar o reescribir.
 
 Mensaje del usuario:
-"${mensaje}"
+"""${mensaje}"""
 
-Responde como SIGy:
+Responde como SIGy.
+No uses markdown pesado.
+No escribas demasiado.
 `;
+}
 
-        const result = await model.generateContent(prompt);
+/* ======================================================
+   POST /api/sigy
+   Body:
+   {
+     "mensaje": "texto",
+     "modo": "acompañar | suavizar | carta | señal | decidir",
+     "seccion": "dashboard | carta | tiempo | espacio | etc"
+   }
+   ====================================================== */
 
-        const texto = result.response.text();
-
-        res.json({
-            ok: true,
-            respuesta: texto
-        });
-
-    } catch (error) {
-
-        console.error("Error SIGy:", error);
-
-        res.status(500).json({
-            ok: false,
-            error: "SIGy explotó emocionalmente 😔"
-        });
+router.post('/', async (req, res) => {
+  try {
+    if (!process.env.GEMINI_API_KEY) {
+      return res.status(500).json({
+        ok: false,
+        error: 'Falta GEMINI_API_KEY en variables de entorno.'
+      });
     }
+
+    const mensaje = limitarTexto(req.body.mensaje, 2500);
+    const modo = limpiarTexto(req.body.modo || 'acompañar');
+    const seccion = limpiarTexto(req.body.seccion || 'general');
+
+    if (!mensaje) {
+      return res.status(400).json({
+        ok: false,
+        error: 'Escribe algo para SIGy.'
+      });
+    }
+
+    const prompt = construirPrompt({
+      mensaje,
+      modo,
+      seccion
+    });
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt
+    });
+
+    const respuesta = limpiarTexto(response.text);
+
+    return res.json({
+      ok: true,
+      respuesta: respuesta || 'Estoy aquí. Podemos ir despacio, sin presión.'
+    });
+
+  } catch (error) {
+    console.error('Error SIGy:', error);
+
+    return res.status(500).json({
+      ok: false,
+      error: 'SIGy se quedó pensando demasiado 😔. Intenta otra vez.'
+    });
+  }
 });
 
 module.exports = router;
