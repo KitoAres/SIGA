@@ -1,6 +1,6 @@
 /* ======================================================
-   SIGy Widget v3 ✨
-   Ahora se mueve, saluda, cambia carita y lanza mensajitos.
+   SIGy Widget v4 ✨
+   Más limpio, menos botones, menos ruido.
    Programar esto fue sufrir, pero con amor.
    ====================================================== */
 
@@ -25,93 +25,49 @@
   ];
 
   const frasesPorSeccion = {
-    dashboard: [
-      'Puedo ayudarte a pensar qué hacer hoy en SIGA.',
-      'Podemos revisar una señal, una carta o solo ordenar una idea.',
-      'Si hoy pesa algo, podemos convertirlo en algo más claro.'
-    ],
-    recuerdos: [
-      'Puedo ayudarte a escribir un recuerdo sin hacerlo demasiado triste.',
-      'Un recuerdo puede guardarse bonito, sin exigir nada.',
-      'Si quieres, puedo ayudarte a convertir este momento en texto.'
-    ],
-    citas: [
-      'Puedo ayudarte a pensar un plan simple, bonito y sin presión.',
-      'Podemos crear una cita que no se sienta pesada.',
-      'Luego puedo sugerir planes según clima y hora.'
-    ],
-    playlist: [
-      'Puedo ayudarte a elegir una canción según el momento.',
-      'A veces una canción dice mejor lo que una carta complica.',
-      'Podemos hacer que esta canción tenga una dedicatoria suave.'
-    ],
-    razones: [
-      'Puedo ayudarte a escribir una razón que no suene exagerada.',
-      'Las razones bonitas también pueden ser simples.',
-      'Podemos escribir algo tierno, pero sin intensidad pesada.'
-    ],
-    promesas: [
-      'Puedo ayudarte a convertir una promesa en algo realista.',
-      'Prometer también es cuidar lo posible, no lo perfecto.',
-      'Podemos escribir una promesa que no suene a deuda emocional.'
-    ],
-    carta: [
-      'Puedo ayudarte a suavizar una carta antes de guardarla.',
-      'Si duele mucho, tal vez primero la hacemos más segura.',
-      'Puedo ayudarte a decirlo sin que suene a reclamo.'
-    ],
-    tiempo: [
-      'Puedo ayudarte a proponer un momento sin presionar.',
-      'Podemos hacer que coincidir se sienta tranquilo.',
-      'Luego puedo revisar clima y sugerir una hora bonita.'
-    ],
-    eventos: [
-      'Puedo sugerir una misión pequeña, no una tarea pesada.',
-      'Una misión también puede ser una señal, una canción o una pausa.',
-      'Podemos hacer una misión que cuide el vínculo sin forzarlo.'
-    ],
-    cajita: [
-      'Puedo ayudarte a escribir una descripción bonita para este detalle.',
-      'Este lugar guarda cosas hechas con cariño. Podemos ordenarlas.',
-      'Podemos hacer que este detalle se sienta más íntimo.'
-    ],
-    espacio: [
-      'Puedo ayudarte a decidir si esto se guarda privado o se comparte.',
-      'Esto puede quedarse solo para ti. No todo tiene que enviarse.',
-      'Podemos convertir lo que sientes en una señal pequeña.'
-    ],
-    calma: [
-      'Modo avión no es castigo. Es una forma de decir: ahora no puedo.',
-      'Puedo ayudarte a escribir una señal de pausa sin culpa.',
-      'A veces cuidar también es bajar el ruido.'
-    ],
-    admin: [
-      'Zona admin. Aquí el amor se mezcla con logs y sufrimiento técnico.',
-      'Puedo ayudar a revisar qué mejorar sin romper SIGA.',
-      'El código también necesita cariño, pero primero backup.'
-    ]
+    dashboard: 'Puedo ayudarte a pensar qué hacer hoy en SIGA.',
+    recuerdos: 'Puedo ayudarte a escribir un recuerdo bonito y claro.',
+    citas: 'Puedo ayudarte a proponer un plan simple y sin presión.',
+    playlist: 'Puedo ayudarte a escribir una dedicatoria suave.',
+    razones: 'Puedo ayudarte a escribir algo bonito sin exagerarlo.',
+    promesas: 'Puedo ayudarte a volver una promesa más realista.',
+    carta: 'Puedo ayudarte a suavizar una carta antes de guardarla.',
+    tiempo: 'Puedo ayudarte a proponer un momento sin presionar.',
+    eventos: 'Puedo ayudarte a pensar una misión pequeña.',
+    cajita: 'Puedo ayudarte a describir este detalle de forma bonita.',
+    espacio: 'Puedo ayudarte a decidir si esto se guarda o se comparte.',
+    calma: 'Puedo ayudarte a escribir una pausa sin culpa.',
+    admin: 'Zona admin. Aquí también se sufre, pero con estilo.'
   };
 
-  const modos = [
-    { id: 'acompañar', label: 'Acompañar' },
-    { id: 'suavizar', label: 'Suavizar' },
-    { id: 'carta', label: 'Carta' },
-    { id: 'señal', label: 'Señal' },
-    { id: 'decidir', label: 'Decidir' }
-  ];
+  const modos = {
+    libre: 'acompañar',
+    suavizar: 'suavizar',
+    señal: 'señal',
+    decidir: 'decidir',
+    carta: 'carta'
+  };
 
   const ayudasModo = {
-    acompañar: 'Cuéntame qué pasa y te ayudo a ordenarlo con calma.',
-    suavizar: 'Pega el mensaje y lo bajo de intensidad sin quitarle verdad.',
-    carta: 'Dame la idea y la convertimos en carta bonita, sin presión.',
-    señal: 'Lo hacemos pequeño: algo que se pueda compartir sin exigir respuesta.',
-    decidir: 'Pega lo que quieres mandar y vemos si conviene enviar, esperar o guardar.'
+    libre: 'Cuéntame qué pasa y te ayudo a ordenarlo con calma.',
+    suavizar: 'Pega tu mensaje y lo bajo de intensidad sin quitarle verdad.',
+    señal: 'Lo hacemos pequeño: una señal corta, suave y sin presión.',
+    decidir: 'Pega el mensaje y vemos si conviene enviarlo, esperar o guardarlo.',
+    carta: 'Dame la idea y la convertimos en una carta bonita.'
+  };
+
+  const placeholders = {
+    libre: 'Escribe lo que sientes, una idea o algo que no sabes cómo decir...',
+    suavizar: 'Pega el mensaje que quieres decir sin que suene a reclamo...',
+    señal: 'Escribe lo que quieres expresar y lo volvemos una señal pequeña...',
+    decidir: 'Pega el mensaje y vemos si conviene enviarlo, esperar o guardarlo...',
+    carta: 'Escribe la idea de tu carta y la hacemos bonita...'
   };
 
   let abierto = false;
-  let modoActual = 'acompañar';
   let moviendose = false;
   let posicionActual = 'derecha';
+  let modoUI = 'libre';
 
   function elegirRandom(lista) {
     return lista[Math.floor(Math.random() * lista.length)];
@@ -125,13 +81,7 @@
 
   function fraseContextual() {
     const seccion = getSeccionActual();
-    const lista = frasesPorSeccion[seccion];
-
-    if (!lista) {
-      return 'Puedo ayudarte a escribir, decidir o bajar la intensidad.';
-    }
-
-    return elegirRandom(lista);
+    return frasesPorSeccion[seccion] || 'Puedo ayudarte a escribir, decidir o suavizar algo.';
   }
 
   function crearWidget() {
@@ -143,7 +93,7 @@
     wrapper.innerHTML = `
       <div id="sigy-globo" class="sigy-globo"></div>
 
-      <button id="sigy-burbuja" title="Hablar con SIGy">
+      <button id="sigy-burbuja" title="Hablar con SIGy" type="button">
         <div class="sigy-carita feliz" id="sigy-carita">
           <div class="sigy-ojos">
             <span></span>
@@ -158,23 +108,22 @@
         <div class="sigy-panel-header">
           <div>
             <div class="sigy-title">SIGy ✨</div>
-            <div class="sigy-subtitle" id="sigy-subtitle">
-              Puedo ayudarte a escribir, decidir o bajar la intensidad.
+            <div class="sigy-subtitle">
+              Te ayudo a escribir, suavizar o decidir.
             </div>
           </div>
-          <button id="sigy-cerrar">×</button>
+          <button id="sigy-cerrar" type="button">×</button>
         </div>
-
-        <div class="sigy-modos" id="sigy-modos"></div>
 
         <div class="sigy-ayudas">
-          <button type="button" data-accion="suavizar">Sin reclamo</button>
-          <button type="button" data-accion="señal">Señal pequeña</button>
-          <button type="button" data-accion="decidir">¿Enviar?</button>
-          <button type="button" data-accion="carta">Carta</button>
+          <button type="button" data-ui="suavizar">Sin reclamo</button>
+          <button type="button" data-ui="señal">Señal</button>
+          <button type="button" data-ui="decidir">¿Enviar?</button>
+          <button type="button" data-ui="carta">Carta</button>
+          <button type="button" data-ui="libre" class="active">Libre</button>
         </div>
 
-        <textarea id="sigy-input" placeholder="Pega aquí lo que quieres decir, una idea, una carta o algo que no sabes si enviar..."></textarea>
+        <textarea id="sigy-input" placeholder="${placeholders.libre}"></textarea>
 
         <div class="sigy-actions">
           <button id="sigy-enviar" type="button">Enviar</button>
@@ -189,20 +138,6 @@
 
     document.body.appendChild(wrapper);
 
-    const modosBox = document.getElementById('sigy-modos');
-
-    modos.forEach(m => {
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.textContent = m.label;
-      btn.dataset.modo = m.id;
-
-      if (m.id === modoActual) btn.classList.add('active');
-
-      btn.addEventListener('click', () => cambiarModo(m.id));
-      modosBox.appendChild(btn);
-    });
-
     document.getElementById('sigy-burbuja').addEventListener('click', toggleSigy);
     document.getElementById('sigy-cerrar').addEventListener('click', cerrarSigy);
     document.getElementById('sigy-enviar').addEventListener('click', hablarConSigy);
@@ -210,51 +145,42 @@
 
     document.querySelectorAll('.sigy-ayudas button').forEach(btn => {
       btn.addEventListener('click', () => {
-        cambiarModo(btn.dataset.accion);
+        cambiarModoUI(btn.dataset.ui);
         abrirSigy();
       });
     });
 
-    mostrarGlobo(elegirRandom(saludosEntrada), 5200, 'feliz');
+    mostrarGlobo(elegirRandom(saludosEntrada), 6500, 'feliz');
 
+    // Mensajitos más lentos
     setInterval(() => {
       if (!abierto) {
-        mostrarGlobo(elegirRandom(mensajitosIdle), 4200, elegirRandom(['feliz', 'pensando']));
+        mostrarGlobo(elegirRandom(mensajitosIdle), 6000, elegirRandom(['feliz', 'pensando']));
       }
-    }, 28000);
+    }, 45000);
 
+    // Movimiento suave menos frecuente
     setInterval(() => {
       if (!abierto) moverSigySuave();
-    }, 18000);
-
-    setInterval(actualizarFrasePorSeccion, 2500);
+    }, 30000);
   }
 
-  function cambiarModo(modo) {
-    modoActual = modo;
+  function cambiarModoUI(nuevoModo) {
+    modoUI = nuevoModo;
 
-    document.querySelectorAll('.sigy-modos button').forEach(b => {
-      b.classList.toggle('active', b.dataset.modo === modo);
+    document.querySelectorAll('.sigy-ayudas button').forEach(b => {
+      b.classList.toggle('active', b.dataset.ui === nuevoModo);
     });
 
+    const input = document.getElementById('sigy-input');
     const respuesta = document.getElementById('sigy-respuesta');
+
+    if (input) input.placeholder = placeholders[nuevoModo] || placeholders.libre;
 
     if (respuesta) {
       respuesta.dataset.tocado = '';
-      respuesta.innerHTML = `<span>${ayudasModo[modo] || fraseContextual()}</span>`;
+      respuesta.innerHTML = `<span>${ayudasModo[nuevoModo] || ayudasModo.libre}</span>`;
     }
-
-    const input = document.getElementById('sigy-input');
-
-    const placeholders = {
-      acompañar: 'Cuéntame qué pasa. No hace falta explicarlo perfecto...',
-      suavizar: 'Pega el mensaje que quieres decir sin que suene a reclamo...',
-      carta: 'Escribe la idea de tu carta y la hacemos bonita...',
-      señal: 'Escribe lo que quieres expresar y lo volvemos una señal pequeña...',
-      decidir: 'Pega el mensaje y vemos si conviene enviarlo, esperar o guardarlo...'
-    };
-
-    if (input) input.placeholder = placeholders[modo] || placeholders.acompañar;
   }
 
   function abrirSigy() {
@@ -268,7 +194,6 @@
 
     centrarSiEstaMuyPegado();
     setEstadoCarita('feliz');
-    actualizarFrasePorSeccion();
   }
 
   function toggleSigy() {
@@ -285,18 +210,7 @@
     setEstadoCarita('');
   }
 
-  function actualizarFrasePorSeccion() {
-    const subtitle = document.getElementById('sigy-subtitle');
-    const respuesta = document.getElementById('sigy-respuesta');
-
-    if (subtitle) subtitle.textContent = fraseContextual();
-
-    if (respuesta && !respuesta.dataset.tocado) {
-      respuesta.innerHTML = `<span>${fraseContextual()}</span>`;
-    }
-  }
-
-  function mostrarGlobo(texto, duracion = 4000, cara = 'feliz') {
+  function mostrarGlobo(texto, duracion = 5000, cara = 'feliz') {
     const globo = document.getElementById('sigy-globo');
     if (!globo || abierto) return;
 
@@ -367,10 +281,11 @@
     const respuestaDiv = document.getElementById('sigy-respuesta');
 
     const mensaje = input.value.trim();
+    const modoBackend = modos[modoUI] || 'acompañar';
 
     if (!mensaje) {
       respuestaDiv.dataset.tocado = '1';
-      respuestaDiv.innerHTML = '<span>Pega una frase, una carta o una idea. Yo te ayudo a bajarla, ordenarla o decidir qué hacer.</span>';
+      respuestaDiv.innerHTML = '<span>Pega una frase, una carta o una idea. Yo te ayudo a ordenarla.</span>';
       setEstadoCarita('pensando');
       return;
     }
@@ -385,7 +300,7 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           mensaje,
-          modo: modoActual,
+          modo: modoBackend,
           seccion: getSeccionActual()
         })
       });
@@ -401,7 +316,7 @@
 
     } catch (error) {
       console.error('Error hablando con SIGy:', error);
-      respuestaDiv.innerHTML = '<span>Me trabé un poquito 😔. Puede ser la API key, el límite gratis o un error del servidor.</span>';
+      respuestaDiv.innerHTML = '<span>Me trabé un poquito 😔. Intenta otra vez.</span>';
       setEstadoCarita('triste');
     }
   }
