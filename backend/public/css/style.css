@@ -3774,3 +3774,26 @@ Si entras y lees esto... pues si le meti mucho amor e insomnio aqui*/
   border-color: rgba(122, 207, 170, 0.22);
   background: rgba(122, 207, 170, 0.055);
 }
+.espacio-history-section {
+  margin-bottom: 22px;
+}
+
+.espacio-history-section:last-child {
+  margin-bottom: 0;
+}
+
+.espacio-history-section h3 {
+  margin: 0 0 4px;
+  font-size: 1.25rem;
+  color: var(--text-primary);
+}
+
+.espacio-history-note {
+  margin: 0 0 14px;
+  color: var(--text-muted);
+  font-size: 0.92rem;
+}
+
+.espacio-history-item small {
+  opacity: 0.75;
+}
