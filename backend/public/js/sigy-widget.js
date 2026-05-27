@@ -1,7 +1,6 @@
 /* ======================================================
-   SIGy Widget ✨
-   La mini presencia emocional de SIGA.
-   Ya no solo dice frases bonitas: ahora intenta ayudar.
+   SIGy Widget v3 ✨
+   Ahora se mueve, saluda, cambia carita y lanza mensajitos.
    Programar esto fue sufrir, pero con amor.
    ====================================================== */
 
@@ -9,17 +8,26 @@
   const saludosEntrada = [
     'Qué bonito verte por aquí ✨',
     'Volviste. SIGA se siente un poquito más vivo.',
-    'Hola. Podemos ir despacio hoy.',
-    'Me alegra verte. ¿Quieres ordenar algo que sientes?',
-    'Aquí estoy. No para presionar, sino para acompañar.',
-    'Qué bueno que entraste. Podemos hacer algo pequeño.',
-    'Hoy no hace falta resolver todo. Podemos empezar por una idea.'
+    'Hola. Podemos ordenar algo con calma.',
+    'Me alegra verte. ¿Quieres escribir algo más suave?',
+    'Aquí estoy. No para presionar, sino para ayudarte.',
+    'Hoy no hace falta resolver todo. Podemos empezar por algo pequeño.'
+  ];
+
+  const mensajitosIdle = [
+    'Puedo ayudarte a escribir sin que suene a reclamo.',
+    'Si algo pesa, podemos bajarlo a palabras más suaves.',
+    'No todo tiene que enviarse. A veces primero se guarda.',
+    'Puedo convertir una idea intensa en una señal pequeña.',
+    'Si dudas, podemos decidir: enviar, esperar o guardar.',
+    'Una carta también puede respirar antes de compartirse.',
+    'Podemos cuidar el vínculo sin perseguirlo.'
   ];
 
   const frasesPorSeccion = {
     dashboard: [
       'Puedo ayudarte a pensar qué hacer hoy en SIGA.',
-      'Podemos revisar una señal, una carta o solo respirar un poco.',
+      'Podemos revisar una señal, una carta o solo ordenar una idea.',
       'Si hoy pesa algo, podemos convertirlo en algo más claro.'
     ],
     recuerdos: [
@@ -30,7 +38,7 @@
     citas: [
       'Puedo ayudarte a pensar un plan simple, bonito y sin presión.',
       'Podemos crear una cita que no se sienta pesada.',
-      'Si hay clima bonito, luego podré sugerir una hora especial.'
+      'Luego puedo sugerir planes según clima y hora.'
     ],
     playlist: [
       'Puedo ayudarte a elegir una canción según el momento.',
@@ -59,7 +67,7 @@
     ],
     eventos: [
       'Puedo sugerir una misión pequeña, no una tarea pesada.',
-      'Una misión también puede ser algo simple: una señal, una canción, una pausa.',
+      'Una misión también puede ser una señal, una canción o una pausa.',
       'Podemos hacer una misión que cuide el vínculo sin forzarlo.'
     ],
     cajita: [
@@ -84,25 +92,6 @@
     ]
   };
 
-  const accionesRapidas = [
-    {
-      texto: 'Ayúdame a decir esto sin reclamo',
-      modo: 'suavizar'
-    },
-    {
-      texto: 'Convierte esto en una señal pequeña',
-      modo: 'señal'
-    },
-    {
-      texto: '¿Conviene enviar esto o guardarlo?',
-      modo: 'decidir'
-    },
-    {
-      texto: 'Hazlo como carta bonita',
-      modo: 'carta'
-    }
-  ];
-
   const modos = [
     { id: 'acompañar', label: 'Acompañar' },
     { id: 'suavizar', label: 'Suavizar' },
@@ -111,9 +100,18 @@
     { id: 'decidir', label: 'Decidir' }
   ];
 
+  const ayudasModo = {
+    acompañar: 'Cuéntame qué pasa y te ayudo a ordenarlo con calma.',
+    suavizar: 'Pega el mensaje y lo bajo de intensidad sin quitarle verdad.',
+    carta: 'Dame la idea y la convertimos en carta bonita, sin presión.',
+    señal: 'Lo hacemos pequeño: algo que se pueda compartir sin exigir respuesta.',
+    decidir: 'Pega lo que quieres mandar y vemos si conviene enviar, esperar o guardar.'
+  };
+
   let abierto = false;
   let modoActual = 'acompañar';
-  let ultimoSaludoMostrado = false;
+  let moviendose = false;
+  let posicionActual = 'derecha';
 
   function elegirRandom(lista) {
     return lista[Math.floor(Math.random() * lista.length)];
@@ -130,7 +128,7 @@
     const lista = frasesPorSeccion[seccion];
 
     if (!lista) {
-      return 'Puedo ayudarte a ordenar algo, escribirlo mejor o decidir si conviene enviarlo.';
+      return 'Puedo ayudarte a escribir, decidir o bajar la intensidad.';
     }
 
     return elegirRandom(lista);
@@ -143,9 +141,7 @@
     wrapper.id = 'sigy-widget';
 
     wrapper.innerHTML = `
-      <div id="sigy-globo" class="sigy-globo">
-        ${elegirRandom(saludosEntrada)}
-      </div>
+      <div id="sigy-globo" class="sigy-globo"></div>
 
       <button id="sigy-burbuja" title="Hablar con SIGy">
         <div class="sigy-carita feliz" id="sigy-carita">
@@ -172,17 +168,17 @@
         <div class="sigy-modos" id="sigy-modos"></div>
 
         <div class="sigy-ayudas">
-          <button data-accion="0">Sin reclamo</button>
-          <button data-accion="1">Señal pequeña</button>
-          <button data-accion="2">¿Enviar?</button>
-          <button data-accion="3">Carta</button>
+          <button type="button" data-accion="suavizar">Sin reclamo</button>
+          <button type="button" data-accion="señal">Señal pequeña</button>
+          <button type="button" data-accion="decidir">¿Enviar?</button>
+          <button type="button" data-accion="carta">Carta</button>
         </div>
 
         <textarea id="sigy-input" placeholder="Pega aquí lo que quieres decir, una idea, una carta o algo que no sabes si enviar..."></textarea>
 
         <div class="sigy-actions">
-          <button id="sigy-enviar">Enviar</button>
-          <button id="sigy-limpiar">Limpiar</button>
+          <button id="sigy-enviar" type="button">Enviar</button>
+          <button id="sigy-limpiar" type="button">Limpiar</button>
         </div>
 
         <div id="sigy-respuesta">
@@ -197,17 +193,13 @@
 
     modos.forEach(m => {
       const btn = document.createElement('button');
+      btn.type = 'button';
       btn.textContent = m.label;
       btn.dataset.modo = m.id;
 
-      if (m.id === modoActual) {
-        btn.classList.add('active');
-      }
+      if (m.id === modoActual) btn.classList.add('active');
 
-      btn.addEventListener('click', () => {
-        cambiarModo(m.id);
-      });
-
+      btn.addEventListener('click', () => cambiarModo(m.id));
       modosBox.appendChild(btn);
     });
 
@@ -218,24 +210,24 @@
 
     document.querySelectorAll('.sigy-ayudas button').forEach(btn => {
       btn.addEventListener('click', () => {
-        const accion = accionesRapidas[Number(btn.dataset.accion)];
-        if (!accion) return;
-
-        cambiarModo(accion.modo);
-
-        const input = document.getElementById('sigy-input');
-
-        if (!input.value.trim()) {
-          input.placeholder = accion.texto + ': pega tu texto aquí...';
-        }
-
+        cambiarModo(btn.dataset.accion);
         abrirSigy();
       });
     });
 
-    mostrarSaludoEntrada();
+    mostrarGlobo(elegirRandom(saludosEntrada), 5200, 'feliz');
 
-    setInterval(actualizarFrasePorSeccion, 2200);
+    setInterval(() => {
+      if (!abierto) {
+        mostrarGlobo(elegirRandom(mensajitosIdle), 4200, elegirRandom(['feliz', 'pensando']));
+      }
+    }, 28000);
+
+    setInterval(() => {
+      if (!abierto) moverSigySuave();
+    }, 18000);
+
+    setInterval(actualizarFrasePorSeccion, 2500);
   }
 
   function cambiarModo(modo) {
@@ -247,69 +239,48 @@
 
     const respuesta = document.getElementById('sigy-respuesta');
 
-    const ayudasModo = {
-      acompañar: 'Cuéntame qué pasa y te ayudo a ordenarlo con calma.',
-      suavizar: 'Pega el mensaje y lo bajo de intensidad sin quitarle verdad.',
-      carta: 'Dame la idea y la convertimos en carta bonita, sin presión.',
-      señal: 'Lo hacemos pequeño: algo que se pueda compartir sin exigir respuesta.',
-      decidir: 'Pega lo que quieres mandar y vemos si conviene enviar, esperar o guardar.'
-    };
-
     if (respuesta) {
       respuesta.dataset.tocado = '';
       respuesta.innerHTML = `<span>${ayudasModo[modo] || fraseContextual()}</span>`;
     }
-  }
 
-  function mostrarSaludoEntrada() {
-    if (ultimoSaludoMostrado) return;
-    ultimoSaludoMostrado = true;
+    const input = document.getElementById('sigy-input');
 
-    const globo = document.getElementById('sigy-globo');
-    const carita = document.getElementById('sigy-carita');
+    const placeholders = {
+      acompañar: 'Cuéntame qué pasa. No hace falta explicarlo perfecto...',
+      suavizar: 'Pega el mensaje que quieres decir sin que suene a reclamo...',
+      carta: 'Escribe la idea de tu carta y la hacemos bonita...',
+      señal: 'Escribe lo que quieres expresar y lo volvemos una señal pequeña...',
+      decidir: 'Pega el mensaje y vemos si conviene enviarlo, esperar o guardarlo...'
+    };
 
-    if (!globo || !carita) return;
-
-    globo.textContent = elegirRandom(saludosEntrada);
-    globo.classList.add('visible');
-    setEstadoCarita('feliz');
-
-    setTimeout(() => {
-      globo.classList.remove('visible');
-      setEstadoCarita('');
-    }, 5200);
+    if (input) input.placeholder = placeholders[modo] || placeholders.acompañar;
   }
 
   function abrirSigy() {
     abierto = true;
+
     const panel = document.getElementById('sigy-panel');
+    const globo = document.getElementById('sigy-globo');
 
-    if (panel) {
-      panel.classList.add('visible');
-    }
+    if (panel) panel.classList.add('visible');
+    if (globo) globo.classList.remove('visible');
 
+    centrarSiEstaMuyPegado();
     setEstadoCarita('feliz');
     actualizarFrasePorSeccion();
   }
 
   function toggleSigy() {
     abierto = !abierto;
-
-    if (abierto) {
-      abrirSigy();
-    } else {
-      cerrarSigy();
-    }
+    abierto ? abrirSigy() : cerrarSigy();
   }
 
   function cerrarSigy() {
     abierto = false;
 
     const panel = document.getElementById('sigy-panel');
-
-    if (panel) {
-      panel.classList.remove('visible');
-    }
+    if (panel) panel.classList.remove('visible');
 
     setEstadoCarita('');
   }
@@ -318,23 +289,76 @@
     const subtitle = document.getElementById('sigy-subtitle');
     const respuesta = document.getElementById('sigy-respuesta');
 
-    if (subtitle) {
-      subtitle.textContent = fraseContextual();
-    }
+    if (subtitle) subtitle.textContent = fraseContextual();
 
     if (respuesta && !respuesta.dataset.tocado) {
       respuesta.innerHTML = `<span>${fraseContextual()}</span>`;
     }
   }
 
+  function mostrarGlobo(texto, duracion = 4000, cara = 'feliz') {
+    const globo = document.getElementById('sigy-globo');
+    if (!globo || abierto) return;
+
+    globo.textContent = texto;
+    globo.classList.add('visible');
+    setEstadoCarita(cara);
+
+    setTimeout(() => {
+      globo.classList.remove('visible');
+      setEstadoCarita('');
+    }, duracion);
+  }
+
   function setEstadoCarita(estado) {
     const carita = document.getElementById('sigy-carita');
     if (!carita) return;
 
-    carita.classList.remove('pensando', 'feliz', 'triste', 'dormido');
+    carita.classList.remove('pensando', 'feliz', 'triste', 'dormido', 'sorpresa');
 
-    if (estado) {
-      carita.classList.add(estado);
+    if (estado) carita.classList.add(estado);
+  }
+
+  function moverSigySuave() {
+    const widget = document.getElementById('sigy-widget');
+    if (!widget || moviendose) return;
+
+    moviendose = true;
+
+    const posiciones = [
+      { nombre: 'derecha', right: '22px', left: 'auto', bottom: '22px' },
+      { nombre: 'centro', right: 'calc(50vw - 38px)', left: 'auto', bottom: '22px' },
+      { nombre: 'izquierda', right: 'auto', left: '22px', bottom: '22px' }
+    ];
+
+    let nueva = elegirRandom(posiciones);
+
+    if (nueva.nombre === posicionActual) {
+      nueva = posiciones.find(p => p.nombre !== posicionActual) || nueva;
+    }
+
+    posicionActual = nueva.nombre;
+
+    widget.style.right = nueva.right;
+    widget.style.left = nueva.left;
+    widget.style.bottom = nueva.bottom;
+
+    setEstadoCarita('feliz');
+
+    setTimeout(() => {
+      moviendose = false;
+      setEstadoCarita('');
+    }, 1000);
+  }
+
+  function centrarSiEstaMuyPegado() {
+    const widget = document.getElementById('sigy-widget');
+    if (!widget) return;
+
+    if (posicionActual === 'izquierda') {
+      widget.style.left = 'auto';
+      widget.style.right = '22px';
+      posicionActual = 'derecha';
     }
   }
 
@@ -358,9 +382,7 @@
     try {
       const res = await fetch('/api/sigy', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           mensaje,
           modo: modoActual,
@@ -393,9 +415,7 @@
     respuestaDiv.innerHTML = `<span>${fraseContextual()}</span>`;
     setEstadoCarita('feliz');
 
-    setTimeout(() => {
-      setEstadoCarita('');
-    }, 1400);
+    setTimeout(() => setEstadoCarita(''), 1400);
   }
 
   function escapeHtml(texto) {
