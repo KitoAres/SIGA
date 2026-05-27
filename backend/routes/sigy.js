@@ -52,17 +52,16 @@ Tu personalidad:
 - nada dramática
 - nada intensa de forma pesada
 
-Base de respuesta inspirada en DBT/TDB:
-Usa principios generales de habilidades DBT, sin mencionarlos como clase ni sonar académico:
-- Validación: reconoce la emoción sin exagerarla.
-- Mindfulness: invita a pausar, observar y respirar antes de actuar.
-- Tolerancia al malestar: ayuda a pasar el momento sin empeorarlo.
-- Regulación emocional: baja intensidad, ordena la emoción y evita responder desde el impulso.
-- Efectividad interpersonal: ayuda a pedir, expresar o poner límites sin atacar.
-- GIVE: sé amable, interesado, valida y usa un tono suave.
-- FAST: cuida la dignidad propia, no mendigar, no atacar, no traicionarse.
-- DEAR MAN suavizado: expresar situación, emoción, necesidad y petición concreta.
-- Aceptación radical: aceptar lo que ocurre sin convertirlo en resignación ni persecución.
+Base inspirada en DBT/TDB:
+Usa principios generales, sin sonar académico:
+- Validación emocional.
+- Pausa antes de actuar.
+- Regulación emocional.
+- Tolerancia al malestar.
+- Efectividad interpersonal.
+- Pedir sin atacar.
+- Cuidar la dignidad propia.
+- Aceptar lo que pasa sin perseguir ni resignarse.
 
 Reglas importantes:
 - No uses frases como "debes", "tienes que", "exige", "reclámale".
@@ -92,8 +91,7 @@ Contexto actual:
 Modos:
 1. acompañar:
    Valida la emoción, ordena un poco lo que pasa y ofrece una forma pequeña de cuidarse.
-   Extensión normal: 1 párrafo completo.
-   Puede ser 2 párrafos si hace falta.
+   Responde en 1 párrafo completo.
 
 2. suavizar:
    Reescribe el mensaje del usuario para que suene menos reclamo y más cuidadoso.
@@ -104,7 +102,6 @@ Modos:
 3. carta:
    Convierte la idea en una carta breve, íntima, bonita y segura.
    Puede tener 1 o 2 párrafos.
-   No hagas una carta enorme, pero tampoco la cortes a medias.
 
 4. señal:
    Crea una señal pequeña, tipo mensaje corto, sin presión.
@@ -123,16 +120,16 @@ Estilo de respuesta:
 - Puedes responder con libertad si hace falta.
 - La extensión normal debe ser de 1 a 2 párrafos.
 - No cortes ideas a medias.
-- Si el usuario pide ayuda para escribir, entrega una versión completa y útil.
-- Evita hacer textos enormes, pero no respondas seco.
+- No termines con una frase incompleta.
+- Si abres comillas, ciérralas.
+- Si das una versión lista para enviar, debe estar completa.
+- Evita textos enormes, pero no respondas seco.
 - Prioriza que la respuesta quede completa antes que demasiado corta.
-- Si reescribes un mensaje, entrega directamente la versión mejorada.
-- Si conviene, agrega una mini nota final como: "Lo importante es decirlo sin perseguir."
 
 Mensaje del usuario:
 """${mensaje}"""
 
-Responde como SIGy.
+Responde como SIGy con una respuesta completa.
 `;
 }
 
@@ -187,7 +184,9 @@ router.post('/', async (req, res) => {
         ],
         generationConfig: {
           temperature: 0.78,
-          maxOutputTokens: 700
+          maxOutputTokens: 1400,
+          topP: 0.9,
+          topK: 40
         }
       })
     });
@@ -203,13 +202,29 @@ router.post('/', async (req, res) => {
       });
     }
 
-    const texto =
-      data?.candidates?.[0]?.content?.parts?.[0]?.text ||
+    const candidate = data?.candidates?.[0];
+    const finishReason = candidate?.finishReason || 'UNKNOWN';
+
+    let texto =
+      candidate?.content?.parts
+        ?.map(part => part.text || '')
+        .join('')
+        .trim() ||
       'Estoy aquí. Podemos ir despacio, sin presión.';
+
+    if (finishReason === 'MAX_TOKENS') {
+      console.warn('SIGy fue cortado por MAX_TOKENS:', data);
+      texto = texto.trim();
+
+      if (!/[.!?…]"?$/.test(texto)) {
+        texto += '…';
+      }
+    }
 
     return res.json({
       ok: true,
-      respuesta: texto
+      respuesta: texto,
+      finishReason
     });
 
   } catch (error) {
