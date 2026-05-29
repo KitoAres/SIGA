@@ -3,11 +3,51 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 
 const app = express();
 
-app.use(cors());
-app.use(express.json());
+app.set('trust proxy', 1);
+
+// Seguridad básica HTTP. CSP apagado porque tu frontend actual usa estilos/scripts inline.
+app.use(helmet({
+  contentSecurityPolicy: false
+}));
+
+// Límite general para evitar abuso simple de la API.
+app.use(rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 300,
+  standardHeaders: true,
+  legacyHeaders: false
+}));
+
+const allowedOrigins = [
+  'https://siga-plai.vercel.app',
+  'http://localhost:3000',
+  'http://localhost:5173'
+];
+
+app.use(cors({
+  origin: function(origin, callback) {
+    // Permite requests sin origin: navegador local, Postman, health checks, etc.
+    if (!origin) return callback(null, true);
+
+    if (process.env.NODE_ENV !== 'production') {
+      return callback(null, true);
+    }
+
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    return callback(new Error('Origen no permitido por CORS'));
+  },
+  credentials: true
+}));
+
+app.use(express.json({ limit: '1mb' }));
 
 const publicPath = path.join(__dirname, 'public');
 app.use(express.static(publicPath));
