@@ -1,12 +1,59 @@
 const express = require('express');
 const router = express.Router();
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const pool = require('../config/db');
+const { requireAuth } = require('../middleware/auth');
 
 const {
   enviarEmail,
   htmlBase,
   escapeHtml
 } = require('../utils/email');
+
+function crearToken(usuario) {
+  if (!process.env.JWT_SECRET) {
+    throw new Error('Falta JWT_SECRET en variables de entorno');
+  }
+
+  return jwt.sign(
+    {
+      id: usuario.id,
+      rol: usuario.rol
+    },
+    process.env.JWT_SECRET,
+    {
+      expiresIn: '7d'
+    }
+  );
+}
+
+function pareceHashBcrypt(valor) {
+  return typeof valor === 'string' && valor.startsWith('$2');
+}
+
+async function validarPassword(contrasenaIngresada, contrasenaGuardada) {
+  if (!contrasenaGuardada) return false;
+
+  // Si ya está hasheada, compara con bcrypt.
+  if (pareceHashBcrypt(contrasenaGuardada)) {
+    return bcrypt.compare(contrasenaIngresada, contrasenaGuardada);
+  }
+
+  // Compatibilidad temporal: si todavía está en texto plano, permite entrar.
+  // Luego el login la actualiza automáticamente a hash.
+  return contrasenaIngresada === contrasenaGuardada;
+}
+
+async function actualizarPasswordPlanoAHashSiHaceFalta(usuarioId, contrasenaIngresada, contrasenaGuardada) {
+  if (pareceHashBcrypt(contrasenaGuardada)) return;
+
+  const hash = await bcrypt.hash(contrasenaIngresada, 10);
+  await pool.query(
+    'UPDATE usuarios SET contrasena=$1 WHERE id=$2',
+    [hash, usuarioId]
+  );
+}
 
 async function registrarAcceso(req, usuario) {
   try {
@@ -68,6 +115,9 @@ async function registrarDebugLogin(usuario) {
 
 async function notificarAccesoElla(usuario) {
   try {
+    // Para producto público esto debería desactivarse o cambiarse por consentimiento explícito.
+    if (process.env.NOTIFICAR_ACCESO_ELLA !== 'true') return;
+
     const rol = String(usuario.rol || '').toLowerCase().trim();
     const usuarioLogin = String(usuario.usuario || '').toLowerCase().trim();
     const nombre = String(usuario.nombre || '').toLowerCase().trim();
@@ -134,7 +184,6 @@ async function notificarAccesoElla(usuario) {
     });
 
     console.log('DEBUG EMAIL ACCESO RESULTADO:', resultadoEmail);
-
   } catch (err) {
     console.error('ERROR notificarAccesoElla:', err);
   }
@@ -155,13 +204,14 @@ router.post('/login', async (req, res) => {
       `SELECT
           id,
           usuario,
+          contrasena,
           nombre,
           rol,
           COALESCE(display_name,nombre,usuario) AS display_name,
           COALESCE(color_perfil,'#22d3ee') AS color_perfil
        FROM usuarios
-       WHERE usuario=$1 AND contrasena=$2`,
-      [usuario, contrasena]
+       WHERE usuario=$1`,
+      [usuario]
     );
 
     if (!result.rows.length) {
@@ -172,17 +222,30 @@ router.post('/login', async (req, res) => {
     }
 
     const u = result.rows[0];
+    const passwordOk = await validarPassword(contrasena, u.contrasena);
+
+    if (!passwordOk) {
+      return res.status(401).json({
+        ok: false,
+        error: 'Credenciales incorrectas'
+      });
+    }
+
+    await actualizarPasswordPlanoAHashSiHaceFalta(u.id, contrasena, u.contrasena);
+
+    const token = crearToken(u);
 
     await registrarAcceso(req, u);
 
     // Debug temporal: confirma que este auth.js se está ejecutando.
     await registrarDebugLogin(u);
 
-    // Email si entra Francin / rol ella.
+    // Desactivado por defecto. Para activarlo: NOTIFICAR_ACCESO_ELLA=true.
     await notificarAccesoElla(u);
 
     res.json({
       ok: true,
+      token,
       usuario_id: u.id,
       id: u.id,
       usuario: u.usuario,
@@ -191,7 +254,6 @@ router.post('/login', async (req, res) => {
       color_perfil: u.color_perfil,
       rol: u.rol
     });
-
   } catch (err) {
     console.error('ERROR LOGIN:', err);
     res.status(500).json({
@@ -201,8 +263,19 @@ router.post('/login', async (req, res) => {
   }
 });
 
-router.get('/perfil/:id', async (req, res) => {
+router.get('/perfil/:id', requireAuth, async (req, res) => {
   try {
+    const solicitadoId = Number(req.params.id);
+    const esPropioPerfil = solicitadoId === Number(req.user.id);
+    const esAdmin = req.user.rol === 'admin';
+
+    if (!esPropioPerfil && !esAdmin) {
+      return res.status(403).json({
+        ok: false,
+        error: 'No puedes ver el perfil de otro usuario.'
+      });
+    }
+
     const result = await pool.query(
       `SELECT
           id,
@@ -213,7 +286,7 @@ router.get('/perfil/:id', async (req, res) => {
           COALESCE(color_perfil,'#22d3ee') AS color_perfil
        FROM usuarios
        WHERE id=$1`,
-      [req.params.id]
+      [solicitadoId]
     );
 
     if (!result.rows.length) {
@@ -227,7 +300,6 @@ router.get('/perfil/:id', async (req, res) => {
       ok: true,
       usuario: result.rows[0]
     });
-
   } catch (err) {
     console.error('ERROR PERFIL:', err);
     res.status(500).json({
@@ -237,7 +309,7 @@ router.get('/perfil/:id', async (req, res) => {
   }
 });
 
-router.put('/perfil/:id', async (req, res) => {
+router.put('/perfil/:id', requireAuth, async (req, res) => {
   const {
     usuario,
     nombre,
@@ -246,6 +318,17 @@ router.put('/perfil/:id', async (req, res) => {
     contrasena_actual,
     nueva_contrasena
   } = req.body;
+
+  const solicitadoId = Number(req.params.id);
+  const esPropioPerfil = solicitadoId === Number(req.user.id);
+  const esAdmin = req.user.rol === 'admin';
+
+  if (!esPropioPerfil && !esAdmin) {
+    return res.status(403).json({
+      ok: false,
+      error: 'No puedes editar el perfil de otro usuario.'
+    });
+  }
 
   if (!usuario || !usuario.trim()) {
     return res.status(400).json({
@@ -264,7 +347,7 @@ router.put('/perfil/:id', async (req, res) => {
   try {
     const actualResult = await pool.query(
       'SELECT id, contrasena FROM usuarios WHERE id=$1',
-      [req.params.id]
+      [solicitadoId]
     );
 
     if (!actualResult.rows.length) {
@@ -284,7 +367,9 @@ router.put('/perfil/:id', async (req, res) => {
         });
       }
 
-      if (contrasena_actual !== actual.contrasena) {
+      const passwordActualOk = await validarPassword(contrasena_actual, actual.contrasena);
+
+      if (!passwordActualOk) {
         return res.status(401).json({
           ok: false,
           error: 'La contraseña actual no es correcta'
@@ -294,7 +379,7 @@ router.put('/perfil/:id', async (req, res) => {
 
     const duplicado = await pool.query(
       'SELECT id FROM usuarios WHERE usuario=$1 AND id<>$2',
-      [usuario.trim(), req.params.id]
+      [usuario.trim(), solicitadoId]
     );
 
     if (duplicado.rows.length) {
@@ -305,6 +390,8 @@ router.put('/perfil/:id', async (req, res) => {
     }
 
     if (nueva_contrasena && nueva_contrasena.trim() !== '') {
+      const hashNueva = await bcrypt.hash(nueva_contrasena.trim(), 10);
+
       await pool.query(
         `UPDATE usuarios
          SET usuario=$1,nombre=$2,display_name=$3,color_perfil=$4,contrasena=$5
@@ -314,8 +401,8 @@ router.put('/perfil/:id', async (req, res) => {
           nombre.trim(),
           (display_name || nombre || usuario).trim(),
           color_perfil || '#22d3ee',
-          nueva_contrasena.trim(),
-          req.params.id
+          hashNueva,
+          solicitadoId
         ]
       );
     } else {
@@ -328,7 +415,7 @@ router.put('/perfil/:id', async (req, res) => {
           nombre.trim(),
           (display_name || nombre || usuario).trim(),
           color_perfil || '#22d3ee',
-          req.params.id
+          solicitadoId
         ]
       );
     }
@@ -343,7 +430,7 @@ router.put('/perfil/:id', async (req, res) => {
           COALESCE(color_perfil,'#22d3ee') AS color_perfil
        FROM usuarios
        WHERE id=$1`,
-      [req.params.id]
+      [solicitadoId]
     );
 
     res.json({
@@ -351,7 +438,6 @@ router.put('/perfil/:id', async (req, res) => {
       message: 'Perfil actualizado correctamente',
       usuario: finalResult.rows[0]
     });
-
   } catch (err) {
     console.error('ERROR ACTUALIZAR PERFIL:', err);
     res.status(500).json({
