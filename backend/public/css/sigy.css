@@ -1,0 +1,596 @@
+/* ======================================================
+   SIGy CSS v12 ✨
+   Sprite real limpio.
+   Sin bloque morado viejo detrás.
+   Respuesta sin cortarse.
+   Programar esto fue sufrir, pero con amor.
+   ====================================================== */
+
+#sigy-widget {
+  position: fixed;
+  left: auto;
+  top: auto;
+  right: 22px;
+  bottom: 22px;
+  z-index: 99999;
+  font-family: inherit;
+
+  width: 96px;
+  height: 116px;
+
+  will-change: left, top, transform;
+  pointer-events: auto;
+}
+
+/* ======================================================
+   GLOBO DE MENSAJITOS
+   ====================================================== */
+
+.sigy-globo {
+  position: absolute;
+  right: 4px;
+  bottom: 120px;
+
+  width: 270px;
+  max-width: calc(100vw - 28px);
+
+  padding: 12px 14px;
+  border-radius: 18px 18px 4px 18px;
+
+  background: rgba(42, 31, 60, 0.97);
+  color: rgba(255, 255, 255, 0.94);
+
+  font-size: 0.82rem;
+  line-height: 1.38;
+
+  box-shadow: 0 16px 45px rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+
+  opacity: 0;
+  transform: translateY(10px) scale(0.96);
+  pointer-events: none;
+  transition: 0.25s ease;
+
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+
+.sigy-globo.visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+/* ======================================================
+   BOTÓN / BURBUJA
+   Aquí estaba el bloque morado viejo.
+   Ahora queda transparente.
+   ====================================================== */
+
+#sigy-burbuja {
+  position: relative;
+
+  width: 96px !important;
+  height: 116px !important;
+
+  border: none !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+
+  cursor: pointer !important;
+
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  padding: 0 !important;
+  margin: 0 !important;
+
+  overflow: visible !important;
+  transition: transform 0.25s ease !important;
+}
+
+#sigy-burbuja:hover {
+  transform: translateY(-4px) scale(1.03) !important;
+  box-shadow: none !important;
+}
+
+.sigy-caminando #sigy-burbuja {
+  animation: sigyCaminataSuave 0.55s ease-in-out infinite !important;
+}
+
+/* ======================================================
+   CORAZONES DECORATIVOS
+   ====================================================== */
+
+.sigy-corazon {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+  font-size: 1rem;
+}
+
+.sigy-corazon-1 {
+  top: -10px;
+  left: 4px;
+  animation: sigyMiniHeart 4.8s ease-in-out infinite;
+}
+
+.sigy-corazon-2 {
+  top: -8px;
+  right: 6px;
+  animation: sigyMiniHeart 5.6s ease-in-out infinite 1.2s;
+}
+
+.sigy-heart-pop {
+  position: absolute;
+  bottom: 80px;
+  font-size: 1rem;
+  pointer-events: none;
+  animation: sigyHeartPop 1.8s ease-out forwards;
+  --sigy-heart-x: 0px;
+}
+
+/* ======================================================
+   SPRITE REAL DE SIGy
+   ====================================================== */
+
+.sigy-carita,
+.sigy-sprite-box {
+  width: 112px !important;
+  height: 112px !important;
+
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+
+  overflow: visible !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  position: relative !important;
+  transition: 0.22s ease;
+}
+
+/* Oculta partes del SIGy viejo por si quedan en el DOM */
+.sigy-ojos,
+.sigy-boca,
+.sigy-mejillas {
+  display: none !important;
+}
+
+.sigy-sprite-img {
+  width: 136px !important;
+  height: 136px !important;
+
+  object-fit: contain !important;
+  pointer-events: none !important;
+  user-select: none !important;
+
+  filter: drop-shadow(0 12px 18px rgba(126, 76, 170, 0.25));
+  animation: sigySpriteRespira 2.8s ease-in-out infinite;
+}
+
+.sigy-nombre {
+  font-size: 0.74rem;
+  font-weight: 800;
+  color: #ffffff;
+
+  margin-top: -6px;
+
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+}
+
+/* ======================================================
+   PANEL SIGy
+   ====================================================== */
+
+#sigy-panel {
+  position: absolute;
+  right: 0;
+  bottom: 124px;
+
+  width: 360px;
+  max-width: calc(100vw - 34px);
+  max-height: calc(100vh - 120px);
+
+  background: rgba(34, 24, 48, 0.97);
+  color: #fff;
+
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 26px;
+
+  box-shadow: 0 28px 75px rgba(0, 0, 0, 0.36);
+  padding: 16px;
+
+  opacity: 0;
+  transform: translateY(16px) scale(0.96);
+  pointer-events: none;
+  transition: 0.24s ease;
+
+  backdrop-filter: blur(16px);
+
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+#sigy-panel.visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+.sigy-panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.sigy-title {
+  font-size: 1rem;
+  font-weight: 900;
+}
+
+.sigy-subtitle {
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.72);
+  margin-top: 3px;
+  line-height: 1.35;
+}
+
+#sigy-cerrar {
+  width: 30px !important;
+  height: 30px !important;
+
+  border: none !important;
+  border-radius: 999px !important;
+
+  background: rgba(255, 255, 255, 0.12) !important;
+  color: #fff !important;
+
+  cursor: pointer !important;
+  font-size: 1.1rem !important;
+
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* ======================================================
+   BOTONES DE MODO
+   ====================================================== */
+
+.sigy-ayudas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+#sigy-widget .sigy-ayudas button {
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: rgba(255, 255, 255, 0.90) !important;
+
+  border-radius: 999px !important;
+
+  padding: 8px 12px !important;
+  font-size: 0.74rem !important;
+
+  cursor: pointer !important;
+  transition: 0.2s ease !important;
+
+  margin: 0 !important;
+  width: auto !important;
+  height: auto !important;
+}
+
+#sigy-widget .sigy-ayudas button:hover,
+#sigy-widget .sigy-ayudas button.active {
+  background: rgba(216, 180, 254, 0.30) !important;
+  border-color: rgba(216, 180, 254, 0.75) !important;
+  color: #fff !important;
+}
+
+/* ======================================================
+   INPUT
+   ====================================================== */
+
+#sigy-input {
+  width: 100%;
+  min-height: 112px;
+
+  resize: vertical;
+
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  outline: none;
+
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.08);
+
+  color: #fff;
+
+  padding: 12px;
+
+  font-family: inherit;
+  font-size: 0.87rem;
+  line-height: 1.45;
+}
+
+#sigy-input::placeholder {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+/* ======================================================
+   ACCIONES
+   ====================================================== */
+
+.sigy-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+#sigy-enviar,
+#sigy-limpiar {
+  border: none !important;
+  border-radius: 999px !important;
+
+  padding: 10px 14px !important;
+
+  cursor: pointer !important;
+
+  font-weight: 800 !important;
+  font-size: 0.82rem !important;
+
+  margin: 0 !important;
+}
+
+#sigy-enviar {
+  background: linear-gradient(135deg, #d8b4fe, #a78bfa) !important;
+  color: #26113d !important;
+  flex: 1;
+}
+
+#sigy-limpiar {
+  background: rgba(255, 255, 255, 0.10) !important;
+  color: #fff !important;
+}
+
+/* ======================================================
+   RESPUESTA
+   Este bloque evita que se corte.
+   ====================================================== */
+
+#sigy-respuesta {
+  display: block !important;
+  box-sizing: border-box !important;
+
+  margin-top: 14px !important;
+  padding: 14px 16px !important;
+
+  border-radius: 16px !important;
+
+  background: rgba(255, 255, 255, 0.07) !important;
+  color: rgba(255, 255, 255, 0.92) !important;
+
+  font-size: 14px !important;
+  line-height: 1.55 !important;
+
+  min-height: 70px !important;
+  height: auto !important;
+  max-height: none !important;
+
+  overflow: visible !important;
+
+  white-space: normal !important;
+  word-break: normal !important;
+  overflow-wrap: break-word !important;
+}
+
+#sigy-respuesta span {
+  display: block !important;
+
+  white-space: pre-wrap !important;
+  word-break: normal !important;
+  overflow-wrap: break-word !important;
+
+  line-height: 1.55 !important;
+
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+/* ======================================================
+   SCROLL BONITO DEL PANEL
+   ====================================================== */
+
+#sigy-panel::-webkit-scrollbar,
+#sigy-respuesta::-webkit-scrollbar {
+  width: 6px;
+}
+
+#sigy-panel::-webkit-scrollbar-thumb,
+#sigy-respuesta::-webkit-scrollbar-thumb {
+  background: rgba(205, 170, 255, 0.45);
+  border-radius: 999px;
+}
+
+#sigy-panel::-webkit-scrollbar-track,
+#sigy-respuesta::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* ======================================================
+   ANIMACIONES
+   ====================================================== */
+
+@keyframes sigySpriteRespira {
+  0% {
+    transform: translateY(0) scale(1);
+  }
+
+  50% {
+    transform: translateY(-4px) scale(1.025);
+  }
+
+  100% {
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes sigyCaminataSuave {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+
+  25% {
+    transform: translateY(-4px) rotate(-2deg);
+  }
+
+  50% {
+    transform: translateY(0) rotate(0deg);
+  }
+
+  75% {
+    transform: translateY(-4px) rotate(2deg);
+  }
+}
+
+@keyframes sigyMiniHeart {
+  0%, 75%, 100% {
+    opacity: 0;
+    transform: translateY(4px) scale(0.6);
+  }
+
+  82% {
+    opacity: 1;
+    transform: translateY(-6px) scale(1);
+  }
+
+  92% {
+    opacity: 0.2;
+    transform: translateY(-16px) scale(1.2);
+  }
+}
+
+@keyframes sigyHeartPop {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0.6);
+  }
+
+  15% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(var(--sigy-heart-x), -90px) scale(1.4) rotate(18deg);
+  }
+}
+
+/* ======================================================
+   RESPONSIVE
+   ====================================================== */
+
+@media (max-width: 560px) {
+  #sigy-widget {
+    width: 88px;
+    height: 108px;
+  }
+
+  #sigy-burbuja {
+    width: 88px !important;
+    height: 108px !important;
+  }
+
+  .sigy-carita,
+  .sigy-sprite-box {
+    width: 104px !important;
+    height: 104px !important;
+  }
+
+  .sigy-sprite-img {
+    width: 126px !important;
+    height: 126px !important;
+  }
+
+  #sigy-panel {
+    width: calc(100vw - 28px);
+    right: 0;
+    bottom: 116px;
+    max-height: calc(100vh - 130px);
+  }
+
+  .sigy-globo {
+    width: 230px;
+    right: 0;
+    bottom: 112px;
+  }
+}
+
+/* ======================================================
+   FIX DEFINITIVO SIGy respuesta v13
+   La respuesta no se corta: tiene scroll interno real.
+   ====================================================== */
+
+#sigy-panel {
+  max-height: calc(100vh - 90px) !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+#sigy-respuesta {
+  display: block !important;
+  position: relative !important;
+  box-sizing: border-box !important;
+
+  margin-top: 14px !important;
+  padding: 14px 16px !important;
+
+  border-radius: 16px !important;
+  background: rgba(255, 255, 255, 0.07) !important;
+  color: rgba(255, 255, 255, 0.92) !important;
+
+  font-size: 14px !important;
+  line-height: 1.55 !important;
+
+  min-height: 76px !important;
+  height: auto !important;
+  max-height: 260px !important;
+
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+
+  white-space: normal !important;
+  word-break: normal !important;
+  overflow-wrap: break-word !important;
+}
+
+#sigy-respuesta span {
+  display: block !important;
+  white-space: pre-wrap !important;
+  word-break: normal !important;
+  overflow-wrap: break-word !important;
+  line-height: 1.55 !important;
+}
+
+#sigy-respuesta::-webkit-scrollbar {
+  width: 6px !important;
+}
+
+#sigy-respuesta::-webkit-scrollbar-thumb {
+  background: rgba(205, 170, 255, 0.55) !important;
+  border-radius: 999px !important;
+}
+
+#sigy-respuesta::-webkit-scrollbar-track {
+  background: transparent !important;
+}
