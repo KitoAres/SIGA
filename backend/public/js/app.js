@@ -44,24 +44,22 @@ async function api(method, url, body) {
   try {
     res = await fetch(url, opts);
   } catch (err) {
-    console.error('Error de red/fetch:', err);
-    return {
-      ok: false,
-      error: 'No se pudo conectar con el servidor. Revisa si Vercel terminó el deploy.'
-    };
+    console.error('FETCH FALLÓ:', err);
+    throw new Error('Fetch falló: ' + err.message);
   }
 
   const text = await res.text();
+
   let data = {};
 
   try {
     data = text ? JSON.parse(text) : {};
   } catch (err) {
-    console.error('Respuesta NO JSON del servidor:', text);
-    return {
-      ok: false,
-      error: 'El servidor respondió algo raro. Revisa /api/health y los Logs de Vercel.'
-    };
+    console.error('RESPUESTA NO JSON DEL SERVIDOR:', text);
+
+    throw new Error(
+      'Servidor respondió HTML/texto. Status ' + res.status + '. Respuesta: ' + text.slice(0, 120)
+    );
   }
 
   if (res.status === 401) {
@@ -70,7 +68,7 @@ async function api(method, url, body) {
   }
 
   if (!res.ok) {
-    console.error('Error API:', data);
+    console.error('ERROR API:', data);
   }
 
   return data;
