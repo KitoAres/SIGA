@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../config/db');
+const { requireAuth, requireAdmin } = require('../middleware/auth');
 
 function calcularNivelRelacion(total) {
   const niveles = [
@@ -34,38 +35,22 @@ function calcularNivelRelacion(total) {
   };
 }
 
-async function esAdmin(usuario_id) {
-  if (!usuario_id) return false;
-
-  const result = await pool.query(
-    `SELECT id FROM usuarios WHERE id = $1 AND rol = 'admin'`,
-    [usuario_id]
-  );
-
-  return result.rows.length > 0;
-}
-
-function asegurarAdmin(handler) {
-  return async (req, res) => {
-    const usuario_id = req.query.usuario_id || req.body?.usuario_id;
-
-    try {
-      if (!(await esAdmin(usuario_id))) {
-        return res.status(403).json({
+function protegerAdmin(handler) {
+  return [
+    requireAuth,
+    requireAdmin,
+    async (req, res) => {
+      try {
+        return await handler(req, res);
+      } catch (err) {
+        console.error('Error admin:', err);
+        return res.status(500).json({
           ok: false,
-          error: 'Solo admin.'
+          error: 'Error en panel admin: ' + err.message
         });
       }
-
-      return handler(req, res);
-    } catch (err) {
-      console.error('Error admin:', err);
-      return res.status(500).json({
-        ok: false,
-        error: 'Error en panel admin'
-      });
     }
-  };
+  ];
 }
 
 function normalizarFuente(fuente) {
@@ -88,8 +73,8 @@ function normalizarFuente(fuente) {
   return permitidas.includes(f) ? f : 'ajuste_admin';
 }
 
-// GET /api/admin/resumen?usuario_id=1
-router.get('/resumen', asegurarAdmin(async (req, res) => {
+// GET /api/admin/resumen
+router.get('/resumen', ...protegerAdmin(async (req, res) => {
   const puntosResumen = await pool.query(
     `SELECT
         COALESCE(SUM(puntos), 0)::int AS puntos,
@@ -180,8 +165,8 @@ router.get('/resumen', asegurarAdmin(async (req, res) => {
   });
 }));
 
-// GET /api/admin/detalle/:fuente?usuario_id=1
-router.get('/detalle/:fuente', asegurarAdmin(async (req, res) => {
+// GET /api/admin/detalle/:fuente
+router.get('/detalle/:fuente', ...protegerAdmin(async (req, res) => {
   const fuente = String(req.params.fuente || '').toLowerCase();
 
   if (fuente === 'accesos') {
@@ -234,9 +219,8 @@ router.get('/detalle/:fuente', asegurarAdmin(async (req, res) => {
 // POST /api/admin/ajuste
 // Permite sumar o quitar puntos manualmente.
 // puntos puede ser positivo o negativo.
-router.post('/ajuste', asegurarAdmin(async (req, res) => {
+router.post('/ajuste', ...protegerAdmin(async (req, res) => {
   const {
-    usuario_id,
     usuario_afectado_id,
     puntos,
     descripcion,
@@ -276,9 +260,9 @@ router.post('/ajuste', asegurarAdmin(async (req, res) => {
   });
 }));
 
-// DELETE /api/admin/puntos/:id?usuario_id=1
+// DELETE /api/admin/puntos/:id
 // Borra un registro de puntos. Esto baja/sube el total según el registro eliminado.
-router.delete('/puntos/:id', asegurarAdmin(async (req, res) => {
+router.delete('/puntos/:id', ...protegerAdmin(async (req, res) => {
   const result = await pool.query(
     `DELETE FROM puntos_conexion
      WHERE id = $1
@@ -299,9 +283,9 @@ router.delete('/puntos/:id', asegurarAdmin(async (req, res) => {
   });
 }));
 
-// DELETE /api/admin/accesos/:id?usuario_id=1
+// DELETE /api/admin/accesos/:id
 // Borra un acceso individual del historial admin.
-router.delete('/accesos/:id', asegurarAdmin(async (req, res) => {
+router.delete('/accesos/:id', ...protegerAdmin(async (req, res) => {
   const result = await pool.query(
     `DELETE FROM accesos_sistema
      WHERE id = $1
