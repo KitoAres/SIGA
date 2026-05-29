@@ -35,17 +35,32 @@ async function api(method, url, body) {
     opts.headers.Authorization = 'Bearer ' + token;
   }
 
-  if (body) opts.body = JSON.stringify(body);
+  if (body) {
+    opts.body = JSON.stringify(body);
+  }
 
   const res = await fetch(url, opts);
 
-  // Si el token venció o no sirve, cerramos sesión para evitar pantallas raras.
+  const text = await res.text();
+
+  let data;
+  try {
+    data = text ? JSON.parse(text) : {};
+  } catch (err) {
+    console.error('Respuesta NO JSON del servidor:', text);
+    throw new Error('El servidor respondió algo raro. Status: ' + res.status);
+  }
+
   if (res.status === 401) {
     sessionStorage.removeItem('siga_token');
     sessionStorage.removeItem('siga_user');
   }
 
-  return res.json();
+  if (!res.ok) {
+    console.error('Error API:', data);
+  }
+
+  return data;
 }
 
 function normalizarFecha(fecha) {
