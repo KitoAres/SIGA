@@ -35,13 +35,12 @@ function pareceHashBcrypt(valor) {
 async function validarPassword(contrasenaIngresada, contrasenaGuardada) {
   if (!contrasenaGuardada) return false;
 
-  // Si ya está hasheada, compara con bcrypt.
   if (pareceHashBcrypt(contrasenaGuardada)) {
     return bcrypt.compare(contrasenaIngresada, contrasenaGuardada);
   }
 
-  // Compatibilidad temporal: si todavía está en texto plano, permite entrar.
-  // Luego el login la actualiza automáticamente a hash.
+  // Compatibilidad temporal: permite entrar si todavía está en texto plano.
+  // Después del login la convierte automáticamente a hash.
   return contrasenaIngresada === contrasenaGuardada;
 }
 
@@ -77,12 +76,15 @@ async function registrarAcceso(req, usuario) {
       ]
     );
   } catch (err) {
+    // No bloquea el login si la tabla de accesos todavía no existe.
     console.warn('No se pudo registrar acceso:', err.message);
   }
 }
 
 async function registrarDebugLogin(usuario) {
   try {
+    if (process.env.DEBUG_LOGIN !== 'true') return;
+
     console.log('DEBUG LOGIN SIGA:', {
       id: usuario.id,
       usuario: usuario.usuario,
@@ -115,7 +117,8 @@ async function registrarDebugLogin(usuario) {
 
 async function notificarAccesoElla(usuario) {
   try {
-    // Para producto público esto debería desactivarse o cambiarse por consentimiento explícito.
+    // Por defecto queda apagado para evitar sensación de vigilancia.
+    // Si lo quieres activar para uso personal: NOTIFICAR_ACCESO_ELLA=true
     if (process.env.NOTIFICAR_ACCESO_ELLA !== 'true') return;
 
     const rol = String(usuario.rol || '').toLowerCase().trim();
@@ -131,30 +134,19 @@ async function notificarAccesoElla(usuario) {
       nombre.includes('francin') ||
       display.includes('francin');
 
-    console.log('DEBUG DETECCION ELLA:', {
-      id: usuario.id,
-      rol,
-      usuarioLogin,
-      nombre,
-      display,
-      watch,
-      esElla
-    });
-
     if (!esElla) return;
 
     const ahora = new Date();
-
-    // Máximo 1 correo por minuto para evitar spam por recargas.
     const minuto = ahora.toISOString().slice(0, 16);
     const clave = `acceso_ella_${usuario.id}_${minuto}`;
     const asunto = 'Francin entró a SIGA 🌿';
 
-    await pool.query(
+    const insert = await pool.query(
       `INSERT INTO email_notificaciones
         (tipo, clave, usuario_id, enviado_a, asunto)
        VALUES ($1, $2, $3, $4, $5)
-       ON CONFLICT (clave) DO NOTHING`,
+       ON CONFLICT (clave) DO NOTHING
+       RETURNING id`,
       [
         'acceso_ella',
         clave,
@@ -164,13 +156,15 @@ async function notificarAccesoElla(usuario) {
       ]
     );
 
+    if (!insert.rows.length) return;
+
     const fechaBonita = ahora.toLocaleString('es-BO', {
       timeZone: 'America/La_Paz',
       dateStyle: 'medium',
       timeStyle: 'short'
     });
 
-    const resultadoEmail = await enviarEmail({
+    await enviarEmail({
       subject: asunto,
       html: htmlBase({
         titulo: 'Francin entró a SIGA 🌿',
@@ -182,15 +176,20 @@ async function notificarAccesoElla(usuario) {
       }),
       text: `Francin entró a SIGA. Hora: ${fechaBonita}`
     });
-
-    console.log('DEBUG EMAIL ACCESO RESULTADO:', resultadoEmail);
   } catch (err) {
-    console.error('ERROR notificarAccesoElla:', err);
+    console.error('ERROR notificarAccesoElla:', err.message);
   }
 }
 
+router.get('/ping', (req, res) => {
+  res.json({
+    ok: true,
+    mensaje: 'Auth vivo 💜'
+  });
+});
+
 router.post('/login', async (req, res) => {
-  const { usuario, contrasena } = req.body;
+  const { usuario, contrasena } = req.body || {};
 
   if (!usuario || !contrasena) {
     return res.status(400).json({
@@ -210,8 +209,9 @@ router.post('/login', async (req, res) => {
           COALESCE(display_name,nombre,usuario) AS display_name,
           COALESCE(color_perfil,'#22d3ee') AS color_perfil
        FROM usuarios
-       WHERE usuario=$1`,
-      [usuario]
+       WHERE usuario=$1
+       LIMIT 1`,
+      [usuario.trim()]
     );
 
     if (!result.rows.length) {
@@ -236,29 +236,25 @@ router.post('/login', async (req, res) => {
     const token = crearToken(u);
 
     await registrarAcceso(req, u);
-
-    // Debug temporal: confirma que este auth.js se está ejecutando.
     await registrarDebugLogin(u);
-
-    // Desactivado por defecto. Para activarlo: NOTIFICAR_ACCESO_ELLA=true.
     await notificarAccesoElla(u);
 
-    res.json({
+    return res.json({
       ok: true,
       token,
       usuario_id: u.id,
       id: u.id,
       usuario: u.usuario,
       nombre: u.nombre,
-      display_name: u.display_name,
-      color_perfil: u.color_perfil,
+      display_name: u.display_name || u.nombre || u.usuario,
+      color_perfil: u.color_perfil || '#22d3ee',
       rol: u.rol
     });
   } catch (err) {
     console.error('ERROR LOGIN:', err);
-    res.status(500).json({
+    return res.status(500).json({
       ok: false,
-      error: 'Error del servidor'
+      error: 'Error en login: ' + err.message
     });
   }
 });
@@ -304,7 +300,7 @@ router.get('/perfil/:id', requireAuth, async (req, res) => {
     console.error('ERROR PERFIL:', err);
     res.status(500).json({
       ok: false,
-      error: 'Error al obtener perfil'
+      error: 'Error al obtener perfil: ' + err.message
     });
   }
 });
@@ -317,7 +313,7 @@ router.put('/perfil/:id', requireAuth, async (req, res) => {
     color_perfil,
     contrasena_actual,
     nueva_contrasena
-  } = req.body;
+  } = req.body || {};
 
   const solicitadoId = Number(req.params.id);
   const esPropioPerfil = solicitadoId === Number(req.user.id);
@@ -442,7 +438,7 @@ router.put('/perfil/:id', requireAuth, async (req, res) => {
     console.error('ERROR ACTUALIZAR PERFIL:', err);
     res.status(500).json({
       ok: false,
-      error: 'Error al actualizar perfil'
+      error: 'Error al actualizar perfil: ' + err.message
     });
   }
 });
