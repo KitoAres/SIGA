@@ -22,12 +22,29 @@ function toast(msg) {
 }
 
 async function api(method, url, body) {
+  const token = sessionStorage.getItem('siga_token');
+
   const opts = {
     method,
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json'
+    },
   };
+
+  if (token) {
+    opts.headers.Authorization = 'Bearer ' + token;
+  }
+
   if (body) opts.body = JSON.stringify(body);
+
   const res = await fetch(url, opts);
+
+  // Si el token venció o no sirve, cerramos sesión para evitar pantallas raras.
+  if (res.status === 401) {
+    sessionStorage.removeItem('siga_token');
+    sessionStorage.removeItem('siga_user');
+  }
+
   return res.json();
 }
 
@@ -121,6 +138,7 @@ async function doLogin() {
       };
 
       sessionStorage.setItem('siga_user', JSON.stringify(state.currentUser));
+      sessionStorage.setItem('siga_token', data.token);
 
       $('login-screen').style.display = 'none';
       $('app').classList.add('visible');
@@ -139,6 +157,7 @@ renderUsuarioActual();
 function doLogout() {
   state.currentUser = null;
   sessionStorage.removeItem('siga_user');
+  sessionStorage.removeItem('siga_token');
 
   $('login-screen').style.display = 'flex';
   $('app').classList.remove('visible');
@@ -1385,6 +1404,8 @@ async function loginTiempo() {
       return;
     }
     // Login exitoso
+    sessionStorage.setItem('siga_token', data.token);
+
     tiempoState.usuarioId   = data.usuario_id;
     tiempoState.nombre      = data.nombre;
     tiempoState.usuarioSlug = slug;
