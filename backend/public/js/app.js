@@ -177,8 +177,10 @@ renderUsuarioActual();
       $('login-error').textContent = data.error || 'Credenciales incorrectas.';
     }
   } catch (err) {
-    console.error(err);
-    $('login-error').textContent = err.message || 'No se pudo conectar con el servidor.';
+    console.error('ERROR LOGIN FRONTEND:', err);
+
+    $('login-error').textContent =
+      'Error real: ' + (err.message || 'No se pudo conectar con el servidor.');
   }
 }
 
