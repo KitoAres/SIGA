@@ -40,6 +40,52 @@
     return !!(user && user.rol === 'admin');
   }
 
+
+  function getToken() {
+    return sessionStorage.getItem('siga_token') || '';
+  }
+
+  async function adminFetch(url, options = {}) {
+    const token = getToken();
+
+    const headers = {
+      ...(options.headers || {})
+    };
+
+    if (token) {
+      headers.Authorization = 'Bearer ' + token;
+    }
+
+    const response = await fetch(url, {
+      ...options,
+      headers
+    });
+
+    const text = await response.text();
+    let data = {};
+
+    try {
+      data = text ? JSON.parse(text) : {};
+    } catch (err) {
+      console.error('Respuesta no JSON en admin:', text);
+      return {
+        ok: false,
+        error: 'El servidor respondió algo raro. Revisa consola.'
+      };
+    }
+
+    if (response.status === 401) {
+      sessionStorage.removeItem('siga_token');
+      sessionStorage.removeItem('siga_user');
+    }
+
+    if (!response.ok) {
+      console.error('Error admin API:', data);
+    }
+
+    return data;
+  }
+
   function fmt(value) {
     if (!value) return '—';
 
@@ -229,8 +275,7 @@
     const user = getUser();
 
     try {
-      const response = await fetch('/api/admin/resumen?usuario_id=' + encodeURIComponent(user.id) + '&x=' + Date.now());
-      const data = await response.json();
+      const data = await adminFetch('/api/admin/resumen?x=' + Date.now());
 
       if (!data.ok) {
         alert(data.error || 'No se pudo cargar panel admin.');
@@ -365,8 +410,7 @@
     modal.classList.add('open');
 
     try {
-      const response = await fetch(`/api/admin/detalle/${encodeURIComponent(fuente)}?usuario_id=${encodeURIComponent(user.id)}&x=${Date.now()}`);
-      const data = await response.json();
+      const data = await adminFetch(`/api/admin/detalle/${encodeURIComponent(fuente)}?x=${Date.now()}`);
 
       if (!data.ok) {
         box.innerHTML = `<div style="color:var(--danger);padding:18px;">${esc(data.error || 'Error al cargar detalle.')}</div>`;
@@ -418,11 +462,9 @@
     }
 
     try {
-      const response = await fetch(`/api/admin/puntos/${id}?usuario_id=${encodeURIComponent(user.id)}`, {
+      const data = await adminFetch(`/api/admin/puntos/${id}`, {
         method: 'DELETE'
       });
-
-      const data = await response.json();
 
       if (!data.ok) {
         alert(data.error || 'No se pudo eliminar.');
@@ -459,11 +501,9 @@
     }
 
     try {
-      const response = await fetch(`/api/admin/accesos/${id}?usuario_id=${encodeURIComponent(user.id)}`, {
+      const data = await adminFetch(`/api/admin/accesos/${id}`, {
         method: 'DELETE'
       });
-
-      const data = await response.json();
 
       if (!data.ok) {
         alert(data.error || 'No se pudo eliminar acceso.');
@@ -515,19 +555,16 @@
     if (fuente === null) return;
 
     try {
-      const response = await fetch('/api/admin/ajuste', {
+      const data = await adminFetch('/api/admin/ajuste', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          usuario_id: user.id,
           usuario_afectado_id: null,
           puntos,
           descripcion,
           fuente
         })
       });
-
-      const data = await response.json();
 
       if (!data.ok) {
         alert(data.error || 'No se pudo hacer el ajuste.');
