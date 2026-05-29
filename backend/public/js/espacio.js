@@ -144,6 +144,51 @@
     alert(msg);
   }
 
+  async function apiEspacio(method, url, body) {
+    const token = sessionStorage.getItem('siga_token');
+
+    const opts = {
+      method,
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    };
+
+    if (token) {
+      opts.headers.Authorization = 'Bearer ' + token;
+    }
+
+    if (body) {
+      opts.body = JSON.stringify(body);
+    }
+
+    const response = await fetch(url, opts);
+    const text = await response.text();
+
+    let data = {};
+
+    try {
+      data = text ? JSON.parse(text) : {};
+    } catch (err) {
+      console.error('Mi espacio recibió una respuesta no JSON:', text);
+      return {
+        ok: false,
+        error: 'El servidor respondió algo inesperado.'
+      };
+    }
+
+    if (response.status === 401) {
+      sessionStorage.removeItem('siga_token');
+      sessionStorage.removeItem('siga_user');
+      return {
+        ok: false,
+        error: 'Tu sesión expiró. Vuelve a iniciar sesión.'
+      };
+    }
+
+    return data;
+  }
+
   function copiarTexto(texto) {
     if (!texto) return;
 
@@ -238,8 +283,7 @@
     if (!box || !u || !u.id) return;
 
     try {
-      const res = await fetch(`/api/espacio/historial?usuario_id=${encodeURIComponent(u.id)}&x=${Date.now()}`);
-      const data = await res.json();
+      const data = await apiEspacio('GET', `/api/espacio/historial?x=${Date.now()}`);
 
       if (!data.ok) {
         box.innerHTML = '<div class="espacio-empty">No se pudo cargar el historial.</div>';
@@ -462,19 +506,12 @@
     }
 
     try {
-      const res = await fetch('/api/espacio/usar', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          usuario_id: u.id,
-          herramienta: herramientaActual,
-          estado: estadoActual,
-          mensaje: mensajeActual,
-          compartido: !!compartido
-        })
+      const data = await apiEspacio('POST', '/api/espacio/usar', {
+        herramienta: herramientaActual,
+        estado: estadoActual,
+        mensaje: mensajeActual,
+        compartido: !!compartido
       });
-
-      const data = await res.json();
 
       if (!data.ok) {
         return toastLocal(data.error || 'No se pudo guardar.');
