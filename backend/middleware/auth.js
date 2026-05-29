@@ -51,6 +51,7 @@ async function requireAuth(req, res, next) {
     req.user = result.rows[0];
     next();
   } catch (err) {
+    console.error('ERROR AUTH MIDDLEWARE:', err.message);
     return res.status(401).json({
       ok: false,
       error: 'Sesión expirada o inválida. Vuelve a iniciar sesión.'
