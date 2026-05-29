@@ -28,7 +28,7 @@ async function api(method, url, body) {
     method,
     headers: {
       'Content-Type': 'application/json'
-    },
+    }
   };
 
   if (token) {
@@ -39,16 +39,29 @@ async function api(method, url, body) {
     opts.body = JSON.stringify(body);
   }
 
-  const res = await fetch(url, opts);
+  let res;
+
+  try {
+    res = await fetch(url, opts);
+  } catch (err) {
+    console.error('Error de red/fetch:', err);
+    return {
+      ok: false,
+      error: 'No se pudo conectar con el servidor. Revisa si Vercel terminó el deploy.'
+    };
+  }
 
   const text = await res.text();
+  let data = {};
 
-  let data;
   try {
     data = text ? JSON.parse(text) : {};
   } catch (err) {
     console.error('Respuesta NO JSON del servidor:', text);
-    throw new Error('El servidor respondió algo raro. Status: ' + res.status);
+    return {
+      ok: false,
+      error: 'El servidor respondió algo raro. Revisa /api/health y los Logs de Vercel.'
+    };
   }
 
   if (res.status === 401) {
@@ -165,7 +178,7 @@ renderUsuarioActual();
     }
   } catch (err) {
     console.error(err);
-    $('login-error').textContent = 'No se pudo conectar con el servidor.';
+    $('login-error').textContent = err.message || 'No se pudo conectar con el servidor.';
   }
 }
 
