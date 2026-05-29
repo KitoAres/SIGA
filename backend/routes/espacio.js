@@ -1,21 +1,20 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../config/db');
+const { requireAuth } = require('../middleware/auth');
 
 /*
-  SIGA — Mi espacio
+  SIGA — Mi espacio seguro
 
-  Nota para quien algún día lea esto:
-  este módulo nació después de muchas pruebas, errores, frustración,
-  cafés imaginarios y varios "¿por qué no funciona si ayer sí funcionaba?".
+  Regla nueva de seguridad:
+  - El frontend ya NO decide qué usuario guarda/carga.
+  - El backend usa req.user.id desde el token JWT.
+  - Así nadie puede mandar usuario_id falso desde consola.
 
-  La idea es simple:
+  Reglas emocionales:
   - Guardar para mí = privado.
   - Compartir señal = visible para ambos.
   - Copiar = no se guarda nada.
-
-  No es vigilancia. No es diagnóstico. No es examen.
-  Es solo una forma suave de decir: "estoy aquí, pero a mi ritmo".
 */
 
 const HERRAMIENTAS = {
@@ -33,37 +32,8 @@ function validarHerramienta(herramienta) {
   return HERRAMIENTAS[key] ? key : 'senal_minima';
 }
 
-async function obtenerUsuario(usuario_id) {
-  if (!usuario_id) return null;
-
-  const r = await pool.query(
-    `SELECT
-        id,
-        usuario,
-        nombre,
-        rol,
-        COALESCE(display_name, nombre, usuario) AS display_name
-     FROM usuarios
-     WHERE id = $1`,
-    [usuario_id]
-  );
-
-  return r.rows[0] || null;
-}
-
-async function usuarioExiste(usuario_id) {
-  const u = await obtenerUsuario(usuario_id);
-  return !!u;
-}
-
 async function registrarPuntosEspacio(usuario_id, herramienta, compartido) {
   try {
-    /*
-      Sí, aquí también hubo sufrimiento.
-      La regla: puede usar Mi espacio muchas veces, pero solo suma puntos una vez al día.
-      Porque cuidar el vínculo no debería convertirse en farmear XP emocional. XD
-    */
-
     const yaTiene = await pool.query(
       `SELECT id
        FROM puntos_conexion
@@ -93,29 +63,13 @@ async function registrarPuntosEspacio(usuario_id, herramienta, compartido) {
   }
 }
 
-// GET /api/espacio/historial?usuario_id=1
-router.get('/historial', async (req, res) => {
-  const usuario_id = req.query.usuario_id;
-
-  const usuario = await obtenerUsuario(usuario_id);
-
-  if (!usuario) {
-    return res.status(400).json({
-      ok: false,
-      error: 'Usuario no válido.'
-    });
-  }
+// GET /api/espacio/historial
+// Ya no recibe usuario_id. Usa el usuario real del token.
+router.get('/historial', requireAuth, async (req, res) => {
+  const usuario_id = req.user.id;
+  const usuario = req.user;
 
   try {
-    /*
-      Privadas:
-      Solo las ve quien las guardó.
-
-      Compartidas:
-      Las ven ambos usuarios principales: yo y ella.
-      Admin también puede verlas porque admin está condenado a depurar cosas. XD
-    */
-
     const privadas = await pool.query(
       `SELECT
           e.id,
@@ -164,13 +118,12 @@ router.get('/historial', async (req, res) => {
       usuario: {
         id: usuario.id,
         usuario: usuario.usuario,
-        nombre: usuario.display_name,
+        nombre: usuario.display_name || usuario.nombre || usuario.usuario,
         rol: usuario.rol
       },
       privadas: privadas.rows,
       compartidas: compartidas.rows
     });
-
   } catch (err) {
     console.error('Error GET /api/espacio/historial:', err);
 
@@ -182,19 +135,13 @@ router.get('/historial', async (req, res) => {
 });
 
 // POST /api/espacio/usar
-router.post('/usar', async (req, res) => {
-  const usuario_id = req.body.usuario_id;
+// Ya no acepta usuario_id desde el navegador. Usa req.user.id.
+router.post('/usar', requireAuth, async (req, res) => {
+  const usuario_id = req.user.id;
   const herramienta = validarHerramienta(req.body.herramienta);
   const estado = String(req.body.estado || '').trim().slice(0, 80);
   const mensaje = String(req.body.mensaje || '').trim().slice(0, 600);
   const compartido = !!req.body.compartido;
-
-  if (!(await usuarioExiste(usuario_id))) {
-    return res.status(400).json({
-      ok: false,
-      error: 'Usuario no válido.'
-    });
-  }
 
   if (!mensaje) {
     return res.status(400).json({
@@ -230,7 +177,6 @@ router.post('/usar', async (req, res) => {
               : 'Guardado solo para ti. Hoy ya se sumaron puntos por Mi espacio, pero igual cuenta.'
           )
     });
-
   } catch (err) {
     console.error('Error POST /api/espacio/usar:', err);
 
