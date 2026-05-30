@@ -78,7 +78,11 @@
       <button class="nav-item" onclick="navigateTo('cajita')">
         <span class="nav-icon">🎁</span> Cajita especial
       </button>
-
+      
+      <button class="nav-item" onclick="navigateTo('analisis')">
+        <span class="nav-icon">📊</span> Análisis SIGA
+      </button>
+      
       <div class="nav-divider"></div>
 
 <button class="nav-item" onclick="navigateTo('espacio')">
@@ -188,6 +192,72 @@
         </div>
       </div>
     </section>
+    <!-- Analisis siga test y mas -->
+
+  <section class="page" id="page-analisis">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Análisis <span>SIGA</span></h1>
+          <p class="page-subtitle">Psicometría y métricas conjuntas. Tareas conductuales sugeridas por SIGy.</p>
+        </div>
+      </div>
+
+      <div class="tiempo-tabs" style="margin-bottom: 20px;">
+        <button class="tiempo-tab active" onclick="switchAnalisisTab('tests')" id="atab-tests">
+          📝 Tests Disponibles
+        </button>
+        <button class="tiempo-tab" onclick="switchAnalisisTab('mis')" id="atab-mis">
+          👤 Mis Resultados
+        </button>
+        <button class="tiempo-tab" onclick="switchAnalisisTab('nuestros')" id="atab-nuestros">
+          💜 Nuestros Resultados
+        </button>
+      </div>
+
+      <div class="tiempo-tab-content active" id="acontent-tests">
+        <div class="admin-hero-card">
+          <div class="admin-hero-icon">🧠</div>
+          <div>
+            <h3>Catálogo de Evaluación</h3>
+            <p>Selecciona un test. Las respuestas alimentan el diagnóstico conductual conjunto.</p>
+          </div>
+        </div>
+        <div class="items-grid" id="lista-tests-disponibles">
+          </div>
+        
+        <div id="contenedor-hacer-test" class="card-siga" style="display:none; margin-top:20px; padding: 20px;">
+          <h2 id="titulo-test-activo"></h2>
+          <p id="desc-test-activo" style="color:var(--text-muted); font-size:0.9rem;"></p>
+          <hr style="border-color:#333; margin:15px 0;">
+          <form id="formulario-test-activo"></form>
+          <button class="btn-save" style="margin-top:20px;" onclick="procesarTest()">Guardar y Analizar</button>
+          <button class="btn-cancel" style="margin-top:20px;" onclick="cerrarTest()">Cancelar</button>
+        </div>
+      </div>
+
+      <div class="tiempo-tab-content" id="acontent-mis">
+        <div id="mis-resultados-container" style="padding: 15px; background: rgba(30,20,45,0.5); border-radius: 10px;">
+          <p>Tus métricas recientes aparecerán aquí una vez completes un test.</p>
+        </div>
+      </div>
+
+      <div class="tiempo-tab-content" id="acontent-nuestros">
+        <div class="sigy-intro-card" style="margin-bottom: 20px;">
+          <div class="sigy-intro-card-icon">✨</div>
+          <div>
+            <strong>Análisis Conjunto de SIGy</strong>
+            <span>Evaluación de brechas y sugerencia de misiones de aproximación.</span>
+          </div>
+        </div>
+        <div id="nuestros-resultados-grafico" style="max-width: 500px; margin: 0 auto;">
+          <canvas id="radarChartAnalisis"></canvas>
+        </div>
+        <div id="sigy-diagnostico-box" style="margin-top:20px; padding:20px; border-left: 4px solid var(--primary-color); background: rgba(0,0,0,0.3); border-radius: 8px;">
+          <p style="font-style: italic; color: #ccc;">Faltan datos de uno de los usuarios para procesar la brecha.</p>
+        </div>
+      </div>
+    </section>
+  
 
     <!-- RECUERDOS -->
     <section class="page" id="page-recuerdos">
@@ -689,6 +759,7 @@
     '¿Nos vemos?': 'tiempo',
     'Misiones SIGA': 'eventos',
     'Cajita especial': 'cajita',
+    'Análisis SIGA': 'analisis',
     'Mi espacio': 'espacio',
     'Modo avión': 'calma',
     'Panel admin': 'admin',
