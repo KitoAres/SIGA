@@ -122,7 +122,7 @@ async function procesarTest() {
 // Nueva función: Muestra los resultados individuales
 async function cargarMisResultados() {
     const container = document.getElementById('mis-resultados-container');
-    container.innerHTML = "<p>Analizando tus patrones...</p>";
+    container.innerHTML = "<p>Cargando métricas...</p>";
 
     try {
         const res = await fetch(`/api/analisis/mis-resultados/sternberg/${usuarioLogueado}`);
@@ -136,37 +136,26 @@ async function cargarMisResultados() {
         const pts = JSON.parse(data.puntajes_json);
         const fecha = new Date(data.fecha).toLocaleDateString();
 
-        // Lógica de diagnóstico cualitativo
-        const diagnosticar = (dim, val) => {
-            if (val >= 4.0) return `Alta presencia de ${dim}. La estructura es sólida.`;
-            if (val >= 2.5) return `${dim} moderada. Hay base, pero se puede fortalecer con comunicación activa.`;
-            return `${dim} baja. Es un punto crítico que requiere atención inmediata mediante misiones SIGA.`;
-        };
-
         container.innerHTML = `
-            <h3>Análisis Individual de SiGy</h3>
-            <p style="color:#aaa; font-size:0.8rem; margin-bottom:15px;">Evaluación: ${fecha}</p>
-            
-            ${testActual.dimensiones.map(d => `
-                <div class="card-siga" style="margin-bottom:15px; padding:15px;">
-                    <div style="display:flex; justify-content:space-between;">
-                        <strong>${d}</strong>
-                        <span style="color:#22d3ee; font-weight:bold;">${pts[d]} / 5</span>
-                    </div>
-                    <p style="font-size: 0.85rem; color: #ddd; margin-top:8px;">${diagnosticar(d, pts[d])}</p>
-                </div>
-            `).join('')}
-
-            <div class="card-siga" style="border-left: 4px solid #6b2a8a; margin-top:20px;">
-                <strong>Resumen SiGy:</strong>
-                <p style="font-size:0.9rem;">${ pts["Intimidad"] < 3 ? "Tu foco principal debe ser la cercanía emocional." : "Tienes una buena base de confianza." }</p>
+            <h3>Tus resultados de Sternberg</h3>
+            <p style="color:#aaa; font-size:0.8rem; margin-bottom:15px;">Última evaluación: ${fecha}</p>
+            <div style="display:flex; justify-content:space-between; margin-bottom:10px; background:rgba(0,0,0,0.3); padding:10px; border-radius:5px;">
+                <span><strong>Intimidad:</strong> Mide la cercanía y confianza.</span>
+                <span style="color:#22d3ee; font-weight:bold;">${pts.Intimidad} / 5</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:10px; background:rgba(0,0,0,0.3); padding:10px; border-radius:5px;">
+                <span><strong>Pasión:</strong> Mide la atracción física y romántica.</span>
+                <span style="color:#ff6384; font-weight:bold;">${pts.Pasión} / 5</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:10px; background:rgba(0,0,0,0.3); padding:10px; border-radius:5px;">
+                <span><strong>Compromiso:</strong> Mide la decisión de mantener la relación.</span>
+                <span style="color:#6b2a8a; font-weight:bold;">${pts.Compromiso} / 5</span>
             </div>
         `;
     } catch (err) {
         container.innerHTML = "<p>Error al cargar resultados.</p>";
     }
 }
-
 
 async function cargarNuestrosResultados() {
     try {
