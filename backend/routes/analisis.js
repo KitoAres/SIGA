@@ -106,4 +106,32 @@ router.get('/conjunto/:test_id', async (req, res) => {
     }
 });
 
+// Obtener mis resultados y validar fecha del último test
+router.get('/mis-resultados/:test_id/:usuario', async (req, res) => {
+    try {
+        const query = `
+            SELECT puntajes_json, fecha 
+            FROM siga_test_resultados 
+            WHERE test_id = $1 AND usuario = $2 
+            ORDER BY fecha DESC LIMIT 1
+        `;
+        // Ajusta $1 y $2 por ? y ? si estás usando MySQL
+        const result = await db.query(query, [req.params.test_id, req.params.usuario]);
+        
+        // Manejo compatible con pg y mysql2
+        let row = null;
+        if (result.rows && result.rows.length > 0) row = result.rows[0];
+        else if (Array.isArray(result) && result[0].length > 0) row = result[0][0];
+
+        if (row) {
+            res.json(row);
+        } else {
+            res.json({ error: "No hay tests previos" });
+        }
+    } catch (error) {
+        console.error("Error al obtener mis resultados:", error);
+        res.status(500).json({ error: "Error en BD" });
+    }
+});
+
 module.exports = router;
