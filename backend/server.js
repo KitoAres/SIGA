@@ -81,6 +81,7 @@ app.use('/api/admin', require('./routes/admin'));
 app.use('/api/puntos', require('./routes/puntos'));
 app.use('/api/espacio', require('./routes/espacio'));
 app.use('/api/sigy', require('./routes/sigy'));
+app.use('/api/analisis', require('./routes/analisis'));
 
 app.get('/', (req, res) => {
   res.sendFile(path.join(publicPath, 'index.html'));
