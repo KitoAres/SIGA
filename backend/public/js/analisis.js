@@ -122,38 +122,72 @@ async function procesarTest() {
 // Nueva función: Muestra los resultados individuales
 async function cargarMisResultados() {
     const container = document.getElementById('mis-resultados-container');
-    container.innerHTML = "<p>Cargando métricas...</p>";
+    if (!container) return;
+    
+    container.innerHTML = "<p>Procesando perfil individual...</p>";
 
     try {
         const res = await fetch(`/api/analisis/mis-resultados/sternberg/${usuarioLogueado}`);
         const data = await res.json();
 
         if (data.error) {
-            container.innerHTML = "<p>Aún no has completado este test.</p>";
+            container.innerHTML = `<p>${data.error}</p>`;
             return;
         }
 
-        const pts = JSON.parse(data.puntajes_json);
-        const fecha = new Date(data.fecha).toLocaleDateString();
+        const pts = typeof data.puntajes_json === 'string' ? JSON.parse(data.puntajes_json) : data.puntajes_json;
+        const fecha = new Date(data.fecha).toLocaleDateString('es-BO');
 
-        container.innerHTML = `
-            <h3>Tus resultados de Sternberg</h3>
-            <p style="color:#aaa; font-size:0.8rem; margin-bottom:15px;">Última evaluación: ${fecha}</p>
-            <div style="display:flex; justify-content:space-between; margin-bottom:10px; background:rgba(0,0,0,0.3); padding:10px; border-radius:5px;">
-                <span><strong>Intimidad:</strong> Mide la cercanía y confianza.</span>
-                <span style="color:#22d3ee; font-weight:bold;">${pts.Intimidad} / 5</span>
-            </div>
-            <div style="display:flex; justify-content:space-between; margin-bottom:10px; background:rgba(0,0,0,0.3); padding:10px; border-radius:5px;">
-                <span><strong>Pasión:</strong> Mide la atracción física y romántica.</span>
-                <span style="color:#ff6384; font-weight:bold;">${pts.Pasión} / 5</span>
-            </div>
-            <div style="display:flex; justify-content:space-between; margin-bottom:10px; background:rgba(0,0,0,0.3); padding:10px; border-radius:5px;">
-                <span><strong>Compromiso:</strong> Mide la decisión de mantener la relación.</span>
-                <span style="color:#6b2a8a; font-weight:bold;">${pts.Compromiso} / 5</span>
-            </div>
+        // Matriz de interpretación cualitativa (Modelo puramente conductual)
+        const obtenerAnalisisCualitativo = (dimension, valor) => {
+            const val = parseFloat(valor);
+            if (val < 2.50) {
+                return {
+                    rango: "Bajo",
+                    color: "#ff6384",
+                    desc: `Nivel crítico en ${dimension}. Indica un déficit percibido en este componente dentro de la dinámica actual. Se recomienda activar misiones específicas de aproximación para evitar el distanciamiento.`
+                };
+            } else if (val <= 3.90) {
+                return {
+                    rango: "Moderado",
+                    color: "#ffca28",
+                    desc: `Nivel estable en ${dimension}. El componente está presente de forma adaptativa, pero muestra vulnerabilidad frente a la habituación o la rutina de la convivencia. Conviene reforzar de forma deliberada.`
+                };
+            } else {
+                return {
+                    rango: "Alto",
+                    color: "#22d3ee",
+                    desc: `Nivel consolidado en ${dimension}. Representa una fortaleza actual en tu percepción de la relación. El objetivo aquí es mantener la tasa de reforzamiento positivo para preservar esta base.`
+                };
+            }
+        };
+
+        let bloquesHtml = `
+            <h3 style="margin-bottom:5px;">Análisis de Perfil Individual</h3>
+            <p style="color:var(--text-muted); font-size:0.8rem; margin-bottom:20px;">Corte psicométrico: ${fecha}</p>
         `;
+
+        for (let dim in pts) {
+            const val = parseFloat(pts[dim]);
+            const interpretacion = obtenerAnalisisCualitativo(dim, val);
+
+            bloquesHtml += `
+                <div class="card-siga" style="margin-bottom: 15px; padding: 15px; border-left: 4px solid ${interpretacion.color}; background: rgba(30, 20, 45, 0.4);">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <strong style="font-size:1.05rem; color:#fff;">${dim}</strong>
+                        <span style="color:${interpretacion.color}; font-weight:bold; font-size:1.1rem;">${val.toFixed(2)} / 5.00</span>
+                    </div>
+                    <div style="font-size:0.8rem; color:${interpretacion.color}; font-weight:500; margin-top:2px;">Estado: ${interpretacion.rango}</div>
+                    <p style="font-size:0.85rem; color:#ddd; margin-top:8px; line-height:1.4;">${interpretacion.desc}</p>
+                </div>
+            `;
+        }
+
+        container.innerHTML = bloquesHtml;
+
     } catch (err) {
-        container.innerHTML = "<p>Error al cargar resultados.</p>";
+        console.error(err);
+        container.innerHTML = "<p style='color:#ff6384;'>Error al procesar la matriz psicométrica individual.</p>";
     }
 }
 
