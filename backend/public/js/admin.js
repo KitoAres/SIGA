@@ -602,4 +602,58 @@
   document.addEventListener('DOMContentLoaded', asegurarUIAdmin);
   setTimeout(asegurarUIAdmin, 500);
   setTimeout(asegurarUIAdmin, 1500);
+
+   async function loadAnalisisAdmin() {
+    const contenedor = qs('admin-lista-psicometria');
+    if (!contenedor) return;
+
+    contenedor.innerHTML = '<div style="padding:10px;color:var(--text-muted);">Cargando registros psicométricos...</div>';
+
+    try {
+      const data = await adminFetch('/api/analisis/admin/historial?x=' + Date.now());
+
+      // Si el backend devuelve un error o no es un array, manejamos el fallo
+      if (!Array.isArray(data)) {
+        contenedor.innerHTML = '<div class="admin-empty">No se pudo formatear el historial.</div>';
+        return;
+      }
+
+      if (data.length === 0) {
+        contenedor.innerHTML = '<div class="admin-empty">No hay tests registrados aún.</div>';
+        return;
+      }
+
+      contenedor.innerHTML = data.map(item => {
+        let pts = {};
+        try {
+          pts = typeof item.puntajes_json === 'string' ? JSON.parse(item.puntajes_json) : item.puntajes_json;
+        } catch (e) {
+          pts = {};
+        }
+
+        const fechaFormateada = fmt(item.fecha);
+        const detalles = Object.entries(pts)
+          .map(([dim, val]) => `${dim}: <strong>${Number(val).toFixed(2)}</strong>`)
+          .join(' | ');
+
+        return `
+          <div class="admin-mini-row" style="border-bottom: 1px solid rgba(255,255,255,0.05); padding: 8px 0;">
+            <div class="admin-mini-icon">🔺</div>
+            <div class="admin-mini-content" style="color: #fff;">
+              <div class="admin-mini-title" style="display:flex; justify-content:space-between;">
+                <span style="color: #22d3ee; font-weight:bold;">${esc(item.usuario)}</span>
+                <small style="color:var(--text-muted); font-size:0.75rem;">${fechaFormateada}</small>
+              </div>
+              <div class="admin-mini-meta" style="margin-top:2px;">Test: <span style="color:#ff6384;">${esc(item.test_id)}</span></div>
+              <div style="font-size:0.78rem; color:#aaa; margin-top:3px;">${detalles}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+    } catch (err) {
+      console.error('Error cargando psicometría en admin:', err);
+      contenedor.innerHTML = '<div class="admin-empty" style="color:var(--danger);">Error al conectar con el servidor.</div>';
+    }
+  }
 })();
