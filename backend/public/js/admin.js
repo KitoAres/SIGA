@@ -1,13 +1,4 @@
-/* SIGA — admin.js limpio y completo
-   Panel admin separado:
-   - Resumen de puntos
-   - Tarjetas clicables por fuente
-   - Detalle por fuente
-   - Eliminar puntos
-   - Sumar/quitar puntos manualmente
-   - Ver accesos sin admin
-   - Reconstruye el panel aunque exista un page-admin viejo
-*/
+/* SIGA — admin.js limpio, completo y corregido con Psicometría */
 
 (function () {
   function qs(id) {
@@ -39,7 +30,6 @@
     const user = getUser();
     return !!(user && user.rol === 'admin');
   }
-
 
   function getToken() {
     return sessionStorage.getItem('siga_token') || '';
@@ -215,8 +205,6 @@
       main.appendChild(section);
     }
 
-    // Siempre reconstruimos el contenido del panel admin.
-    // Así eliminamos el panel viejo que quedaba vacío.
     section.innerHTML = `
       <div class="page-header">
         <div>
@@ -256,9 +244,16 @@
           </div>
         </div>
 
-        <div class="admin-box">
-          <div class="admin-box-title">Actividad por usuario <span class="admin-muted">(sin admin)</span></div>
-          <div id="admin-actividad-usuarios" class="admin-list-mini">Cargando...</div>
+        <div class="admin-two-cols" style="margin-top:20px;">
+          <div class="admin-box">
+            <div class="admin-box-title">Actividad por usuario <span class="admin-muted">(sin admin)</span></div>
+            <div id="admin-actividad-usuarios" class="admin-list-mini">Cargando...</div>
+          </div>
+
+          <div class="admin-box">
+            <div class="admin-box-title">Historial de Tests <span class="admin-muted">(SiGy Analisi)</span></div>
+            <div id="admin-lista-psicometria" class="admin-list-mini">Cargando...</div>
+          </div>
         </div>
       </div>
     `;
@@ -271,8 +266,6 @@
       alert('Solo admin.');
       return;
     }
-
-    const user = getUser();
 
     try {
       const data = await adminFetch('/api/admin/resumen?x=' + Date.now());
@@ -346,6 +339,9 @@
           `).join('');
         }
       }
+
+      // ¡AQUÍ ES DONDE SE PEGA! Se ejecuta inmediatamente después de cargar lo anterior
+      await loadAnalisisAdmin();
 
     } catch (err) {
       console.error('Error cargando panel admin:', err);
@@ -589,21 +585,7 @@
     }
   }
 
-  window.cargarPanelAdmin = cargarPanelAdmin;
-  window.loadAdminPanel = cargarPanelAdmin;
-
-  window.abrirDetalleAdmin = abrirDetalleAdmin;
-  window.cerrarDetalleAdmin = cerrarDetalleAdmin;
-
-  window.eliminarPuntoAdmin = eliminarPuntoAdmin;
-  window.eliminarAccesoAdmin = eliminarAccesoAdmin;
-  window.abrirAjusteAdmin = abrirAjusteAdmin;
-
-  document.addEventListener('DOMContentLoaded', asegurarUIAdmin);
-  setTimeout(asegurarUIAdmin, 500);
-  setTimeout(asegurarUIAdmin, 1500);
-
-   async function loadAnalisisAdmin() {
+  async function loadAnalisisAdmin() {
     const contenedor = qs('admin-lista-psicometria');
     if (!contenedor) return;
 
@@ -612,7 +594,6 @@
     try {
       const data = await adminFetch('/api/analisis/admin/historial?x=' + Date.now());
 
-      // Si el backend devuelve un error o no es un array, manejamos el fallo
       if (!Array.isArray(data)) {
         contenedor.innerHTML = '<div class="admin-empty">No se pudo formatear el historial.</div>';
         return;
@@ -656,4 +637,16 @@
       contenedor.innerHTML = '<div class="admin-empty" style="color:var(--danger);">Error al conectar con el servidor.</div>';
     }
   }
+
+  window.cargarPanelAdmin = cargarPanelAdmin;
+  window.loadAdminPanel = cargarPanelAdmin;
+  window.abrirDetalleAdmin = abrirDetalleAdmin;
+  window.cerrarDetalleAdmin = cerrarDetalleAdmin;
+  window.eliminarPuntoAdmin = eliminarPuntoAdmin;
+  window.eliminarAccesoAdmin = eliminarAccesoAdmin;
+  window.abrirAjusteAdmin = abrirAjusteAdmin;
+
+  document.addEventListener('DOMContentLoaded', asegurarUIAdmin);
+  setTimeout(asegurarUIAdmin, 500);
+  setTimeout(asegurarUIAdmin, 1500);
 })();
