@@ -1,5 +1,5 @@
 /* ======================================================
-   SIGy Sprites v4 ✨
+   SIGy Sprites v4 ✨ (OPTIMIZADO PARA NO TIRAR EL SERVIDOR)
    Más expresivo, acciones más largas y movimiento más suave.
    Programar esto fue sufrir, pero con amor.
    ====================================================== */
@@ -59,6 +59,31 @@
     }
   };
 
+  // --- NUEVO: PRECARGA EN MEMORIA RAM ---
+  // Esto obliga al navegador a descargar todas las imágenes de Sigy en el 
+  // instante en que cargas la página. Así, cuando la animación corre, 
+  // saca la imagen de tu RAM y NO le hace peticiones a Vercel. 0 errores 429.
+  const cacheImagenes = {};
+  function precargarImagenes() {
+    Object.values(SIGY_ASSETS).forEach(categoria => {
+      if (Array.isArray(categoria)) {
+        categoria.forEach(src => {
+          const img = new Image();
+          img.src = src;
+          cacheImagenes[src] = img;
+        });
+      } else if (typeof categoria === 'object') {
+        Object.values(categoria).forEach(src => {
+          const img = new Image();
+          img.src = src;
+          cacheImagenes[src] = img;
+        });
+      }
+    });
+  }
+  precargarImagenes();
+  // ----------------------------------------
+
   const DURACION = {
     cafe: 7600,
     manta: 7600,
@@ -93,7 +118,6 @@
     isMoving: false,
     currentMode: 'idle',
 
-    // Mientras esto esté activo, ninguna microacción random interrumpe café/manta/etc.
     actionLockUntil: 0
   };
 
@@ -178,7 +202,6 @@
     enlazarEventosUI();
     iniciarVidaIdle();
 
-    // Saludo suave al cargar.
     setTimeout(() => {
       mostrarAccion(SIGY_ASSETS.actions.hello, 3000, true, true);
     }, 600);
@@ -255,7 +278,6 @@
     state.lastTextSeen = texto;
     tocar();
 
-    // Café / tacita / chocolatito
     if (
       texto.includes('cafe') ||
       texto.includes('cafecito') ||
@@ -269,7 +291,6 @@
       return;
     }
 
-    // Mantita / cobija / almohadita
     if (
       texto.includes('mantita') ||
       texto.includes('cobijita') ||
@@ -283,7 +304,6 @@
       return;
     }
 
-    // Leer / carta / mensaje
     if (
       texto.includes('carta') ||
       texto.includes('mensaje') ||
@@ -296,7 +316,6 @@
       return;
     }
 
-    // Pensar / decidir
     if (
       texto.includes('pensar') ||
       texto.includes('pensando') ||
@@ -311,7 +330,6 @@
       return;
     }
 
-    // Amor / corazones / ternura
     if (
       texto.includes('amor') ||
       texto.includes('corazon') ||
@@ -326,7 +344,6 @@
       return;
     }
 
-    // Saludo / bienvenida
     if (
       texto.includes('hola') ||
       texto.includes('volviste') ||
@@ -338,7 +355,6 @@
       return;
     }
 
-    // Celebración / siuuu
     if (
       texto.includes('sigyyyy') ||
       texto.includes('siiuuu') ||
@@ -352,7 +368,6 @@
       return;
     }
 
-    // Tristeza / dolor
     if (
       texto.includes('triste') ||
       texto.includes('duele') ||
@@ -365,7 +380,6 @@
       return;
     }
 
-    // Sorpresa
     if (
       texto.includes('sorpresa') ||
       texto.includes('wow') ||
@@ -377,7 +391,6 @@
       return;
     }
 
-    // Acompañamiento / calma
     if (
       texto.includes('acompanar') ||
       texto.includes('acompañar') ||
