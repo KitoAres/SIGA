@@ -134,4 +134,21 @@ router.get('/mis-resultados/:test_id/:usuario', async (req, res) => {
     }
 });
 
+// Obtener el historial completo de tests para el panel de administración
+router.get('/admin/historial', async (req, res) => {
+    try {
+        const query = `
+            SELECT id, usuario, test_id, puntajes_json, fecha 
+            FROM siga_test_resultados 
+            ORDER BY fecha DESC
+        `;
+        const result = await db.query(query);
+        const rows = result.rows ? result.rows : result[0];
+        res.json(rows);
+    } catch (error) {
+        console.error("Error al cargar historial admin:", error);
+        res.status(500).json({ error: "Error al obtener los datos de administración." });
+    }
+});
+
 module.exports = router;
