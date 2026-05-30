@@ -47,8 +47,6 @@ function puntosPorNivel(nivel) {
   return { facil: 10, medio: 25, dificil: 50, hardcore: 100 }[n] || 10;
 }
 
-const { calcularNivelRelacion } = require('../utils/nivel');
-
 
 
 async function esAdmin(usuario_id) {
