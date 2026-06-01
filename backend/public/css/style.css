@@ -3797,3 +3797,31 @@ Si entras y lees esto... pues si le meti mucho amor e insomnio aqui*/
 .espacio-history-item small {
   opacity: 0.75;
 }
+
+/* ======================================================
+   🔮 PARCHE DE CONTROL ESPIRITUAL PARA SIGy
+   Permite que se pasee libre pero sin tapar el Universo
+   ====================================================== */
+
+#sigy-widget {
+    position: fixed !important;
+    z-index: 99999 !important; /* Asegura que la carita se vea arriba */
+    pointer-events: none !important; /* El "aire" invisible del contenedor NO recibe clics */
+}
+
+/* Hacemos que solo los elementos reales de SIGy sí respondan a los clics */
+#sigy-burbuja, 
+#sigy-globo, 
+#sigy-panel {
+    pointer-events: auto !important; /* La burbuja, el globo de texto y el panel sí son interactivos */
+}
+
+/* ── Corrección de la capa del universo ── */
+#universo-map-container {
+    position: relative;
+    z-index: 5; /* Lo posicionamos por encima de cualquier otro fondo */
+}
+
+#universo-svg {
+    pointer-events: auto !important; /* Garantiza que los planetas escuchen tus clics */
+}
