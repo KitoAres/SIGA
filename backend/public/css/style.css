@@ -3825,3 +3825,13 @@ Si entras y lees esto... pues si le meti mucho amor e insomnio aqui*/
 #universo-svg {
     pointer-events: auto !important; /* Garantiza que los planetas escuchen tus clics */
 }
+
+
+/* ── ELIMINAR EL CUADRO INTRUSO DEL CENTRO ── YA ME ESTREEESEEEEEE*/
+.tiempo-login-wrap, 
+.tiempo-login-card {
+    display: none !important;
+    pointer-events: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+}
