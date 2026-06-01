@@ -1,4 +1,3 @@
-
 'use strict';
 
 // ── ESTADO GLOBAL ──────────────────────────────────────────────
@@ -138,6 +137,7 @@ function formatFechaLarga(d) {
     day: 'numeric'
   });
 }
+
 // ── LOGIN / LOGOUT ─────────────────────────────────────────────
 async function doLogin() {
   const usuario = $('login-user').value.trim();
@@ -169,7 +169,7 @@ async function doLogin() {
       $('login-screen').style.display = 'none';
       $('app').classList.add('visible');
 
-renderUsuarioActual();
+      renderUsuarioActual();
       forzarSeccion('dashboard');
     } else {
       $('login-error').textContent = data.error || 'Credenciales incorrectas.';
@@ -193,6 +193,7 @@ function doLogout() {
   $('login-user').value = '';
   $('login-pass').value = '';
 }
+
 function renderUsuarioActual() {
   if (!state.currentUser) return;
 
@@ -222,87 +223,10 @@ document.addEventListener('keydown', function(e) {
   }
 });
 
-// ── NAVEGACIÓN ─────────────────────────────────────────────────
+// ── NAVEGACIÓN (Obsolescente, mapeada a forzarSeccion) ─────────
 function navigateTo(page) {
-  const targetPage = $('page-' + page);
-
-  if (!targetPage) {
-    console.error('No existe la sección:', 'page-' + page);
-    toast('No existe la sección: ' + page);
-    return;
-  }
-
-  // Ocultar todas las páginas con !important para ganarle al CSS
-  document.querySelectorAll('.page').forEach(p => {
-    p.classList.remove('active');
-    p.style.setProperty('display', 'none', 'important');
-    p.style.setProperty('visibility', 'hidden', 'important');
-    p.style.setProperty('opacity', '0', 'important');
-    p.style.setProperty('position', 'relative', 'important');
-  });
-
-  // Mostrar la página elegida
-  targetPage.classList.add('active');
-  targetPage.style.setProperty('display', 'block', 'important');
-  targetPage.style.setProperty('visibility', 'visible', 'important');
-  targetPage.style.setProperty('opacity', '1', 'important');
-  targetPage.style.setProperty('position', 'relative', 'important');
-  targetPage.style.setProperty('z-index', '5', 'important');
-
-  // Activar botón correcto del menú
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-
-  const mapa = {
-    dashboard: 'Dashboard',
-    recuerdos: 'Recuerdos',
-    citas: 'Nuestros planes',
-    playlist: 'Playlist',
-    razones: 'Razones',
-    promesas: 'Promesas',
-    carta: 'Carta',
-    tiempo: '¿Nos vemos?',
-    eventos: 'Misiones de conexión',
-    cajita: 'Cajita especial',
-    espacio: 'Mi espacio',
-    pregunta: 'Pregunta final',
-    universo: 'Nuestro universo'
-  };
-
-  document.querySelectorAll('.nav-item').forEach(n => {
-    if (n.textContent.includes(mapa[page])) n.classList.add('active');
-  });
-
-  state.currentPage = page;
-
-  if (typeof closeSidebar === 'function') closeSidebar();
-
-  const loaders = {
-    dashboard: typeof loadDashboard === 'function' ? loadDashboard : null,
-    recuerdos: typeof loadRecuerdos === 'function' ? loadRecuerdos : null,
-    citas: typeof loadCitas === 'function' ? loadCitas : null,
-    playlist: typeof loadPlaylist === 'function' ? loadPlaylist : null,
-    razones: typeof loadRazones === 'function' ? loadRazones : null,
-    promesas: typeof loadPromesas === 'function' ? loadPromesas : null,
-    carta: typeof loadCarta === 'function' ? loadCarta : null,
-    eventos: typeof loadEventos === 'function' ? loadEventos : null,
-    cajita: typeof loadCajita === 'function' ? loadCajita : null,
-    espacio: typeof loadEspacio === 'function' ? loadEspacio : null
-  };
-
-  if (loaders[page]) loaders[page]();
-
-  if (page === 'tiempo' && typeof initTiempoPage === 'function') {
-    initTiempoPage();
-  }
-
-  // Universo: init al entrar, destroy al salir
-  if (page === 'universo') {
-    if (typeof initUniverso === 'function') initUniverso();
-  } else {
-    if (typeof destroyUniverso === 'function') destroyUniverso();
-  }
+  forzarSeccion(page);
 }
-
 window.navigateTo = navigateTo;
 
 // ── SIDEBAR MÓVIL ──────────────────────────────────────────────
@@ -326,12 +250,13 @@ async function loadDashboard() {
   } catch {
     // Silencioso si no hay DB aún
   }
-cargarFraseDelDia();
+  cargarFraseDelDia();
   await cargarAvisoMatchDashboard();
   if (typeof cargarProgresoGlobal === 'function') {
-  await cargarProgresoGlobal();
+    await cargarProgresoGlobal();
   }
 }
+
 function cargarFraseDelDia() {
   const el = $('frase-dia-text');
   if (!el) return;
@@ -347,7 +272,6 @@ function cargarFraseDelDia() {
     'Hoy puede ser un buen día para cuidar lo nuestro.',
     'Lo que se construye con calma también puede ser fuerte.',
     'Estar presente también es una forma de amor.',
-
     'Un mensaje pequeño también puede abrazar.',
     'Que lo nuestro tenga paciencia, no prisa.',
     'A veces el amor se nota en cómo esperamos.',
@@ -358,7 +282,6 @@ function cargarFraseDelDia() {
     'Hoy no hace falta correr; basta con no soltarnos.',
     'Lo nuestro merece calma, no miedo.',
     'A veces quedarse también es decir te quiero.',
-
     'La ternura no siempre hace ruido.',
     'Hay formas suaves de decir aquí sigo.',
     'No todo silencio es distancia; a veces es cuidado.',
@@ -369,7 +292,6 @@ function cargarFraseDelDia() {
     'Que tengas un maravilloso dia. Recuerda que siempre estas presente incluso en tu ausencia.',
     'El amor consumado no exige perfección.',
     'A veces un “estoy aquí” vale más que mil explicaciones.',
-
     'Que lo nuestro no se mida por la prisa, sino por el cuidado.',
     'Hoy también se puede empezar con calma.',
     'Si algo pesa, que no pese solo.',
@@ -380,7 +302,6 @@ function cargarFraseDelDia() {
     'No todo tiene que doler para ser profundo. Aunque Fiodor diria lo contrario',
     'El cariño se nota en cómo tratamos lo frágil.',
     'Hoy podemos ser un lugar seguro.',
-
     'Que el miedo no decida por nosotros.',
     'A veces amar es respirar antes de responder.',
     'Lo nuestro puede ir despacio y seguir siendo valioso.',
@@ -391,7 +312,6 @@ function cargarFraseDelDia() {
     'No hace falta forzar cercanía para que exista cariño.',
     'Que hoy el amor no sea presión, sino refugio.',
     'Lo sincero también puede ser suave.',
-
     'Hoy podemos hablarnos como si hubieramos descubierto lo que Sternberg llamo "imposible", porque no esta lejano.',
     'A veces el detalle más bonito es tener paciencia.',
     'Se dice que puedes gestionar tus emociones. La verdad es que no se puede. Contigo lo confirmo cada dia, porque es dificil no amarte tanto.',
@@ -402,7 +322,6 @@ function cargarFraseDelDia() {
     'Si hay silencio, que no falte cariño.',
     'Si hay miedo, que no falte honestidad.',
     'Si hay cansancio, que no falte cuidado.',
-
     'Que lo bonito no se pierda por no saber comunicar.',
     'A veces el amor empieza por elegir.',
     'Hoy no necesitamos intensidad, necesitamos calma.',
@@ -413,7 +332,6 @@ function cargarFraseDelDia() {
     'No subestimes lo que una palabra suave puede hacer.',
     'Que la desconfianza no ocupe el lugar del cariño.',
     'Hoy también se puede reparar algo pequeño.',
-
     'Cuidar no siempre es resolver; a veces es estar.',
     'A veces lo más bonito es sentirse elegido sin presión.',
     'Que el día nos trate bonito.',
@@ -424,7 +342,6 @@ function cargarFraseDelDia() {
     'A veces preguntar con ternura evita muchas heridas.',
     'No somos perfectos; solo sabemos como "leernos".',
     'Que la calma sea nuestro punto de encuentro.',
-
     'Hoy podemos darnos un poco más de paciencia.',
     'El amor también necesita descanso.',
     'A veces cuidar es no insistir de más.',
@@ -435,7 +352,6 @@ function cargarFraseDelDia() {
     'Lo bonito también se protege con límites sanos.',
     'Amar no es invadir; amar también es respetar.',
     'Que podamos estar cerca sin apurarnos.',
-
     'Hoy puede bastar con una señal pequeña.',
     'No hace falta tener un gran día para tener un gesto bonito.',
     'Que nuestro amor sea más fuerte que la costumbre.',
@@ -456,14 +372,13 @@ function cargarFraseDelDia() {
   const frase = frases[diaDelAno % frases.length];
   el.textContent = frase;
 }
+
 async function cargarAvisoMatchDashboard() {
   const box = $('dashboard-match-alert');
   if (!box) return;
 
   if (!state.currentUser || !state.currentUser.id) return;
 
-  // Evita el parpadeo inicial: si loadDashboard se llama 2 o 3 veces,
-  // no vaciamos el cuadro mientras la API responde.
   if (cargarAvisoMatchDashboard._loading) return;
   cargarAvisoMatchDashboard._loading = true;
 
@@ -516,7 +431,6 @@ async function cargarAvisoMatchDashboard() {
       }
     }
 
-    // Solo actualiza si cambió. Así ya no aparece/desaparece al inicio.
     if (box.innerHTML.trim() !== html.trim()) {
       box.innerHTML = html;
     }
@@ -524,7 +438,6 @@ async function cargarAvisoMatchDashboard() {
     if (matches.length) mostrarAvisoMatch(matches);
   } catch (err) {
     console.warn('No se pudo cargar aviso de match en dashboard:', err);
-    // Si falla la API, dejamos lo último que había en pantalla.
   } finally {
     cargarAvisoMatchDashboard._loading = false;
   }
@@ -540,33 +453,32 @@ async function loadRecuerdos() {
       container.innerHTML = emptyState('🌸', 'Aún no hay recuerdos guardados.');
       return;
     }
-     window.recuerdosCache = items;
-container.innerHTML = items.map(r => `
-  <div class="item-card recuerdo-card">
-    ${r.imagen_url ? `
-      <div class="recuerdo-img-wrap">
-        <img src="${esc(r.imagen_url)}" alt="${esc(r.titulo)}" class="recuerdo-img">
+    window.recuerdosCache = items;
+    container.innerHTML = items.map(r => `
+      <div class="item-card recuerdo-card">
+        ${r.imagen_url ? `
+          <div class="recuerdo-img-wrap">
+            <img src="${esc(r.imagen_url)}" alt="${esc(r.titulo)}" class="recuerdo-img">
+          </div>
+        ` : ''}
+
+        <div class="item-header">
+          <div class="item-title">${esc(r.titulo)}</div>
+          <div class="item-meta">${formatDate(r.fecha)}</div>
+        </div>
+
+        <p class="item-desc">${esc(r.descripcion)}</p>
+
+        ${r.enlace_url ? `
+          <a class="btn-link-recuerdo" href="${esc(r.enlace_url)}" target="_blank" rel="noopener">
+            Abrir algo especial ♡
+          </a>
+        ` : ''}
+
+        <button class="btn btn-sm btn-edit" onclick="editarRecuerdoSeguro(${r.id})">Editar</button>
+        <button class="btn btn-sm btn-delete" onclick="deleteItem('recuerdos', ${r.id})">Eliminar</button>
       </div>
-    ` : ''}
-
-    <div class="item-header">
-      <div class="item-title">${esc(r.titulo)}</div>
-      <div class="item-meta">${formatDate(r.fecha)}</div>
-    </div>
-
-    <p class="item-desc">${esc(r.descripcion)}</p>
-
-    ${r.enlace_url ? `
-      <a class="btn-link-recuerdo" href="${esc(r.enlace_url)}" target="_blank" rel="noopener">
-        Abrir algo especial ♡
-      </a>
-    ` : ''}
-
-<button class="btn btn-sm btn-edit" onclick="editarRecuerdoSeguro(${r.id})">Editar</button>
-      <button class="btn btn-sm btn-delete" onclick="deleteItem('recuerdos', ${r.id})">Eliminar</button>
-    </div>
-  </div>
-`).join('');
+    `).join('');
   } catch {
     container.innerHTML = '<div style="color:var(--danger);padding:20px;">Error al cargar recuerdos.</div>';
   }
@@ -1022,12 +934,7 @@ async function deleteItem(type, id) {
     toast('Error al eliminar.');
   }
 }
-const modalPerfil = $('modal-perfil');
-if (modalPerfil) {
-  modalPerfil.addEventListener('click', function(e) {
-    if (e.target === this) closeModal('modal-perfil');
-  });
-}
+
 // ── CAJITA ESPECIAL ───────────────────────────────────────────
 async function loadCajita() {
   const container = $('list-cajita');
@@ -1104,6 +1011,7 @@ function editarCajitaSeguro(id) {
     normalizarFecha(item.fecha)
   );
 }
+
 // ── MI CUENTA / PERFIL ─────────────────────────────────────────
 async function abrirModalPerfil() {
   if (!state.currentUser || !state.currentUser.id) {
@@ -1189,6 +1097,7 @@ async function guardarPerfil() {
     toast('Error al guardar perfil.');
   }
 }
+
 // ── PREGUNTA FINAL ────────────────────────────────────────────
 function escapeNo(e) {
   const btnNo = $('btn-no');
@@ -1211,15 +1120,15 @@ function escapeNo(e) {
   const margen = 40;
 
   const posiciones = [
-    { x: 0, y: 0 },                                                // arriba izquierda
-    { x: zonaW - noW, y: 0 },                                      // arriba derecha
-    { x: 0, y: zonaH - noH },                                      // abajo izquierda
-    { x: zonaW - noW, y: zonaH - noH },                            // abajo derecha
-    { x: Math.floor((zonaW - noW) / 2), y: 0 },                    // arriba centro
-    { x: Math.floor((zonaW - noW) / 2), y: zonaH - noH },          // abajo centro
-    { x: 0, y: Math.floor((zonaH - noH) / 2) },                    // medio izquierda
-    { x: zonaW - noW, y: Math.floor((zonaH - noH) / 2) },          // medio derecha
-    { x: Math.floor((zonaW - noW) / 2), y: Math.floor((zonaH - noH) / 2) } // centro
+    { x: 0, y: 0 },
+    { x: zonaW - noW, y: 0 },
+    { x: 0, y: zonaH - noH },
+    { x: zonaW - noW, y: zonaH - noH },
+    { x: Math.floor((zonaW - noW) / 2), y: 0 },
+    { x: Math.floor((zonaW - noW) / 2), y: zonaH - noH },
+    { x: 0, y: Math.floor((zonaH - noH) / 2) },
+    { x: zonaW - noW, y: Math.floor((zonaH - noH) / 2) },
+    { x: Math.floor((zonaW - noW) / 2), y: Math.floor((zonaH - noH) / 2) }
   ];
 
   const posicionesSeguras = posiciones.filter(pos => {
@@ -1274,16 +1183,7 @@ function emptyState(icon, msg) {
   `;
 }
 
-// ── CERRAR MODALES CON ESC ────────────────────────────────────
-document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') {
-    if ($('modal-crud') && $('modal-crud').classList.contains('open')) closeModal('modal-crud');
-    if ($('modal-tiempo') && $('modal-tiempo').classList.contains('open')) closeModal('modal-tiempo');
-    if ($('modal-perfil') && $('modal-perfil').classList.contains('open')) closeModal('modal-perfil');
-  }
-});
-
-// Cerrar modal al click fuera
+// Cerrar modales con overlay click
 const modalCrud = $('modal-crud');
 if (modalCrud) {
   modalCrud.addEventListener('click', function(e) {
@@ -1297,18 +1197,17 @@ if (modalPerfil2) {
     if (e.target === this) closeModal('modal-perfil');
   });
 }
+
 /* ============================================================
    MÓDULO: Nuestro Tiempo
    ============================================================ */
-// ── Aviso happy cuando hay match de tiempo ───────────────────
 let ultimoMatchAvisado = '';
 
 function sonidoMatch() {
   try {
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     const ctx = new AudioContext();
-
-    const notas = [523.25, 659.25, 783.99, 1046.5]; // do, mi, sol, do alto
+    const notas = [523.25, 659.25, 783.99, 1046.5];
 
     notas.forEach((freq, i) => {
       const osc = ctx.createOscillator();
@@ -1389,7 +1288,6 @@ function mostrarAvisoMatch(coincidencias) {
   `;
 
   document.body.appendChild(aviso);
-
   setTimeout(() => aviso.classList.add('show'), 50);
 
   setTimeout(() => {
@@ -1397,140 +1295,15 @@ function mostrarAvisoMatch(coincidencias) {
     setTimeout(() => aviso.remove(), 400);
   }, 4200);
 }
-// Estado del módulo tiempo (separado del estado global de SIGA)
+
 const tiempoState = {
   usuarioId:   null,
   nombre:      null,
-  usuarioSlug: null,  // 'yo' | 'ella'
+  usuarioSlug: null,
   editandoId:  null,
   tabActual:   'mis',
 };
 
-// ── Selección de usuario en el mini-login ──────────────────────
-function seleccionarTiempoUser(slug) {
-  tiempoState.usuarioSlug = slug;
-  document.querySelectorAll('.tiempo-user-btn').forEach(b => b.classList.remove('selected'));
-  const btn = slug === 'yo' ? $('tbtn-yo') : $('tbtn-ella');
-  if (btn) btn.classList.add('selected');
-  const passEl = $('t-pass');
-  if (passEl) { passEl.focus(); }
-}
-
-// ── Login del módulo ───────────────────────────────────────────
-async function loginTiempo() {
-  const slug     = tiempoState.usuarioSlug;
-  const contrasena = $('t-pass') ? $('t-pass').value.trim() : '';
-  const errEl    = $('t-login-error');
-
-  if (errEl) errEl.textContent = '';
-
-  if (!slug) {
-    if (errEl) errEl.textContent = 'Elige quién eres (Yo o Ella).';
-    return;
-  }
-  if (!contrasena) {
-    if (errEl) errEl.textContent = 'Ingresa tu contraseña.';
-    return;
-  }
-
-  try {
-    const data = await api('POST', '/api/auth/login', { usuario: slug, contrasena });
-    if (!data.ok) {
-      if (errEl) errEl.textContent = data.error || 'Credenciales incorrectas.';
-      return;
-    }
-    // Login exitoso
-    sessionStorage.setItem('siga_token', data.token);
-
-    tiempoState.usuarioId   = data.usuario_id;
-    tiempoState.nombre      = data.nombre;
-    tiempoState.usuarioSlug = slug;
-
-    // Mostrar panel, ocultar login
-    const loginWrap = $('tiempo-login-wrap');
-    const panel     = $('tiempo-panel');
-    if (loginWrap) loginWrap.style.display = 'none';
-    if (panel)     panel.classList.add('active');
-
-    // Actualizar badge
-    const badge = $('tiempo-badge-nombre');
-    if (badge) badge.textContent = data.nombre || slug;
-
-    // Limpiar contraseña
-    if ($('t-pass')) $('t-pass').value = '';
-
-    // Cargar datos
-    await loadDisponibilidades();
-    await loadCoincidencias();
-  } catch {
-    if (errEl) errEl.textContent = 'No se pudo conectar con el servidor.';
-  }
-}
-
-function logoutTiempo() {
-  // Ya no usamos mini-login. Salir de "¿Nos vemos?" vuelve al dashboard.
-  navigateTo('dashboard');
-}
-
-function initTiempoPage() {
-  const loginWrap = $('tiempo-login-wrap');
-  const panel = $('tiempo-panel');
-
-  if (!state.currentUser || !state.currentUser.id) {
-    if (loginWrap) loginWrap.style.display = 'none';
-
-    if (panel) {
-      panel.classList.remove('active');
-      panel.style.display = 'none';
-    }
-
-    toast('Primero inicia sesión.');
-    return;
-  }
-
-  tiempoState.usuarioId = state.currentUser.id;
-  tiempoState.nombre =
-    state.currentUser.display_name ||
-    state.currentUser.nombre ||
-    state.currentUser.usuario;
-
-  tiempoState.usuarioSlug = state.currentUser.usuario;
-
-  if (loginWrap) {
-    loginWrap.style.display = 'none';
-  }
-
-  if (panel) {
-    panel.classList.add('active');
-    panel.style.display = 'block';
-  }
-
-  const badge = $('tiempo-badge-nombre');
-  if (badge) {
-    badge.textContent = tiempoState.nombre;
-  }
-
-  loadDisponibilidades();
-  loadCoincidencias();
-}
-
-window.initTiempoPage = initTiempoPage;
-// ── Tabs ───────────────────────────────────────────────────────
-function switchTiempoTab(tab) {
-  tiempoState.tabActual = tab;
-
-  document.querySelectorAll('.tiempo-tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.tiempo-tab-content').forEach(c => c.classList.remove('active'));
-
-  const tabBtn     = tab === 'mis' ? $('ttab-mis')   : $('ttab-coin');
-  const tabContent = tab === 'mis' ? $('tcontent-mis') : $('tcontent-coin');
-  if (tabBtn)     tabBtn.classList.add('active');
-  if (tabContent) tabContent.classList.add('active');
-
-  if (tab === 'coincidencias') loadCoincidencias();
-}
-
-// ── Cargar mis disponibilidades ────────────────────────────────
 async function loadDisponibilidades() {
   const container = $('list-disponibilidades');
   if (!container || !tiempoState.usuarioId) return;
@@ -1579,7 +1352,6 @@ async function loadDisponibilidades() {
   }
 }
 
-// ── Cargar coincidencias ───────────────────────────────────────
 async function loadCoincidencias() {
   const container = $('list-coincidencias');
   if (!container || !tiempoState.usuarioId) return;
@@ -1615,12 +1387,10 @@ async function loadCoincidencias() {
       return;
     }
 
-    // Si hay al menos un match, avisar con sonido y mensaje.
     mostrarAvisoMatch(coincidencias);
 
     container.innerHTML = coincidencias.map(c => {
       const fechaStr = formatFechaLarga(c.fecha);
-
       const mi = c.mi_disponibilidad || {};
       const otra = c.otra_disponibilidad || {};
 
@@ -1629,16 +1399,8 @@ async function loadCoincidencias() {
 
       const miLugar = textoLugar(mi.lugar);
       const miMensaje = textoMensaje(mi.mensaje);
-
       const otraLugar = textoLugar(otra.lugar);
       const otraMensaje = textoMensaje(otra.mensaje);
-
-      /*
-        Para Francin, si algún día inspeccionas este código:
-        esta tarjeta no está hecha para presionarte.
-        Está hecha para que, cuando ambos coincidan, no tengan que adivinar.
-        Si aparece un lugar o un mensaje, es solo una invitación suave. ♡
-      */
 
       if (c.hay_coincidencia) {
         return `
@@ -1647,27 +1409,19 @@ async function loadCoincidencias() {
               <span style="font-size:1.1rem;">💙</span>
               <div class="coincidencia-fecha">${fechaStr}</div>
             </div>
-
             <div class="coincidencia-resultado found">✨ MATCH de tiempo 💙</div>
-
             <div class="coincidencia-horario">
               ⏰ ${formatHora(c.inicio_coincidencia)} — ${formatHora(c.fin_coincidencia)}
             </div>
-
             <div class="coincidencia-mi-disp">
               <strong>Tu bloque:</strong>
-              <span>
-                ${formatHora(mi.hora_inicio)} – ${formatHora(mi.hora_fin)}
-              </span>
+              <span>${formatHora(mi.hora_inicio)} – ${formatHora(mi.hora_fin)}</span>
               <div style="margin-top:6px;">${miLugar}</div>
               <div style="margin-top:4px;">${miMensaje}</div>
             </div>
-
             <div class="coincidencia-mi-disp" style="margin-top:10px;border-top:1px solid rgba(255,255,255,.08);padding-top:10px;">
               <strong>Su bloque:</strong>
-              <span>
-                ${formatHora(otra.hora_inicio)} – ${formatHora(otra.hora_fin)}
-              </span>
+              <span>${formatHora(otra.hora_inicio)} – ${formatHora(otra.hora_fin)}</span>
               <div style="margin-top:6px;">${otraLugar}</div>
               <div style="margin-top:4px;">${otraMensaje}</div>
             </div>
@@ -1680,24 +1434,17 @@ async function loadCoincidencias() {
             <span style="font-size:1.1rem;">🌙</span>
             <div class="coincidencia-fecha">${fechaStr}</div>
           </div>
-
           <div class="coincidencia-resultado not-found">Sin match por ahora 🌙</div>
-
           <div class="coincidencia-mi-disp" style="margin-top:8px;">
             <strong>Tu bloque:</strong>
-            <span>
-              ${formatHora(mi.hora_inicio)} – ${formatHora(mi.hora_fin)}
-            </span>
+            <span>${formatHora(mi.hora_inicio)} – ${formatHora(mi.hora_fin)}</span>
             <div style="margin-top:6px;">${miLugar}</div>
             <div style="margin-top:4px;">${miMensaje}</div>
           </div>
-
           ${otra.hora_inicio ? `
             <div class="coincidencia-mi-disp" style="margin-top:10px;border-top:1px solid rgba(255,255,255,.08);padding-top:10px;">
               <strong>Su bloque:</strong>
-              <span>
-                ${formatHora(otra.hora_inicio)} – ${formatHora(otra.hora_fin)}
-              </span>
+              <span>${formatHora(otra.hora_inicio)} – ${formatHora(otra.hora_fin)}</span>
               <div style="margin-top:6px;">${otraLugar}</div>
               <div style="margin-top:4px;">${otraMensaje}</div>
             </div>
@@ -1711,7 +1458,19 @@ async function loadCoincidencias() {
   }
 }
 
-// ── Modal disponibilidad ───────────────────────────────────────
+function switchTiempoTab(tab) {
+  tiempoState.tabActual = tab;
+  document.querySelectorAll('.tiempo-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tiempo-tab-content').forEach(c => c.classList.remove('active'));
+
+  const tabBtn     = tab === 'mis' ? $('ttab-mis')   : $('ttab-coin');
+  const tabContent = tab === 'mis' ? $('tcontent-mis') : $('tcontent-coin');
+  if (tabBtn)     tabBtn.classList.add('active');
+  if (tabContent) tabContent.classList.add('active');
+
+  if (tab === 'coincidencias') loadCoincidencias();
+}
+
 function openModalTiempo() {
   tiempoState.editandoId = null;
   const titleEl = $('modal-tiempo-title');
@@ -1791,37 +1550,21 @@ async function eliminarDisponibilidad(id) {
   }
 }
 
-// ── Formatear hora HH:MM:SS → HH:MM ───────────────────────────
 function formatHora(h) {
   if (!h) return '';
   return String(h).substring(0, 5);
 }
 
-// ── Enter en login de tiempo ───────────────────────────────────
-document.addEventListener('keydown', function(e) {
-  if (e.key === 'Enter') {
-    const passEl = $('t-pass');
-    if (passEl && document.activeElement === passEl) loginTiempo();
-    if ($('modal-tiempo') && $('modal-tiempo').classList.contains('open')) {
-      const active = document.activeElement;
-      if (active && active.id !== 't-mensaje') return;
-      // guardarDisponibilidad(); // no disparar en textarea
-    }
-  }
-});
-
-// Cerrar modal tiempo con Esc (ya cubierto por el listener global arriba)
-// Pero agregamos el overlay click
 const mTiempo = $('modal-tiempo');
 if (mTiempo) {
   mTiempo.addEventListener('click', function(e) {
     if (e.target === this) closeModal('modal-tiempo');
   });
 }
+
 /* ======================================================
    FIX DEFINITIVO SIGA - MOSTRAR SECCIONES
    ====================================================== */
-
 function forzarSeccion(page) {
   const pagina = document.getElementById('page-' + page);
 
@@ -1859,7 +1602,8 @@ function forzarSeccion(page) {
     cajita: 'Cajita especial',
     espacio: 'Mi espacio',
     calma: 'Modo avión',
-    pregunta: 'Pregunta final'
+    pregunta: 'Pregunta final',
+    universo: 'Nuestro universo'
   };
 
   document.querySelectorAll('.nav-item').forEach(btn => {
@@ -1880,6 +1624,19 @@ function forzarSeccion(page) {
   if (page === 'espacio' && typeof loadEspacio === 'function') loadEspacio();
   if (page === 'tiempo' && typeof initTiempoPage === 'function') initTiempoPage();
   if (page === 'calma' && typeof loadCalma === 'function') loadCalma();
+
+  // ── NUEVO DISPARADOR PARA EL UNIVERSO ──
+  if (page === 'universo') {
+    setTimeout(() => {
+      if (typeof window.initUniverso === 'function') {
+        window.initUniverso();
+      }
+    }, 60);
+  } else {
+    if (typeof window.destroyUniverso === 'function') {
+      window.destroyUniverso();
+    }
+  }
 }
 
 window.forzarSeccion = forzarSeccion;
@@ -1903,73 +1660,35 @@ document.addEventListener('click', function(e) {
   else if (texto.includes('Cajita especial')) forzarSeccion('cajita');
   else if (texto.includes('Mi espacio')) forzarSeccion('espacio');
   else if (texto.includes('Modo avión') || texto.includes('Modo calma')) forzarSeccion('calma');
+  else if (texto.includes('universo') || texto.includes('Universo') || texto.includes('Nuestro universo')) forzarSeccion('universo');
 });
 
-// Desactivado: este refuerzo recargaba el dashboard al inicio y causaba parpadeo del cuadro de match.
-// setTimeout(function() {
-//   const login = document.getElementById('login-screen');
-//   const app = document.getElementById('app');
-//
-//   if ((login && login.style.display === 'none') || (app && app.classList.contains('visible'))) {
-//     forzarSeccion('dashboard');
-//   }
-// }, 500);
-
 /* ======================================================
-   FIX FINAAAL: ¿NOS VEMOS? SIN MINI-LOGIN
+   FIX: ¿NOS VEMOS? Usa la sesión principal de SIGA
    ====================================================== */
-
-window.initTiempoPage = initTiempoPage;
-
-setTimeout(function() {
-  const btnsTiempo = document.querySelectorAll('.nav-item');
-
-  btnsTiempo.forEach(btn => {
-    if (btn.textContent.includes('¿Nos vemos?')) {
-      btn.onclick = function() {
-        forzarSeccion('tiempo');
-        initTiempoPage();
-      };
-    }
-  });
-}, 300);
-
-/* ======================================================
-   FIX: ¿NOS VEMOS? 
-   Usa la sesión principal de SIGA
-   ====================================================== */
-
 var initTiempoPage = function() {
   const loginWrap = document.getElementById('tiempo-login-wrap');
   const panel = document.getElementById('tiempo-panel');
 
   if (!state.currentUser || !state.currentUser.id) {
     if (loginWrap) loginWrap.style.display = 'none';
-
     if (panel) {
       panel.classList.remove('active');
       panel.style.display = 'none';
     }
-
     return;
   }
 
   tiempoState.usuarioId = state.currentUser.id;
-  tiempoState.nombre =
-    state.currentUser.display_name ||
-    state.currentUser.nombre ||
-    state.currentUser.usuario;
-
+  tiempoState.nombre = state.currentUser.display_name || state.currentUser.nombre || state.currentUser.usuario;
   tiempoState.usuarioSlug = state.currentUser.usuario;
 
-  // Ocultar pantalla Yo/Ella/Contraseña
   if (loginWrap) {
     loginWrap.style.setProperty('display', 'none', 'important');
     loginWrap.style.setProperty('visibility', 'hidden', 'important');
     loginWrap.style.setProperty('opacity', '0', 'important');
   }
 
-  // Mostrar panel real
   if (panel) {
     panel.classList.add('active');
     panel.style.setProperty('display', 'block', 'important');
@@ -1982,13 +1701,8 @@ var initTiempoPage = function() {
     badge.textContent = tiempoState.nombre;
   }
 
-  if (typeof loadDisponibilidades === 'function') {
-    loadDisponibilidades();
-  }
-
-  if (typeof loadCoincidencias === 'function') {
-    loadCoincidencias();
-  }
+  if (typeof loadDisponibilidades === 'function') loadDisponibilidades();
+  if (typeof loadCoincidencias === 'function') loadCoincidencias();
 };
 
 window.initTiempoPage = initTiempoPage;
@@ -1997,22 +1711,8 @@ window.logoutTiempo = function() {
   navigateTo('dashboard');
 };
 
-// Refuerzo: cada vez que se haga click en ¿Nos vemos?
-document.addEventListener('click', function(e) {
-  const btn = e.target.closest('.nav-item');
-  if (!btn) return;
-
-  if (btn.textContent.includes('¿Nos vemos?')) {
-    setTimeout(function() {
-      initTiempoPage();
-    }, 80);
-  }
-});
-
-// Refuerzo: si ya estás en la página tiempo al cargar
 setTimeout(function() {
   const pageTiempo = document.getElementById('page-tiempo');
-
   if (pageTiempo && pageTiempo.classList.contains('active')) {
     initTiempoPage();
   }
@@ -2020,15 +1720,7 @@ setTimeout(function() {
 
 /* ======================================================
    MODO AVIÓN
-   Antes: Modo calma.
-   Ahora: un solo estado simple.
-   - Solo usuarios normales pueden activarlo.
-   - Solo quien lo activó puede desactivarlo.
-   - Admin/otro usuario solo mira el aviso.
-   estaria chido activar una funcion extra para desactivar para el admin
-   pero da paja. 
    ====================================================== */
-
 let calmaActual = null;
 
 async function loadCalma() {
@@ -2041,8 +1733,7 @@ async function loadCalma() {
         <div class="calma-empty-icon">✈️</div>
         <h3>Primero inicia sesión</h3>
         <p>Necesitas iniciar sesión para ver Modo avión.</p>
-      </div>
-    `;
+      </div>`;
     return;
   }
 
@@ -2057,8 +1748,7 @@ async function loadCalma() {
           <div class="calma-empty-icon">✈️</div>
           <h3>No se pudo cargar Modo avión</h3>
           <p>Intenta actualizar la página.</p>
-        </div>
-      `;
+        </div>`;
       return;
     }
 
@@ -2074,23 +1764,16 @@ async function loadCalma() {
         <div class="modo-avion-card">
           <div class="modo-avion-icon">✈️</div>
           <h2>Modo avión</h2>
-          <p>
-            Un botón simple para decir: no estoy disponible por ahora.
-            No hay fechas, no hay explicaciones largas y no hay presión.
-          </p>
-
+          <p>Un botón simple para decir: no estoy disponible por ahora. No hay explicaciones largas ni presión.</p>
           ${soyAdmin ? `
             <div class="modo-avion-status tranquilo">
               <strong>Modo avión desactivado.</strong>
               <span>Nadie está en pausa por ahora.</span>
-            </div>
-          ` : `
+            </div>` : `
             <button class="btn-save modo-avion-main-btn" onclick="activarModoAvion()">
               Activar modo avión
-            </button>
-          `}
-        </div>
-      `;
+            </button>`}
+        </div>`;
       return;
     }
 
@@ -2099,20 +1782,15 @@ async function loadCalma() {
         <div class="modo-avion-card activo">
           <div class="modo-avion-icon">✈️</div>
           <h2>Estás en modo avión</h2>
-          <p>
-            No estás disponible por ahora. Puedes volver cuando tú decidas.
-          </p>
-
+          <p>No estás disponible por ahora. Puedes volver cuando tú decidas.</p>
           <div class="modo-avion-status activo">
             <strong>Modo avión activo.</strong>
             <span>${esc(modo.mensaje || 'Estoy en modo avión. No estoy disponible por ahora.')}</span>
           </div>
-
           <button class="btn-save modo-avion-main-btn" onclick="desactivarModoAvion()">
             Desactivar modo avión
           </button>
-        </div>
-      `;
+        </div>`;
       return;
     }
 
@@ -2120,21 +1798,16 @@ async function loadCalma() {
       <div class="modo-avion-card activo">
         <div class="modo-avion-icon">✈️</div>
         <h2>${esc(modo.usuario_nombre || 'Esta persona')} está en modo avión</h2>
-        <p>
-          No está disponible por ahora. Puede volver cuando lo decida.
-        </p>
-
+        <p>No está disponible por ahora. Puede volver cuando lo decida.</p>
         <div class="modo-avion-status activo">
           <strong>Modo avión activo.</strong>
           <span>${esc(modo.mensaje || 'Estoy en modo avión. No estoy disponible por ahora.')}</span>
         </div>
-
         <div class="modo-avion-status tranquilo">
           <strong>No puedes desactivarlo tú.</strong>
           <span>Solo la persona que activó Modo avión puede quitarlo.</span>
         </div>
-      </div>
-    `;
+      </div>`;
 
   } catch (err) {
     console.error('Error cargando Modo avión:', err);
@@ -2143,33 +1816,20 @@ async function loadCalma() {
         <div class="calma-empty-icon">✈️</div>
         <h3>Error al cargar Modo avión</h3>
         <p>Revisa la conexión o intenta actualizar la página.</p>
-      </div>
-    `;
+      </div>`;
   }
 }
 
 async function activarModoAvion() {
-  if (!state.currentUser || !state.currentUser.id) {
-    toast('Primero inicia sesión.');
-    return;
-  }
-
-  if (state.currentUser.rol === 'admin') {
-    toast('El admin no puede activar Modo avión.');
-    return;
-  }
+  if (!state.currentUser || !state.currentUser.id) { toast('Primero inicia sesión.'); return; }
+  if (state.currentUser.rol === 'admin') { toast('El admin no puede activar Modo avión.'); return; }
 
   try {
     const data = await api('POST', '/api/calma/activar', {
       usuario_id: state.currentUser.id,
       mensaje: 'Estoy en modo avión. No estoy disponible por ahora.'
     });
-
-    if (!data.ok) {
-      toast(data.error || 'No se pudo activar Modo avión.');
-      return;
-    }
-
+    if (!data.ok) { toast(data.error || 'No se pudo activar Modo avión.'); return; }
     toast(data.mensaje_bonito || 'Modo avión activado.');
     loadCalma();
   } catch (err) {
@@ -2179,21 +1839,11 @@ async function activarModoAvion() {
 }
 
 async function desactivarModoAvion() {
-  if (!state.currentUser || !state.currentUser.id) {
-    toast('Primero inicia sesión.');
-    return;
-  }
+  if (!state.currentUser || !state.currentUser.id) { toast('Primero inicia sesión.'); return; }
 
   try {
-    const data = await api('POST', '/api/calma/desactivar', {
-      usuario_id: state.currentUser.id
-    });
-
-    if (!data.ok) {
-      toast(data.error || 'No se pudo desactivar Modo avión.');
-      return;
-    }
-
+    const data = await api('POST', '/api/calma/desactivar', { usuario_id: state.currentUser.id });
+    if (!data.ok) { toast(data.error || 'No se pudo desactivar Modo avión.'); return; }
     toast(data.mensaje_bonito || 'Modo avión desactivado.');
     loadCalma();
   } catch (err) {
@@ -2202,29 +1852,13 @@ async function desactivarModoAvion() {
   }
 }
 
-/* Refuerzo para que el menú cargue Modo avión */
-document.addEventListener('click', function(e) {
-  const btn = e.target.closest('.nav-item');
-  if (!btn) return;
-
-  if (btn.textContent.includes('Modo avión') || btn.textContent.includes('Modo calma')) {
-    setTimeout(() => {
-      if (typeof loadCalma === 'function') loadCalma();
-    }, 100);
-  }
-});
-
 window.loadCalma = loadCalma;
 window.activarModoAvion = activarModoAvion;
 window.desactivarModoAvion = desactivarModoAvion;
 
 function editarRecuerdoSeguro(id) {
   const r = (window.recuerdosCache || []).find(x => Number(x.id) === Number(id));
-
-  if (!r) {
-    toast('No se encontró el recuerdo.');
-    return;
-  }
+  if (!r) { toast('No se encontró el recuerdo.'); return; }
 
   openModal(
     'recuerdos',
@@ -2237,7 +1871,7 @@ function editarRecuerdoSeguro(id) {
   );
 }
 
-/* SIGA — loader para admin.js y puntos.js. Pegar al FINAL de backend/public/js/app.js */
+/* Loader para admin.js y puntos.js */
 (function cargarModulosExtraSIGA(){
   function cargarScript(src,id){if(document.getElementById(id))return;const s=document.createElement('script');s.src=src+'?v=puntos-globales-2';s.id=id;document.body.appendChild(s)}
   cargarScript('/js/puntos.js','siga-puntos-js');
@@ -2252,14 +1886,8 @@ function editarRecuerdoSeguro(id) {
     try {
       const user = JSON.parse(sessionStorage.getItem('siga_user') || 'null');
       const navAdmin = document.getElementById('nav-admin-panel');
-
       if (!navAdmin) return;
-
-      if (user && user.rol === 'admin') {
-        navAdmin.style.display = 'flex';
-      } else {
-        navAdmin.style.display = 'none';
-      }
+      navAdmin.style.display = (user && user.rol === 'admin') ? 'flex' : 'none';
     } catch (err) {
       console.warn('No se pudo validar panel admin:', err);
     }
@@ -2269,12 +1897,8 @@ function editarRecuerdoSeguro(id) {
 
   const viejoDoLoginAdminFix = window.doLogin;
   window.doLogin = async function () {
-    if (typeof viejoDoLoginAdminFix === 'function') {
-      await viejoDoLoginAdminFix();
-    }
-
+    if (typeof viejoDoLoginAdminFix === 'function') await viejoDoLoginAdminFix();
     setTimeout(mostrarPanelAdminSiCorresponde, 300);
   };
-
   window.mostrarPanelAdminSiCorresponde = mostrarPanelAdminSiCorresponde;
 })();
