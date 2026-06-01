@@ -1,0 +1,516 @@
+/* ======================================================
+   🌌 EL UNIVERSO DEL VÍNCULO — Estilos
+   Compatible con variables de style.css de SIGA.
+   ====================================================== */
+
+/* ── Página contenedor ────────────────────────────────── */
+#page-universo {
+  padding: 0 !important;
+  overflow: hidden;
+  height: 100vh;
+  position: relative;
+  background: transparent;
+}
+
+/* ── Canvas fondo estelar ─────────────────────────────── */
+#universo-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  display: block;
+}
+
+/* ── Wrapper principal encima del canvas ─────────────── */
+#universo-wrapper {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  overflow-y: auto;
+  padding-bottom: 60px;
+}
+
+/* ── Header del universo ──────────────────────────────── */
+.universo-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 28px 8px;
+  position: relative;
+  z-index: 3;
+}
+
+.universo-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.5rem;
+  font-weight: 400;
+  color: var(--text-primary);
+  letter-spacing: 0.04em;
+}
+
+.universo-title span { color: var(--accent-purple); }
+
+.universo-back-btn {
+  background: rgba(180,130,220,0.12);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  border-radius: 8px;
+  padding: 7px 16px;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: var(--transition);
+  font-family: 'DM Sans', sans-serif;
+}
+.universo-back-btn:hover {
+  background: rgba(180,130,220,0.22);
+  color: var(--text-primary);
+}
+
+/* ── Mapa SVG ─────────────────────────────────────────── */
+#universo-map-container {
+  width: 100%;
+  max-width: 900px;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 20px;
+  min-height: 500px;
+}
+
+#universo-svg {
+  width: 100%;
+  height: auto;
+  max-height: 70vh;
+  overflow: visible;
+}
+
+/* ── Núcleo del vínculo ───────────────────────────────── */
+.nucleo-group { cursor: default; }
+
+.nucleo-glow {
+  animation: nucleoPulse 3s ease-in-out infinite;
+}
+@keyframes nucleoPulse {
+  0%, 100% { opacity: 0.35; r: 52; }
+  50%       { opacity: 0.7;  r: 60; }
+}
+
+.nucleo-ring {
+  animation: nucleoRotate 18s linear infinite;
+  transform-origin: center;
+}
+@keyframes nucleoRotate {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.nucleo-sphere {
+  animation: nucleoBreathe 4s ease-in-out infinite;
+}
+@keyframes nucleoBreathe {
+  0%, 100% { transform: scale(1); }
+  50%       { transform: scale(1.06); }
+}
+
+/* ── Nodos ────────────────────────────────────────────── */
+.nodo-group {
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+.nodo-group:hover .nodo-circle {
+  filter: brightness(1.35) drop-shadow(0 0 10px currentColor);
+}
+.nodo-group:hover .nodo-label {
+  opacity: 1;
+  font-weight: 500;
+}
+.nodo-group:hover {
+  transform-origin: var(--cx, 50%) var(--cy, 50%);
+}
+
+.nodo-circle {
+  transition: r 0.3s ease, fill 0.3s ease;
+}
+
+.nodo-label {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 10px;
+  fill: var(--text-secondary, #a89cc8);
+  opacity: 0.85;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+
+.nodo-icon {
+  font-size: 16px;
+  pointer-events: none;
+}
+
+/* ── Puentes/líneas ───────────────────────────────────── */
+.puente-line {
+  stroke: rgba(180,130,220,0.18);
+  stroke-width: 1;
+  stroke-dasharray: 4 6;
+  fill: none;
+  animation: puenteFlow 3s linear infinite;
+}
+@keyframes puenteFlow {
+  from { stroke-dashoffset: 0; }
+  to   { stroke-dashoffset: -40; }
+}
+
+/* ── Partículas de energía ────────────────────────────── */
+.energia-particle {
+  fill: var(--accent-purple);
+  opacity: 0;
+  animation: particulaFly 4s ease-in-out infinite;
+}
+@keyframes particulaFly {
+  0%   { opacity: 0;   transform: translate(0, 0) scale(0.5); }
+  30%  { opacity: 0.8; }
+  100% { opacity: 0;   transform: translate(var(--dx), var(--dy)) scale(0); }
+}
+
+/* ── Barra de energía del núcleo ─────────────────────── */
+.universo-energia-bar {
+  width: 100%;
+  max-width: 320px;
+  margin: 4px auto 12px;
+  text-align: center;
+}
+.universo-energia-label {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 5px;
+}
+.universo-energia-track {
+  background: rgba(255,255,255,0.06);
+  border-radius: 99px;
+  height: 5px;
+  overflow: hidden;
+}
+.universo-energia-fill {
+  height: 100%;
+  border-radius: 99px;
+  background: linear-gradient(90deg, var(--accent-purple), var(--accent-blue));
+  transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 0 8px rgba(180,130,220,0.5);
+}
+
+/* ── SIGy flotante en el universo ────────────────────── */
+#universo-sigy {
+  position: fixed;
+  bottom: 80px;
+  right: 24px;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+  pointer-events: none;
+}
+
+#universo-sigy.visible { pointer-events: all; }
+
+.universo-sigy-bubble {
+  background: var(--bg-card2);
+  border: 1px solid var(--border-glow);
+  border-radius: 16px 16px 4px 16px;
+  padding: 10px 14px;
+  max-width: 220px;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  box-shadow: 0 0 20px rgba(180,130,220,0.1);
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+.universo-sigy-bubble.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.universo-sigy-img {
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+  animation: sigyFloat 3s ease-in-out infinite;
+  cursor: pointer;
+  filter: drop-shadow(0 0 8px rgba(180,130,220,0.4));
+}
+@keyframes sigyFloat {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-6px); }
+}
+
+/* ── Eventos activos strip ────────────────────────────── */
+.universo-eventos-strip {
+  width: 100%;
+  max-width: 900px;
+  padding: 0 20px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-bottom: 6px;
+}
+
+.universo-evento-chip {
+  background: rgba(180,130,220,0.1);
+  border: 1px solid rgba(180,130,220,0.25);
+  border-radius: 99px;
+  padding: 5px 14px;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  animation: chipAppear 0.5s ease;
+}
+@keyframes chipAppear {
+  from { opacity: 0; transform: scale(0.85); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* ── Modal de nodo ────────────────────────────────────── */
+.universo-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 6, 18, 0.82);
+  backdrop-filter: blur(8px);
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+.universo-modal-overlay.open {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.universo-modal {
+  background: var(--bg-card);
+  border: 1px solid var(--border-glow);
+  border-radius: 20px;
+  padding: 28px;
+  width: 100%;
+  max-width: 480px;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 0 60px rgba(180,130,220,0.12);
+  transform: translateY(20px) scale(0.97);
+  transition: transform 0.3s ease;
+  position: relative;
+}
+.universo-modal-overlay.open .universo-modal {
+  transform: translateY(0) scale(1);
+}
+
+.universo-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.universo-modal-icon {
+  font-size: 1.8rem;
+  line-height: 1;
+}
+
+.universo-modal-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.35rem;
+  font-weight: 400;
+  color: var(--text-primary);
+}
+
+.universo-modal-close {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 1rem;
+  transition: var(--transition);
+}
+.universo-modal-close:hover {
+  background: rgba(255,255,255,0.12);
+  color: var(--text-primary);
+}
+
+.universo-modal-item {
+  border-bottom: 1px solid var(--border);
+  padding: 12px 0;
+}
+.universo-modal-item:last-child { border-bottom: none; }
+
+.universo-modal-item-title {
+  font-size: 0.92rem;
+  color: var(--text-primary);
+  margin-bottom: 3px;
+}
+
+.universo-modal-item-sub {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.universo-modal-empty {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  padding: 24px 0;
+}
+
+.universo-modal-go-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 18px;
+  background: rgba(180,130,220,0.15);
+  border: 1px solid var(--border-glow);
+  border-radius: 10px;
+  padding: 9px 18px;
+  font-size: 0.85rem;
+  color: var(--accent-purple);
+  cursor: pointer;
+  transition: var(--transition);
+  font-family: 'DM Sans', sans-serif;
+}
+.universo-modal-go-btn:hover {
+  background: rgba(180,130,220,0.25);
+}
+
+/* ── Tarjeta en el dashboard ──────────────────────────── */
+.universo-dashboard-card {
+  background: linear-gradient(135deg, rgba(15,12,28,0.9) 0%, rgba(25,18,45,0.9) 100%);
+  border: 1px solid rgba(180,130,220,0.3);
+  border-radius: var(--radius);
+  padding: 22px 24px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  cursor: pointer;
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+  margin-top: 16px;
+  box-shadow: 0 0 30px rgba(180,130,220,0.05);
+}
+
+.universo-dashboard-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 80% 80% at 20% 50%, rgba(180,130,220,0.08), transparent);
+  pointer-events: none;
+}
+
+.universo-dashboard-card:hover {
+  border-color: rgba(180,130,220,0.6);
+  box-shadow: 0 0 40px rgba(180,130,220,0.12);
+  transform: translateY(-2px);
+}
+
+.universo-dashboard-card:hover .universo-card-arrow {
+  transform: translateX(4px);
+}
+
+.universo-card-icon {
+  font-size: 2rem;
+  flex-shrink: 0;
+  filter: drop-shadow(0 0 8px rgba(180,130,220,0.5));
+  animation: cardIconFloat 3.5s ease-in-out infinite;
+}
+@keyframes cardIconFloat {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-4px); }
+}
+
+.universo-card-body { flex: 1; }
+
+.universo-card-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.15rem;
+  color: var(--text-primary);
+  margin-bottom: 3px;
+}
+
+.universo-card-sub {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+
+.universo-card-arrow {
+  color: var(--accent-purple);
+  font-size: 1.1rem;
+  transition: transform 0.25s ease;
+  flex-shrink: 0;
+}
+
+/* ── Cargando ─────────────────────────────────────────── */
+.universo-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  height: 60vh;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  letter-spacing: 0.06em;
+}
+
+.universo-loading-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent-purple);
+  animation: loadingPulse 1.4s ease-in-out infinite;
+}
+.universo-loading-dot:nth-child(2) { animation-delay: 0.2s; }
+.universo-loading-dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes loadingPulse {
+  0%, 100% { opacity: 0.3; transform: scale(0.8); }
+  50%       { opacity: 1;   transform: scale(1.2); }
+}
+
+.universo-loading-dots {
+  display: flex;
+  gap: 8px;
+}
+
+/* ── Responsive ───────────────────────────────────────── */
+@media (max-width: 600px) {
+  .universo-header { padding: 14px 16px 6px; }
+  #universo-map-container { min-height: 360px; }
+  .universo-modal { padding: 20px; }
+  #universo-sigy { bottom: 20px; right: 12px; }
+  .universo-sigy-bubble { max-width: 170px; font-size: 0.78rem; }
+}
