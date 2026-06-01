@@ -31,8 +31,8 @@ router.get('/', async (req, res) => {
       pool.query('SELECT COUNT(*)::int AS n FROM promesas'),
       pool.query("SELECT COUNT(*)::int AS n FROM espacio_personal_registros WHERE herramienta = 'señal'")
       .catch(() => ({ rows: [{ n: 0 }] })),
-      pool.query("SELECT COUNT(*)::int AS n FROM pool.query("SELECT COUNT(*)::int AS n FROM eventos_completados")
-      .catch(() => ({ rows: [{ n: 0 }] })),"),
+      pool.query("SELECT COUNT(*)::int AS n FROM eventos_completados")
+      .catch(() => ({ rows: [{ n: 0 }] })),
       pool.query("SELECT EXTRACT(DAY FROM NOW() - fecha_inicio::timestamp)::int AS dias FROM config_amor LIMIT 1")
     ]);
 
