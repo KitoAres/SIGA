@@ -3835,3 +3835,12 @@ Si entras y lees esto... pues si le meti mucho amor e insomnio aqui*/
     visibility: hidden !important;
     opacity: 0 !important;
 }
+
+/* ── REFUERZO DE CAPAS PARA EL UNIVERSO ── */
+#universo-map-container, 
+#universo-svg {
+    position: relative !important;
+    z-index: 50 !important;
+    pointer-events: auto !important;
+}
+
