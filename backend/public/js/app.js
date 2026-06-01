@@ -1566,6 +1566,20 @@ if (mTiempo) {
    FIX DEFINITIVO SIGA - MOSTRAR SECCIONES
    ====================================================== */
 function forzarSeccion(page) {
+  // ── ¡INJECTA ESTA LIMPIEZA AQUÍ AL INICIO DE LA FUNCIÓN! ──
+  if (typeof closeModal === 'function') closeModal('modal-crud');
+  const tiempoLogin = document.getElementById('tiempo-login-wrap');
+  if (tiempoLogin) tiempoLogin.style.setProperty('display', 'none', 'important');
+  // ─────────────────────────────────────────────────────────
+
+  const pagina = document.getElementById('page-' + page);
+
+  if (!pagina) {
+    console.error('No existe page-' + page);
+    return;
+  }
+  // ... (el resto del código que ya tienes abajo)
+  
   const pagina = document.getElementById('page-' + page);
 
   if (!pagina) {
