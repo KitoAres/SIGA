@@ -29,8 +29,10 @@ router.get('/', async (req, res) => {
       pool.query('SELECT contenido FROM carta LIMIT 1'),
       pool.query('SELECT COUNT(*)::int AS n FROM razones'),
       pool.query('SELECT COUNT(*)::int AS n FROM promesas'),
-      pool.query("SELECT COUNT(*)::int AS n FROM espacio_registros WHERE herramienta = 'señal'").catch(() => ({ rows: [{ n: 0 }] })),
-      pool.query("SELECT COUNT(*)::int AS n FROM eventos_completados"),
+      pool.query("SELECT COUNT(*)::int AS n FROM espacio_personal_registros WHERE herramienta = 'señal'")
+      .catch(() => ({ rows: [{ n: 0 }] })),
+      pool.query("SELECT COUNT(*)::int AS n FROM pool.query("SELECT COUNT(*)::int AS n FROM eventos_completados")
+      .catch(() => ({ rows: [{ n: 0 }] })),"),
       pool.query("SELECT EXTRACT(DAY FROM NOW() - fecha_inicio::timestamp)::int AS dias FROM config_amor LIMIT 1")
     ]);
 
@@ -193,7 +195,7 @@ router.get('/nodo/:id', async (req, res) => {
       }
       case 'rincon': {
         const r = await pool.query(
-          "SELECT mensaje, compartido, creado_en FROM espacio_registros WHERE compartido = true ORDER BY creado_en DESC LIMIT 5"
+          "SELECT mensaje, compartido, creado_en FROM espacio_personal_registros WHERE compartido = true ORDER BY creado_en DESC LIMIT 5"
         ).catch(() => ({ rows: [] }));
         datos = { items: r.rows };
         break;
