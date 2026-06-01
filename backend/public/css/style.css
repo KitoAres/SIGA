@@ -3799,48 +3799,43 @@ Si entras y lees esto... pues si le meti mucho amor e insomnio aqui*/
 }
 
 /* ======================================================
-   🔮 PARCHE DE CONTROL ESPIRITUAL PARA SIGy
-   Permite que se pasee libre pero sin tapar el Universo
+   🌌 PARCHE DEFINITIVO: UNIVERSO DEL VÍNCULO & SIGy
    ====================================================== */
 
+/* 1. DOMAR EL AIRE INVISIBLE DE SIGy (Libre pero sin estorbar) */
 #sigy-widget {
     position: fixed !important;
-    z-index: 99999 !important; /* Asegura que la carita se vea arriba */
-    pointer-events: none !important; /* El "aire" invisible del contenedor NO recibe clics */
+    z-index: 99999 !important; /* Mantiene a SIGy por encima de todo */
+    pointer-events: none !important; /* El área invisible no bloquea los clics del mapa */
 }
 
-/* Hacemos que solo los elementos reales de SIGy sí respondan a los clics */
+/* Permitir clics únicamente en el cuerpo real de SIGy, su globo y su panel */
 #sigy-burbuja, 
 #sigy-globo, 
 #sigy-panel {
-    pointer-events: auto !important; /* La burbuja, el globo de texto y el panel sí son interactivos */
+    pointer-events: auto !important;
 }
 
-/* ── Corrección de la capa del universo ── */
-#universo-map-container {
-    position: relative;
-    z-index: 5; /* Lo posicionamos por encima de cualquier otro fondo */
-}
-
-#universo-svg {
-    pointer-events: auto !important; /* Garantiza que los planetas escuchen tus clics */
-}
-
-
-/* ── ELIMINAR EL CUADRO INTRUSO DEL CENTRO ── YA ME ESTREEESEEEEEE*/
-.tiempo-login-wrap, 
-.tiempo-login-card {
+/* 2. ELIMINAR EL CUADRO INTRUSO (Aislado para NO romper el login principal de SIGA) */
+#page-universo .tiempo-login-wrap,
+#page-universo .tiempo-login-card,
+#page-tiempo .tiempo-login-wrap,
+#page-tiempo .tiempo-login-card {
     display: none !important;
     pointer-events: none !important;
     visibility: hidden !important;
     opacity: 0 !important;
 }
 
-/* ── REFUERZO DE CAPAS PARA EL UNIVERSO ── */
-#universo-map-container, 
-#universo-svg {
+/* 3. REFUERZO TOTAL DE CAPAS PARA EL MAPA DEL UNIVERSO */
+#universo-map-container {
     position: relative !important;
-    z-index: 50 !important;
+    z-index: 50 !important; /* Pasa al frente de cualquier contenedor fantasma */
     pointer-events: auto !important;
 }
 
+#universo-svg {
+    position: relative !important;
+    z-index: 51 !important;
+    pointer-events: auto !important; /* Asegura que los planetas reciban los clics de las rutas */
+}
