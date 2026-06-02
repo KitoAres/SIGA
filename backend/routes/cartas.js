@@ -47,4 +47,18 @@ router.put('/:id', async (req, res) => {
   }
 });
 
+// 🗑️ Eliminar carta (ESTO ES LO NUEVO)
+router.delete('/:id', async (req, res) => {
+  try {
+    await pool.query(
+      'DELETE FROM carta WHERE id = $1',
+      [req.params.id]
+    );
+
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;
