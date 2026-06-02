@@ -692,7 +692,8 @@ async function loadCarta() {
     state.cartaOriginal = data.contenido || '';
     $('carta-view').textContent = data.contenido || '';
   } catch {
-    $('carta-view').textContent = 'No se pudo cargar la carta.';
+    document.getElementById('carta-view').textContent =
+    'No se pudo cargar la carta.';
   }
 }
 
