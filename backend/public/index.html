@@ -319,26 +319,24 @@
       <div class="items-grid" id="list-promesas"></div>
     </section>
 
-    <!-- CARTA -->
-    <section class="page" id="page-carta">
-      <div class="page-header">
-        <div>
-          <h1 class="page-title">Mi <span>carta</span></h1>
-          <p class="page-subtitle">Para ti, que de alguna manera inexplicable llegaste a quedarte.</p>
-        </div>
-        <div style="display:flex;gap:8px;">
-          <button class="btn" id="btn-edit-carta" onclick="editCarta()">✎ Editar</button>
-          <button class="btn-save" id="btn-save-carta" style="display:none;" onclick="saveCarta()">Guardar</button>
-          <button class="btn-cancel" id="btn-cancel-carta" style="display:none;" onclick="cancelCarta()">Cancelar</button>
-        </div>
-      </div>
+<!-- CARTAS -->
+<section class="page" id="page-carta">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Mis <span>cartas</span></h1>
+      <p class="page-subtitle">
+        Un espacio para guardar varias cartas y volver a ellas cuando quieras.
+      </p>
+    </div>
 
-      <div class="carta-container">
-        <div class="carta-paper" id="carta-view"></div>
-        <textarea class="carta-edit-area" id="carta-edit" style="display:none;"></textarea>
-      </div>
-    </section>
+    <button class="btn-add" onclick="nuevaCarta()">
+      + Nueva carta
+    </button>
+  </div>
 
+  <div class="items-grid" id="list-cartas"></div>
+</section>
+  
     <!-- ¿NOS VEMOS? -->
     <section class="page" id="page-tiempo">
 
