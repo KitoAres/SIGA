@@ -689,6 +689,11 @@ async function loadCarta() {
   const contenedor = document.getElementById('carta-lista');
   if (!contenedor) return;
 
+  // Asegurarse de que solo lista esté visible
+  document.getElementById('carta-editor').style.display = 'none';
+  document.getElementById('carta-vista').style.display = 'none';
+  contenedor.style.display = 'block';
+
   contenedor.innerHTML = '<p style="color:var(--text-muted);font-size:0.85rem;">Cargando cartas...</p>';
 
   try {
@@ -699,14 +704,30 @@ async function loadCarta() {
     const cartas = await resp.json();
 
     if (!cartas.length) {
-      contenedor.innerHTML = '<p style="color:var(--text-muted);font-size:0.85rem;">Aún no hay cartas. Escribe la primera.</p>';
+      contenedor.innerHTML = '<p style="color:var(--text-muted);font-size:0.85rem;padding:20px 0;">Aún no hay cartas. Escribe la primera.</p>';
       return;
     }
 
     contenedor.innerHTML = cartas.map(c => `
-      <div class="carta-item" style="background:var(--bg-card2);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;margin-bottom:12px;cursor:pointer;" onclick="abrirCarta(${c.id})">
-        <div style="font-family:'Cormorant Garamond',serif;font-size:1.05rem;color:var(--text-primary);">${c.titulo}</div>
-        <div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px;">${c.fecha || ''} ${c.creado_en ? '· ' + new Date(c.creado_en).toLocaleDateString('es') : ''}</div>
+      <div onclick="abrirCarta(${c.id})" style="
+        background: var(--bg-card2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 18px 22px;
+        margin-bottom: 12px;
+        cursor: pointer;
+        transition: var(--transition);
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      " onmouseover="this.style.borderColor='var(--border-glow)';this.style.transform='translateY(-1px)'"
+         onmouseout="this.style.borderColor='var(--border)';this.style.transform='translateY(0)'">
+        <span style="font-size:1.4rem;">✉️</span>
+        <div style="flex:1;">
+          <div style="font-family:'Cormorant Garamond',serif;font-size:1.05rem;color:var(--text-primary);">${c.titulo || 'Sin título'}</div>
+          <div style="font-size:0.75rem;color:var(--text-muted);margin-top:3px;">${c.fecha ? c.fecha : ''} ${c.creado_en ? '· ' + new Date(c.creado_en).toLocaleDateString('es') : ''}</div>
+        </div>
+        <span style="color:var(--text-muted);font-size:0.85rem;">→</span>
       </div>
     `).join('');
   } catch (e) {
@@ -722,12 +743,36 @@ async function abrirCarta(id) {
   const carta = await resp.json();
   if (!carta) return;
 
-  document.getElementById('carta-titulo-input').value = carta.titulo || '';
-  document.getElementById('carta-fecha-input').value = carta.fecha || '';
-  document.getElementById('carta-contenido-input').value = carta.contenido || '';
-  document.getElementById('carta-editor-id').value = carta.id;
-  document.getElementById('carta-editor').style.display = 'block';
+  const rol = state?.usuario?.rol || localStorage.getItem('siga_rol') || '';
+  const esEditor = (rol === 'yo' || rol === 'admin');
+
   document.getElementById('carta-lista').style.display = 'none';
+  document.getElementById('carta-editor').style.display = 'none';
+  document.getElementById('carta-vista').style.display = 'none';
+
+  if (esEditor) {
+    // Modo edición
+    document.getElementById('carta-titulo-input').value = carta.titulo || '';
+    document.getElementById('carta-fecha-input').value = carta.fecha || '';
+    document.getElementById('carta-contenido-input').value = carta.contenido || '';
+    document.getElementById('carta-editor-id').value = carta.id;
+    document.getElementById('carta-editor').style.display = 'block';
+  } else {
+    // Modo lectura bonita
+    document.getElementById('carta-vista-titulo').textContent = carta.titulo || '';
+    document.getElementById('carta-vista-fecha').textContent = carta.fecha
+      ? new Date(carta.fecha + 'T00:00:00').toLocaleDateString('es', { year:'numeric', month:'long', day:'numeric' })
+      : '';
+    document.getElementById('carta-vista-contenido').textContent = carta.contenido || '';
+    // Guardar id por si tiene permiso de editar después
+    document.getElementById('carta-vista').dataset.id = carta.id;
+    document.getElementById('carta-vista').style.display = 'block';
+  }
+}
+
+function pasarAEditar() {
+  const id = document.getElementById('carta-vista').dataset.id;
+  if (id) abrirCarta(parseInt(id));
 }
 
 async function guardarCarta() {
@@ -770,15 +815,20 @@ function nuevaCarta() {
   document.getElementById('carta-fecha-input').value = '';
   document.getElementById('carta-contenido-input').value = '';
   document.getElementById('carta-editor-id').value = '';
-  document.getElementById('carta-editor').style.display = 'block';
   document.getElementById('carta-lista').style.display = 'none';
+  document.getElementById('carta-vista').style.display = 'none';
+  document.getElementById('carta-editor').style.display = 'block';
 }
 
 function cerrarEditorCarta() {
   document.getElementById('carta-editor').style.display = 'none';
+  document.getElementById('carta-vista').style.display = 'none';
   document.getElementById('carta-lista').style.display = 'block';
 }
 
+function cerrarVistaCarta() {
+  cerrarEditorCarta();
+}
 
 // ── MODAL CRUD ────────────────────────────────────────────────
 function openModal(type, id, ...args) {
