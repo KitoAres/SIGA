@@ -3797,3 +3797,32 @@ Si entras y lees esto... pues si le meti mucho amor e insomnio aqui*/
 .espacio-history-item small {
   opacity: 0.75;
 }
+
+
+
+
+
+
+
+
+.carta-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  max-width: 500px;
+  margin: auto;
+
+  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+  border: 1px solid rgba(0,0,0,0.05);
+}
+
+#carta-titulo {
+  font-size: 20px;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+#carta-contenido {
+  white-space: pre-wrap;
+  line-height: 1.5;
+}
