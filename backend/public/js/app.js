@@ -2285,7 +2285,7 @@ async function loadCartas() {
 
   box.innerHTML = 'Cargando...';
 
-  const r = await fetch('/api/carta');
+  const r = await fetch('/api/cartas');
   const cartas = await r.json();
 
   if (!cartas.length) {
@@ -2327,7 +2327,7 @@ async function nuevaCarta() {
 
   if (texto === null) return;
 
-  await fetch('/api/carta', {
+  await fetch('/api/cartas', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
@@ -2345,7 +2345,7 @@ async function editarCarta(id) {
 
   if (texto === null) return;
 
-  await fetch('/api/carta/' + id, {
+  await fetch('/api/cartas/' + id, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json'
@@ -2361,7 +2361,7 @@ async function editarCarta(id) {
 async function eliminarCarta(id) {
   if (!confirm('¿Eliminar esta carta?')) return;
 
-  await fetch('/api/carta/' + id, {
+  await fetch('/api/cartas/' + id, {
     method: 'DELETE'
   });
 
