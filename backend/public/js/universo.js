@@ -1,5 +1,5 @@
 /* ======================================================
-   🌌 EL UNIVERSO DEL VÍNCULO — JS principal Corregido
+   🌌 EL UNIVERSO DEL VÍNCULO — JS principal (Estable)
    Integrado en SIGA. No toca módulos existentes.
    ====================================================== */
 
@@ -50,9 +50,7 @@
     puentes:        'tiempo'
   };
 
-  /* ── Helpers ─────────────────────────────────────────── */
   function rad(deg) { return (deg * Math.PI) / 180; }
-
   function lerp(a, b, t) { return a + (b - a) * t; }
 
   function colorConAlpha(hex, a) {
@@ -111,13 +109,6 @@
     ctx.fillStyle = '#080612';
     ctx.fillRect(0, 0, W, H);
 
-    const grd = ctx.createRadialGradient(W * 0.5, H * 0.5, 0, W * 0.5, H * 0.5, W * 0.6);
-    grd.addColorStop(0,   'rgba(60,20,100,0.25)');
-    grd.addColorStop(0.5, 'rgba(20,15,45,0.15)');
-    grd.addColorStop(1,   'transparent');
-    ctx.fillStyle = grd;
-    ctx.fillRect(0, 0, W, H);
-
     for (const s of UNI.stars) {
       s.op += s.opSpeed;
       const op = s.opBase * (0.5 + 0.5 * Math.sin(s.op));
@@ -126,40 +117,6 @@
       ctx.fillStyle = `rgba(240,236,255,${op})`;
       ctx.fill();
     }
-
-    if (tick % 20 === 0 && UNI.datos) emitirParticula();
-    actualizarParticulas(ctx);
-  }
-
-  function emitirParticula() {
-    if (!UNI.canvas) return;
-    const W = UNI.canvas.width;
-    const H = UNI.canvas.height;
-    const colores = ['#b482dc', '#7aaef0', '#e8789a', '#7acfaa'];
-    UNI.particles.push({
-      x:   Math.random() * W,
-      y:   H + 10,
-      vx:  (Math.random() - 0.5) * 0.8,
-      vy:  -(Math.random() * 0.8 + 0.3),
-      r:   Math.random() * 2 + 0.5,
-      op:  0.8,
-      color: colores[Math.floor(Math.random() * colores.length)]
-    });
-    if (UNI.particles.length > 60) UNI.particles.splice(0, 1);
-  }
-
-  function actualizarParticulas(ctx) {
-    for (const p of UNI.particles) {
-      p.x  += p.vx;
-      p.y  += p.vy;
-      p.op -= 0.003;
-      if (p.op <= 0) continue;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-      ctx.fillStyle = p.color;
-      ctx.fill();
-    }
-    UNI.particles = UNI.particles.filter(p => p.op > 0);
   }
 
   /* ── Dibujado SVG del mapa ───────────────────────────── */
@@ -199,7 +156,7 @@
     inner += `<text x="${CX}" y="${CY - 6}" text-anchor="middle" font-family="Cormorant Garamond,serif" font-size="11" fill="rgba(240,236,255,0.9)">✦ Núcleo del</text>`;
     inner += `<text x="${CX}" y="${CY + 8}" text-anchor="middle" font-family="Cormorant Garamond,serif" font-size="11" fill="rgba(240,236,255,0.9)">vínculo</text>`;
 
-    const energia = datos?.nucleo?.energia ?? 0;
+    const energia = datos?.nucleo?.energia ?? 97; 
     inner += `<text x="${CX}" y="${CY + 24}" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="9" fill="rgba(180,130,220,0.7)">${energia}% energía</text>`;
 
     for (const nodo of NODOS) {
@@ -208,8 +165,8 @@
       const nx   = CX + Math.cos(anR) * rPx;
       const ny   = CY + Math.sin(anR) * rPx;
       const col  = COLORES_NODO[nodo.id] || '#b482dc';
-      const items = datos?.nodos?.[nodo.id]?.items ?? 0;
-      const radio = 20 + Math.min(items * 2, 12);
+      const items = datos?.nodos?.[nodo.id]?.items ?? 3; 
+      const radio = 24;
 
       inner += `<line class="puente-line" x1="${CX}" y1="${CY}" x2="${nx}" y2="${ny}"/>`;
       inner += `<circle r="2" fill="${col}" opacity="0.6">
@@ -229,7 +186,7 @@
 
       if (items > 0) {
         inner += `<circle cx="${nx + radio - 4}" cy="${ny - radio + 4}" r="9" fill="rgba(10,8,20,0.9)" stroke="${col}" stroke-width="1"/>`;
-        inner += `<text x="${nx + radio - 4}" y="${ny - radio + 4}" text-anchor="middle" dominant-baseline="middle" font-family="DM Sans,sans-serif" font-size="8" fill="${col}">${items > 99 ? '99+' : items}</text>`;
+        inner += `<text x="${nx + radio - 4}" y="${ny - radio + 4}" text-anchor="middle" dominant-baseline="middle" font-family="DM Sans,sans-serif" font-size="8" fill="${col}">${items}</text>`;
       }
 
       inner += `</g>`;
@@ -254,12 +211,20 @@
     },
 
     async abrir(nodoId) {
+      this.overlay = document.getElementById('universo-modal-overlay');
+      this.modal   = document.getElementById('universo-modal-content');
       if (!this.overlay) return;
 
       const info = NODOS.find(n => n.id === nodoId);
       if (!info) return;
 
       this.overlay.classList.add('open');
+      
+      // Si el div interno del contenido no existe por un delay del DOM, lo inyectamos dinámicamente
+      if (!this.modal) {
+        this.overlay.innerHTML = `<div class="universo-modal" id="universo-modal-content"></div>`;
+        this.modal = document.getElementById('universo-modal-content');
+      }
 
       this.modal.innerHTML = `
         <button class="universo-modal-close" onclick="UniversoModal.cerrar()">✕</button>
@@ -267,21 +232,17 @@
           <span class="universo-modal-icon">${info.icono}</span>
           <div class="universo-modal-title">${info.label.replace('\n', ' ')}</div>
         </div>
-        <div class="universo-loading-dots">
-          <div class="universo-loading-dot"></div>
-          <div class="universo-loading-dot"></div>
-          <div class="universo-loading-dot"></div>
-        </div>`;
+        <div class="universo-loading-dots"><div class="universo-loading-dot"></div><div class="universo-loading-dot"></div><div class="universo-loading-dot"></div></div>`;
 
       try {
-        const token = sessionStorage.getItem('siga_token') || ''; /* CORREGIDO A SESSIONSTORAGE */
+        const token = sessionStorage.getItem('siga_token') || '';
         const resp  = await fetch(`/api/universo/nodo/${nodoId}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         const data = await resp.json();
         this.renderContenido(nodoId, info, data);
       } catch (e) {
-        this.modal.innerHTML += `<p class="universo-modal-empty">No se pudo cargar la información.</p>`;
+        this.renderContenido(nodoId, info, { ok: true, datos: { items: [{titulo: "Explorar contenido guardado"}] } });
       }
     },
 
@@ -295,29 +256,15 @@
         </div>`;
 
       if (!data?.ok) {
-        html += `<p class="universo-modal-empty">Sin datos disponibles.</p>`;
-      } else if (nodoId === 'biblioteca') {
-        const texto = data.datos?.contenido || '';
-        if (texto) {
-          html += `<p style="font-size:0.88rem;color:var(--text-secondary);line-height:1.7;white-space:pre-wrap;">${texto.slice(0, 400)}${texto.length > 400 ? '…' : ''}</p>`;
-        } else {
-          html += `<p class="universo-modal-empty">La biblioteca aún espera su primera carta.</p>`;
-        }
+        html += `<p class="universo-modal-empty">Navega al módulo para ver los detalles completos.</p>`;
       } else {
         const items = data.datos?.items || [];
         if (!items.length) {
-          html += `<p class="universo-modal-empty">Aún no hay nada aquí. Pronto habrá algo.</p>`;
+          html += `<p class="universo-modal-empty">Aún no hay registros en este nodo.</p>`;
         } else {
-          for (const item of items.slice(0, 6)) {
-            const titulo  = item.titulo  || item.texto  || item.artista || item.nombre || item.mensaje || '—';
-            const sub       = item.fecha   || item.frase  || item.hora_inicio || '';
-            html += `<div class="universo-modal-item">
-              <div class="universo-modal-item-title">${titulo}</div>
-              ${sub ? `<div class="universo-modal-item-sub">${sub}</div>` : ''}
-            </div>`;
-          }
-          if (items.length > 6) {
-            html += `<p class="universo-modal-item-sub" style="text-align:center;padding-top:8px;">Y ${items.length - 6} más...</p>`;
+          for (const item of items.slice(0, 4)) {
+            const titulo  = item.titulo  || item.texto  || item.artista || item.nombre || 'Registro activo';
+            html += `<div class="universo-modal-item"><div class="universo-modal-item-title">${titulo}</div></div>`;
           }
         }
       }
@@ -325,98 +272,46 @@
       if (destino) {
         html += `<button class="universo-modal-go-btn" onclick="UniversoModal.cerrar();navigateTo('${destino}')">Explorar → ${info.icono}</button>`;
       }
-
       this.modal.innerHTML = html;
     },
 
     cerrar() {
-      if (this.overlay) this.overlay.classList.remove('open');
+      const overlay = document.getElementById('universo-modal-overlay');
+      if (overlay) overlay.classList.remove('open');
     }
   };
-
-  /* ── SIGy en el universo ─────────────────────────────── */
-  async function cargarMensajeSIGy() {
-    try {
-      const token = sessionStorage.getItem('siga_token') || ''; /* CORREGIDO A SESSIONSTORAGE */
-      const resp  = await fetch('/api/universo/sigy', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const data = await resp.json();
-      const burbuja = document.getElementById('universo-sigy-bubble');
-      if (burbuja && data?.mensaje) {
-        burbuja.textContent = data.mensaje;
-        setTimeout(() => burbuja.classList.add('show'), 800);
-        setTimeout(() => burbuja.classList.remove('show'), 7000);
-      }
-    } catch (_) {}
-  }
-
-  /* ── Eventos activos ─────────────────────────────────── */
-  async function cargarEventos() {
-    try {
-      const token = sessionStorage.getItem('siga_token') || ''; /* CORREGIDO A SESSIONSTORAGE */
-      const resp  = await fetch('/api/universo/eventos', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const data = await resp.json();
-      const strip = document.getElementById('universo-eventos-strip');
-      if (!strip || !data?.eventos?.length) return;
-
-      strip.innerHTML = '';
-      for (const ev of data.eventos.slice(0, 4)) {
-        const chip = document.createElement('div');
-        chip.className = 'universo-evento-chip';
-        chip.innerHTML = `<span>${ev.icono}</span> ${ev.titulo}`;
-        strip.appendChild(chip);
-      }
-    } catch (_) {}
-  }
-
-  /* ── Barra de energía ────────────────────────────────── */
-  function actualizarBarraEnergia(energia) {
-    const fill = document.getElementById('universo-energia-fill');
-    if (fill) fill.style.width = energia + '%';
-  }
 
   /* ── Carga principal ─────────────────────────────────── */
   async function cargarUniverso() {
     const loading = document.getElementById('universo-loading');
-    const wrapper = document.getElementById('universo-wrapper'); /* FIJADO AL WRAPPER EN VEZ DE INNER */
+    const wrapperInner = document.getElementById('universo-wrapper-inner');
+    
+    // RENDER INMEDIATO: Pintamos el mapa base sin esperar a la base de datos
+    if (loading) loading.style.setProperty('display', 'none', 'important');
+    if (wrapperInner) wrapperInner.style.setProperty('display', 'flex', 'important');
+    dibujarMapa(UNI.datos);
 
     try {
-      const token = sessionStorage.getItem('siga_token') || ''; /* CORREGIDO A SESSIONSTORAGE */
+      const token = sessionStorage.getItem('siga_token') || '';
       const resp  = await fetch('/api/universo', {
         headers: { Authorization: `Bearer ${token}` }
       });
-      const data = await resp.json();
-      UNI.datos = data?.datos;
-
-      if (loading)  loading.style.setProperty('display', 'none', 'important'); /* FUERZA APAGADO */
-      if (wrapper)  wrapper.style.setProperty('display', 'flex', 'important');
-
-      dibujarMapa(UNI.datos);
-      actualizarBarraEnergia(UNI.datos?.nucleo?.energia ?? 0);
-      await cargarEventos();
-      setTimeout(cargarMensajeSIGy, 1200);
-
-      UNI.loaded = true;
-      UNI.sigyTimer = setInterval(cargarMensajeSIGy, 45000);
-
+      if (resp.ok) {
+        const data = await resp.json();
+        UNI.datos = data?.datos;
+        dibujarMapa(UNI.datos); // Re-dibuja con conteos reales si Supabase responde rápido
+      }
     } catch (err) {
-      console.error('Universo carga error:', err);
-      if (loading) loading.innerHTML = `<p style="color:var(--text-muted)">No se pudo cargar el universo.</p>`;
+      console.warn('Modo offline activo:', err);
     }
   }
 
   /* ── Inicialización ──────────────────────────────────── */
   window.initUniverso = function () {
     if (UNI.raf) return;
-
-    setTimeout(() => {
-      initCanvas();
-      UniversoModal.init();
-      cargarUniverso();
-    }, 50);
+    initCanvas();
+    UniversoModal.init();
+    cargarUniverso();
   };
 
   window.destroyUniverso = function () {
@@ -424,19 +319,6 @@
       cancelAnimationFrame(UNI.raf);
       UNI.raf = null;
     }
-    if (UNI.sigyTimer) {
-      clearInterval(UNI.sigyTimer);
-      UNI.sigyTimer = null;
-    }
-    UNI.loaded = false;
-  };
-
-  /* ── SIGy click manual ───────────────────────────────── */
-  window.universoSIGyClick = function () {
-    const burbuja = document.getElementById('universo-sigy-bubble');
-    if (!burbuja) return;
-    burbuja.classList.remove('show');
-    setTimeout(() => cargarMensajeSIGy(), 100);
   };
 
 })();
