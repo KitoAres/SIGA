@@ -1582,7 +1582,8 @@ function forzarSeccion(page) {
     cajita: 'Cajita especial',
     espacio: 'Mi espacio',
     calma: 'Modo avión',
-    pregunta: 'Pregunta final'
+    pregunta: 'Pregunta final',
+    universo: 'Nuestro universo' // ── AÑADIDO AQUÍ ──
   };
 
   document.querySelectorAll('.nav-item').forEach(btn => {
@@ -1603,6 +1604,21 @@ function forzarSeccion(page) {
   if (page === 'espacio' && typeof loadEspacio === 'function') loadEspacio();
   if (page === 'tiempo' && typeof initTiempoPage === 'function') initTiempoPage();
   if (page === 'calma' && typeof loadCalma === 'function') loadCalma();
+
+  // ── NUEVO: DISPARADOR PARA DESPERTAR TU UNIVERSO ──
+  if (page === 'universo') {
+    setTimeout(() => {
+      if (typeof window.initUniverso === 'function') {
+        window.initUniverso();
+      } else {
+        console.warn('window.initUniverso no está disponible aún.');
+      }
+    }, 120); // Delay suave para asegurar que la pantalla de carga ya esté montada
+  } else {
+    if (typeof window.destroyUniverso === 'function') {
+      window.destroyUniverso();
+    }
+  }
 }
 
 window.forzarSeccion = forzarSeccion;
@@ -1626,8 +1642,9 @@ document.addEventListener('click', function(e) {
   else if (texto.includes('Cajita especial')) forzarSeccion('cajita');
   else if (texto.includes('Mi espacio')) forzarSeccion('espacio');
   else if (texto.includes('Modo avión') || texto.includes('Modo calma')) forzarSeccion('calma');
+  // ── NUEVO: CAPTURAR EL CLIC DEL MENÚ PARA EL UNIVERSO ──
+  else if (texto.includes('universo') || texto.includes('Universo') || texto.includes('Nuestro universo')) forzarSeccion('universo');
 });
-
 /* ======================================================
    FIX: ¿NOS VEMOS? Usa la sesión principal de SIGA
    ====================================================== */
