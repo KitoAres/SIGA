@@ -743,7 +743,7 @@ async function abrirCarta(id) {
   const carta = await resp.json();
   if (!carta) return;
 
-  const rol = state?.usuario?.rol || localStorage.getItem('siga_rol') || '';
+  const rol = state?.currentUser?.rol || '';
   const esEditor = (rol === 'yo' || rol === 'admin');
 
   document.getElementById('carta-lista').style.display = 'none';
