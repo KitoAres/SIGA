@@ -319,14 +319,14 @@
       <div class="items-grid" id="list-promesas"></div>
     </section>
 
-    <!-- CARTA -->
+<!-- CARTA -->
 <section class="page" id="page-carta">
   <div class="page-header">
     <div>
       <h1 class="page-title">Cartas <span>para ti</span></h1>
       <p class="page-subtitle">Cada carta guarda algo real.</p>
     </div>
-    <button class="btn-primary" onclick="nuevaCarta()">+ Nueva carta</button>
+    <button class="btn-save" onclick="nuevaCarta()">+ Nueva carta</button>
   </div>
 
   <!-- Lista de cartas -->
@@ -363,8 +363,8 @@
       "></div>
     </div>
     <div style="display:flex; gap:10px; margin-top:16px; flex-wrap:wrap;">
-      <button class="btn-secondary" onclick="cerrarVistaCarta()">← Volver</button>
-      <button class="btn-primary" id="carta-btn-editar-vista" onclick="pasarAEditar()" style="display:none;">Editar</button>
+      <button class="btn btn-sm btn-edit" onclick="cerrarVistaCarta()">← Volver</button>
+      <button class="btn btn-sm btn-edit" id="carta-btn-editar-vista" onclick="pasarAEditar()" style="display:none;">Editar</button>
     </div>
   </div>
 
@@ -420,24 +420,14 @@
           transition: var(--transition);
         " onfocus="this.style.borderColor='var(--border-glow)'" onblur="this.style.borderColor='var(--border)'"></textarea>
       </div>
-      <div style="display:flex; gap:10px; flex-wrap:wrap;">
-        <button class="btn-primary" onclick="guardarCarta()">Guardar carta</button>
-        <button class="btn-secondary" onclick="cerrarEditorCarta()">Cancelar</button>
-        <button onclick="eliminarCarta()" id="carta-btn-eliminar" style="
-          background: transparent;
-          border: 1px solid var(--danger);
-          color: var(--danger);
-          border-radius: var(--radius-sm);
-          padding: 9px 18px;
-          font-size: 0.85rem;
-          cursor: pointer;
-          transition: var(--transition);
-        ">Borrar carta</button>
+      <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+        <button class="btn-save" onclick="guardarCarta()">Guardar carta</button>
+        <button class="btn btn-sm" onclick="cerrarEditorCarta()">Cancelar</button>
+        <button class="btn btn-sm btn-delete" onclick="eliminarCarta()" id="carta-btn-eliminar">Borrar carta</button>
       </div>
     </div>
   </div>
 </section>
-
     <!-- ¿NOS VEMOS? -->
     <section class="page" id="page-tiempo">
 
