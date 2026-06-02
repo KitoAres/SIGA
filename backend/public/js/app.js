@@ -223,10 +223,79 @@ document.addEventListener('keydown', function(e) {
   }
 });
 
-// ── NAVEGACIÓN (Obsolescente, mapeada a forzarSeccion) ─────────
+// ── NAVEGACIÓN ─────────────────────────────────────────────────
 function navigateTo(page) {
-  forzarSeccion(page);
+  const targetPage = $('page-' + page);
+
+  if (!targetPage) {
+    console.error('No existe la sección:', 'page-' + page);
+    toast('No existe la sección: ' + page);
+    return;
+  }
+
+  // Ocultar todas las páginas con !important para ganarle al CSS
+  document.querySelectorAll('.page').forEach(p => {
+    p.classList.remove('active');
+    p.style.setProperty('display', 'none', 'important');
+    p.style.setProperty('visibility', 'hidden', 'important');
+    p.style.setProperty('opacity', '0', 'important');
+    p.style.setProperty('position', 'relative', 'important');
+  });
+
+  // Mostrar la página elegida
+  targetPage.classList.add('active');
+  targetPage.style.setProperty('display', 'block', 'important');
+  targetPage.style.setProperty('visibility', 'visible', 'important');
+  targetPage.style.setProperty('opacity', '1', 'important');
+  targetPage.style.setProperty('position', 'relative', 'important');
+  targetPage.style.setProperty('z-index', '5', 'important');
+
+  // Activar botón correcto del menú
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+
+  const mapa = {
+    dashboard: 'Dashboard',
+    recuerdos: 'Recuerdos',
+    citas: 'Nuestros planes',
+    playlist: 'Playlist',
+    razones: 'Razones',
+    promesas: 'Promesas',
+    carta: 'Carta',
+    tiempo: '¿Nos vemos?',
+    eventos: 'Misiones de conexión',
+    cajita: 'Cajita especial',
+    espacio: 'Mi espacio',
+    pregunta: 'Pregunta final'
+  };
+
+  document.querySelectorAll('.nav-item').forEach(n => {
+    if (n.textContent.includes(mapa[page])) n.classList.add('active');
+  });
+
+  state.currentPage = page;
+
+  if (typeof closeSidebar === 'function') closeSidebar();
+
+  const loaders = {
+    dashboard: typeof loadDashboard === 'function' ? loadDashboard : null,
+    recuerdos: typeof loadRecuerdos === 'function' ? loadRecuerdos : null,
+    citas: typeof loadCitas === 'function' ? loadCitas : null,
+    playlist: typeof loadPlaylist === 'function' ? loadPlaylist : null,
+    razones: typeof loadRazones === 'function' ? loadRazones : null,
+    promesas: typeof loadPromesas === 'function' ? loadPromesas : null,
+    carta: typeof loadCarta === 'function' ? loadCarta : null,
+    eventos: typeof loadEventos === 'function' ? loadEventos : null,
+    cajita: typeof loadCajita === 'function' ? loadCajita : null,
+    espacio: typeof loadEspacio === 'function' ? loadEspacio : null
+  };
+
+  if (loaders[page]) loaders[page]();
+
+  if (page === 'tiempo' && typeof initTiempoPage === 'function') {
+    initTiempoPage();
+  }
 }
+
 window.navigateTo = navigateTo;
 
 // ── SIDEBAR MÓVIL ──────────────────────────────────────────────
@@ -309,7 +378,7 @@ function cargarFraseDelDia() {
     'Que la calma nos encuentre antes que la herida.',
     'Hay días en los que amar es simplemente no irse.',
     'A veces una pausa también cuida.',
-    'No hace falta forzar cercanía para que exista cariño.',
+    'No hace falta forced cercanía para que exista cariño.',
     'Que hoy el amor no sea presión, sino refugio.',
     'Lo sincero también puede ser suave.',
     'Hoy podemos hablarnos como si hubieramos descubierto lo que Sternberg llamo "imposible", porque no esta lejano.',
@@ -935,6 +1004,13 @@ async function deleteItem(type, id) {
   }
 }
 
+const modalPerfil = $('modal-perfil');
+if (modalPerfil) {
+  modalPerfil.addEventListener('click', function(e) {
+    if (e.target === this) closeModal('modal-perfil');
+  });
+}
+
 // ── CAJITA ESPECIAL ───────────────────────────────────────────
 async function loadCajita() {
   const container = $('list-cajita');
@@ -1183,7 +1259,6 @@ function emptyState(icon, msg) {
   `;
 }
 
-// Cerrar modales con overlay click
 const modalCrud = $('modal-crud');
 if (modalCrud) {
   modalCrud.addEventListener('click', function(e) {
@@ -1201,101 +1276,6 @@ if (modalPerfil2) {
 /* ============================================================
    MÓDULO: Nuestro Tiempo
    ============================================================ */
-let ultimoMatchAvisado = '';
-
-function sonidoMatch() {
-  try {
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    const ctx = new AudioContext();
-    const notas = [523.25, 659.25, 783.99, 1046.5];
-
-    notas.forEach((freq, i) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-
-      osc.type = 'sine';
-      osc.frequency.value = freq;
-
-      gain.gain.setValueAtTime(0.0001, ctx.currentTime + i * 0.12);
-      gain.gain.exponentialRampToValueAtTime(0.18, ctx.currentTime + i * 0.12 + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + i * 0.12 + 0.18);
-
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-
-      osc.start(ctx.currentTime + i * 0.12);
-      osc.stop(ctx.currentTime + i * 0.12 + 0.2);
-    });
-  } catch (err) {
-    console.warn('No se pudo reproducir sonido:', err);
-  }
-}
-
-function matchSigueVigente(match) {
-  const fecha = normalizarFecha(match.fecha);
-  const horaFin = match.fin_coincidencia || '';
-
-  if (!fecha || !horaFin) return false;
-
-  const horaLimpia = String(horaFin).substring(0, 5);
-  const finMatch = new Date(`${fecha}T${horaLimpia}:00`);
-  const ahora = new Date();
-
-  if (isNaN(finMatch.getTime())) return false;
-
-  return finMatch >= ahora;
-}
-
-function claveMatch(match) {
-  const usuarioId = state.currentUser?.id || 'anonimo';
-  const fecha = normalizarFecha(match.fecha);
-  const inicio = match.inicio_coincidencia || '';
-  const fin = match.fin_coincidencia || '';
-
-  return `match_avisado_${usuarioId}_${fecha}_${inicio}_${fin}`;
-}
-
-function mostrarAvisoMatch(coincidencias) {
-  const matches = coincidencias.filter(c => c.hay_coincidencia);
-  if (!matches.length) return;
-
-  const matchesVigentes = matches.filter(matchSigueVigente);
-  if (!matchesVigentes.length) return;
-
-  const matchNuevo = matchesVigentes.find(m => {
-    const key = claveMatch(m);
-    return localStorage.getItem(key) !== '1';
-  });
-
-  if (!matchNuevo) return;
-
-  const key = claveMatch(matchNuevo);
-  localStorage.setItem(key, '1');
-
-  sonidoMatch();
-
-  const aviso = document.createElement('div');
-  aviso.className = 'match-toast';
-  aviso.innerHTML = `
-    <div class="match-toast-icon">✨</div>
-    <div>
-      <div class="match-toast-title">¡MATCH DE TIEMPO!</div>
-      <div class="match-toast-text">
-        Hay un ratito donde sí pueden verse 💙<br>
-        <strong>${formatHora(matchNuevo.inicio_coincidencia)} — ${formatHora(matchNuevo.fin_coincidencia)}</strong>
-      </div>
-    </div>
-  `;
-
-  document.body.appendChild(aviso);
-  setTimeout(() => aviso.classList.add('show'), 50);
-
-  setTimeout(() => {
-    aviso.classList.remove('show');
-    setTimeout(() => aviso.remove(), 400);
-  }, 4200);
-}
-
 const tiempoState = {
   usuarioId:   null,
   nombre:      null,
@@ -1566,20 +1546,6 @@ if (mTiempo) {
    FIX DEFINITIVO SIGA - MOSTRAR SECCIONES
    ====================================================== */
 function forzarSeccion(page) {
-  // ── ¡INJECTA ESTA LIMPIEZA AQUÍ AL INICIO DE LA FUNCIÓN! ──
-  if (typeof closeModal === 'function') closeModal('modal-crud');
-  const tiempoLogin = document.getElementById('tiempo-login-wrap');
-  if (tiempoLogin) tiempoLogin.style.setProperty('display', 'none', 'important');
-  // ─────────────────────────────────────────────────────────
-
-  const pagina = document.getElementById('page-' + page);
-
-  if (!pagina) {
-    console.error('No existe page-' + page);
-    return;
-  }
-  // ... (el resto del código que ya tienes abajo)
-  
   const pagina = document.getElementById('page-' + page);
 
   if (!pagina) {
@@ -1616,8 +1582,7 @@ function forzarSeccion(page) {
     cajita: 'Cajita especial',
     espacio: 'Mi espacio',
     calma: 'Modo avión',
-    pregunta: 'Pregunta final',
-    universo: 'Nuestro universo'
+    pregunta: 'Pregunta final'
   };
 
   document.querySelectorAll('.nav-item').forEach(btn => {
@@ -1638,19 +1603,6 @@ function forzarSeccion(page) {
   if (page === 'espacio' && typeof loadEspacio === 'function') loadEspacio();
   if (page === 'tiempo' && typeof initTiempoPage === 'function') initTiempoPage();
   if (page === 'calma' && typeof loadCalma === 'function') loadCalma();
-
-  // ── NUEVO DISPARADOR PARA EL UNIVERSO ──
-  if (page === 'universo') {
-    setTimeout(() => {
-      if (typeof window.initUniverso === 'function') {
-        window.initUniverso();
-      }
-    }, 60);
-  } else {
-    if (typeof window.destroyUniverso === 'function') {
-      window.destroyUniverso();
-    }
-  }
 }
 
 window.forzarSeccion = forzarSeccion;
@@ -1674,7 +1626,6 @@ document.addEventListener('click', function(e) {
   else if (texto.includes('Cajita especial')) forzarSeccion('cajita');
   else if (texto.includes('Mi espacio')) forzarSeccion('espacio');
   else if (texto.includes('Modo avión') || texto.includes('Modo calma')) forzarSeccion('calma');
-  else if (texto.includes('universo') || texto.includes('Universo') || texto.includes('Nuestro universo')) forzarSeccion('universo');
 });
 
 /* ======================================================
