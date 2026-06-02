@@ -320,7 +320,7 @@
     </section>
 
     <!-- CARTA -->
-  <section class="page" id="page-carta">
+<section class="page" id="page-carta">
   <div class="page-header">
     <div>
       <h1 class="page-title">Cartas <span>para ti</span></h1>
@@ -332,17 +332,107 @@
   <!-- Lista de cartas -->
   <div id="carta-lista"></div>
 
-  <!-- Editor -->
-  <div id="carta-editor" style="display:none;">
+  <!-- Vista lectura (para quien recibe) -->
+  <div id="carta-vista" style="display:none; max-width:640px;">
+    <div style="
+      background: var(--bg-card2);
+      border: 1px solid var(--border-glow);
+      border-radius: var(--radius);
+      padding: 36px 40px;
+      box-shadow: 0 0 40px rgba(180,130,220,0.08);
+    ">
+      <div id="carta-vista-titulo" style="
+        font-family: 'Cormorant Garamond', serif;
+        font-size: 1.7rem;
+        font-weight: 400;
+        color: var(--text-primary);
+        margin-bottom: 6px;
+      "></div>
+      <div id="carta-vista-fecha" style="
+        font-size: 0.78rem;
+        color: var(--text-muted);
+        margin-bottom: 28px;
+        letter-spacing: 0.05em;
+      "></div>
+      <div id="carta-vista-contenido" style="
+        font-family: 'Cormorant Garamond', serif;
+        font-size: 1.05rem;
+        line-height: 1.85;
+        color: var(--text-secondary);
+        white-space: pre-wrap;
+      "></div>
+    </div>
+    <div style="display:flex; gap:10px; margin-top:16px; flex-wrap:wrap;">
+      <button class="btn-secondary" onclick="cerrarVistaCarta()">← Volver</button>
+      <button class="btn-primary" id="carta-btn-editar-vista" onclick="pasarAEditar()" style="display:none;">Editar</button>
+    </div>
+  </div>
+
+  <!-- Editor (solo para quien escribe) -->
+  <div id="carta-editor" style="display:none; max-width:640px;">
     <input type="hidden" id="carta-editor-id"/>
-    <div style="display:flex;flex-direction:column;gap:12px;max-width:640px;">
-      <input type="text" id="carta-titulo-input" placeholder="Título de la carta" class="input-field"/>
-      <input type="date" id="carta-fecha-input" class="input-field"/>
-      <textarea id="carta-contenido-input" placeholder="Escribe aquí..." class="input-field" rows="12" style="resize:vertical;"></textarea>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;">
-        <button class="btn-primary" onclick="guardarCarta()">Guardar</button>
+    <div style="display:flex; flex-direction:column; gap:14px;">
+      <div>
+        <label style="font-size:0.78rem; color:var(--text-muted); display:block; margin-bottom:6px; letter-spacing:0.05em; text-transform:uppercase;">Título</label>
+        <input type="text" id="carta-titulo-input" placeholder="Título de la carta" style="
+          width:100%;
+          background: var(--bg-card2);
+          border: 1px solid var(--border);
+          border-radius: var(--radius-sm);
+          padding: 12px 16px;
+          color: var(--text-primary);
+          font-family: 'Cormorant Garamond', serif;
+          font-size: 1.1rem;
+          outline: none;
+          transition: var(--transition);
+        " onfocus="this.style.borderColor='var(--border-glow)'" onblur="this.style.borderColor='var(--border)'"/>
+      </div>
+      <div>
+        <label style="font-size:0.78rem; color:var(--text-muted); display:block; margin-bottom:6px; letter-spacing:0.05em; text-transform:uppercase;">Fecha</label>
+        <input type="date" id="carta-fecha-input" style="
+          width:100%;
+          background: var(--bg-card2);
+          border: 1px solid var(--border);
+          border-radius: var(--radius-sm);
+          padding: 12px 16px;
+          color: var(--text-secondary);
+          font-family: 'DM Sans', sans-serif;
+          font-size: 0.9rem;
+          outline: none;
+          transition: var(--transition);
+          color-scheme: dark;
+        " onfocus="this.style.borderColor='var(--border-glow)'" onblur="this.style.borderColor='var(--border)'"/>
+      </div>
+      <div>
+        <label style="font-size:0.78rem; color:var(--text-muted); display:block; margin-bottom:6px; letter-spacing:0.05em; text-transform:uppercase;">Contenido</label>
+        <textarea id="carta-contenido-input" placeholder="Escribe aquí..." rows="14" style="
+          width:100%;
+          background: var(--bg-card2);
+          border: 1px solid var(--border);
+          border-radius: var(--radius-sm);
+          padding: 16px;
+          color: var(--text-primary);
+          font-family: 'Cormorant Garamond', serif;
+          font-size: 1.0rem;
+          line-height: 1.8;
+          outline: none;
+          resize: vertical;
+          transition: var(--transition);
+        " onfocus="this.style.borderColor='var(--border-glow)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+      </div>
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn-primary" onclick="guardarCarta()">Guardar carta</button>
         <button class="btn-secondary" onclick="cerrarEditorCarta()">Cancelar</button>
-        <button class="btn-danger" onclick="eliminarCarta()" id="carta-btn-eliminar">Borrar carta</button>
+        <button onclick="eliminarCarta()" id="carta-btn-eliminar" style="
+          background: transparent;
+          border: 1px solid var(--danger);
+          color: var(--danger);
+          border-radius: var(--radius-sm);
+          padding: 9px 18px;
+          font-size: 0.85rem;
+          cursor: pointer;
+          transition: var(--transition);
+        ">Borrar carta</button>
       </div>
     </div>
   </div>
