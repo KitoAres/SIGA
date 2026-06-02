@@ -19,15 +19,15 @@
     sigyTimer:  null
   };
 
-  /* ── Config nodos ───────────────────────────────────── */
+/* ── Config nodos CORREGIDA (Distribución Elíptica Expandida) ── */
   const NODOS = [
-    { id: 'islas',        icono: '🪐', label: 'Isla del Primer\nEncuentro', angulo: -90,  radio: 0.34 },
-    { id: 'bosque',        icono: '🎵', label: 'Bosque de\nlas Canciones',   angulo: -20,  radio: 0.35 },
-    { id: 'biblioteca',    icono: '📚', label: 'Biblioteca\nde Secretos',     angulo: 40,   radio: 0.33 },
-    { id: 'puertas',       icono: '🚪', label: 'Puerta del\nFuturo',           angulo: 100,  radio: 0.34 },
-    { id: 'rincon',        icono: '🌙', label: 'Rincón de\nla Calma',          angulo: 155,  radio: 0.33 },
-    { id: 'constelaciones',icono: '✨', label: 'Constelaciones',               angulo: 210,  radio: 0.35 },
-    { id: 'puentes',       icono: '🌉', label: 'Puentes de\nencuentro',        angulo: 265,  radio: 0.34 }
+    { id: 'islas',        icono: '🪐', label: 'Isla del Primer\nEncuentro', angulo: -140, radio: 0.38 },
+    { id: 'bosque',        icono: '🎵', label: 'Bosque de\nlas Canciones',   angulo: 35,   radio: 0.38 },
+    { id: 'biblioteca',    icono: '📚', label: 'Biblioteca\nde Secretos',     angulo: 90,   radio: 0.36 },
+    { id: 'puertas',       icono: '🚪', label: 'Puerta del\nFuturo',           angulo: 15,   radio: 0.38 },
+    { id: 'rincon',        icono: '🌙', label: 'Rincón de\nla Calma',          angulo: 145,  radio: 0.38 },
+    { id: 'constelaciones',icono: '✨', label: 'Constelaciones',               angulo: -175, radio: 0.36 },
+    { id: 'puentes',       icono: '🌉', label: 'Puentes de\nencuentro',        angulo: -45,  radio: 0.38 }
   ];
 
   const COLORES_NODO = {
