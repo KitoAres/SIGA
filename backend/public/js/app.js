@@ -684,12 +684,14 @@ async function loadPromesas() {
   }
 }
 
-// ── CARTA ─────────────────────────────────────────────────────
+
+
+// ── LOAD Carta ───────────────────────────────────────────────────
+
 async function loadCarta() {
   const contenedor = document.getElementById('carta-lista');
   if (!contenedor) return;
 
-  // Asegurarse de que solo lista esté visible
   document.getElementById('carta-editor').style.display = 'none';
   document.getElementById('carta-vista').style.display = 'none';
   contenedor.style.display = 'block';
@@ -697,18 +699,14 @@ async function loadCarta() {
   contenedor.innerHTML = '<p style="color:var(--text-muted);font-size:0.85rem;">Cargando cartas...</p>';
 
   try {
-    const token = localStorage.getItem('siga_token') || '';
-    const resp = await fetch('/api/cartas', {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    const cartas = await resp.json();
+    const data = await api('GET', '/api/cartas');
 
-    if (!cartas.length) {
+    if (!Array.isArray(data) || !data.length) {
       contenedor.innerHTML = '<p style="color:var(--text-muted);font-size:0.85rem;padding:20px 0;">Aún no hay cartas. Escribe la primera.</p>';
       return;
     }
 
-    contenedor.innerHTML = cartas.map(c => `
+    contenedor.innerHTML = data.map(c => `
       <div onclick="abrirCarta(${c.id})" style="
         background: var(--bg-card2);
         border: 1px solid var(--border);
@@ -724,8 +722,8 @@ async function loadCarta() {
          onmouseout="this.style.borderColor='var(--border)';this.style.transform='translateY(0)'">
         <span style="font-size:1.4rem;">✉️</span>
         <div style="flex:1;">
-          <div style="font-family:'Cormorant Garamond',serif;font-size:1.05rem;color:var(--text-primary);">${c.titulo || 'Sin título'}</div>
-          <div style="font-size:0.75rem;color:var(--text-muted);margin-top:3px;">${c.fecha ? c.fecha : ''} ${c.creado_en ? '· ' + new Date(c.creado_en).toLocaleDateString('es') : ''}</div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:1.05rem;color:var(--text-primary);">${esc(c.titulo || 'Sin título')}</div>
+          <div style="font-size:0.75rem;color:var(--text-muted);margin-top:3px;">${c.fecha ? formatDate(c.fecha) : ''}</div>
         </div>
         <span style="color:var(--text-muted);font-size:0.85rem;">→</span>
       </div>
@@ -736,39 +734,109 @@ async function loadCarta() {
 }
 
 async function abrirCarta(id) {
-  const token = localStorage.getItem('siga_token') || '';
-  const resp = await fetch(`/api/cartas/${id}`, {
-    headers: { Authorization: `Bearer ${token}` }
-  });
-  const carta = await resp.json();
-  if (!carta) return;
+  try {
+    const carta = await api('GET', '/api/cartas/' + id);
+    if (!carta) return;
 
-  const rol = state?.currentUser?.rol || '';
-  const esEditor = (rol === 'yo' || rol === 'admin');
-
-  document.getElementById('carta-lista').style.display = 'none';
-  document.getElementById('carta-editor').style.display = 'none';
-  document.getElementById('carta-vista').style.display = 'none';
-
-  if (esEditor) {
-    // Modo edición
-    document.getElementById('carta-titulo-input').value = carta.titulo || '';
-    document.getElementById('carta-fecha-input').value = carta.fecha || '';
-    document.getElementById('carta-contenido-input').value = carta.contenido || '';
-    document.getElementById('carta-editor-id').value = carta.id;
-    document.getElementById('carta-editor').style.display = 'block';
-  } else {
-    // Modo lectura bonita
-    document.getElementById('carta-vista-titulo').textContent = carta.titulo || '';
-    document.getElementById('carta-vista-fecha').textContent = carta.fecha
-      ? new Date(carta.fecha + 'T00:00:00').toLocaleDateString('es', { year:'numeric', month:'long', day:'numeric' })
-      : '';
-    document.getElementById('carta-vista-contenido').textContent = carta.contenido || '';
-    // Guardar id por si tiene permiso de editar después
+    // Guardar id para editar después
     document.getElementById('carta-vista').dataset.id = carta.id;
+    document.getElementById('carta-vista').dataset.fecha = carta.fecha ? carta.fecha.split('T')[0] : '';
+    // Llenar la vista bonita
+    document.getElementById('carta-vista-titulo').textContent = carta.titulo || '';
+    document.getElementById('carta-vista-fecha').textContent = carta.fecha ? formatDate(carta.fecha) : '';
+    document.getElementById('carta-vista-contenido').textContent = carta.contenido || '';
+
+    // Mostrar botón editar solo si corresponde
+    const rol = state?.currentUser?.rol || '';
+    const btnEditar = document.getElementById('carta-btn-editar-vista');
+    if (btnEditar) {
+      btnEditar.style.display = (rol === 'yo' || rol === 'admin') ? 'inline-flex' : 'none';
+    }
+
+    // Siempre mostrar vista bonita primero
+    document.getElementById('carta-lista').style.display = 'none';
+    document.getElementById('carta-editor').style.display = 'none';
     document.getElementById('carta-vista').style.display = 'block';
+
+  } catch (e) {
+    toast('Error al abrir la carta.');
   }
 }
+
+function pasarAEditorCarta() {
+  const id = document.getElementById('carta-vista').dataset.id;
+  if (!id) return;
+
+  // Tomar los datos que ya están en la vista
+  const titulo    = document.getElementById('carta-vista-titulo').textContent;
+  const contenido = document.getElementById('carta-vista-contenido').textContent;
+  // La fecha la sacamos del dataset si la guardamos, o la dejamos vacía
+  const fechaRaw  = document.getElementById('carta-vista').dataset.fecha || '';
+
+  document.getElementById('carta-editor-id').value      = id;
+  document.getElementById('carta-titulo-input').value   = titulo;
+  document.getElementById('carta-contenido-input').value = contenido;
+  document.getElementById('carta-fecha-input').value    = fechaRaw;
+
+  document.getElementById('carta-vista').style.display  = 'none';
+  document.getElementById('carta-editor').style.display = 'block';
+}
+
+async function guardarCarta() {
+  const id = document.getElementById('carta-editor-id').value;
+  const body = {
+    titulo:    document.getElementById('carta-titulo-input').value,
+    contenido: document.getElementById('carta-contenido-input').value,
+    fecha:     document.getElementById('carta-fecha-input').value || null
+  };
+
+  try {
+    const url    = id ? '/api/cartas/' + id : '/api/cartas';
+    const method = id ? 'PUT' : 'POST';
+    await api(method, url, body);
+    toast('✓ Carta guardada');
+    cerrarEditorCarta();
+    loadCarta();
+  } catch (e) {
+    toast('Error al guardar.');
+  }
+}
+
+async function eliminarCarta() {
+  const id = document.getElementById('carta-editor-id').value;
+  if (!id) return;
+  if (!confirm('¿Borrar esta carta?')) return;
+  try {
+    await api('DELETE', '/api/cartas/' + id);
+    toast('Carta eliminada.');
+    cerrarEditorCarta();
+    loadCarta();
+  } catch (e) {
+    toast('Error al eliminar.');
+  }
+}
+
+function nuevaCarta() {
+  document.getElementById('carta-titulo-input').value    = '';
+  document.getElementById('carta-fecha-input').value     = '';
+  document.getElementById('carta-contenido-input').value = '';
+  document.getElementById('carta-editor-id').value       = '';
+  document.getElementById('carta-lista').style.display   = 'none';
+  document.getElementById('carta-vista').style.display   = 'none';
+  document.getElementById('carta-editor').style.display  = 'block';
+}
+
+function cerrarEditorCarta() {
+  document.getElementById('carta-editor').style.display = 'none';
+  document.getElementById('carta-vista').style.display  = 'none';
+  document.getElementById('carta-lista').style.display  = 'block';
+}
+
+function cerrarVistaCarta() {
+  cerrarEditorCarta();
+}
+
+
 
 function pasarAEditar() {
   const id = document.getElementById('carta-vista').dataset.id;
