@@ -2270,3 +2270,111 @@ function editarRecuerdoSeguro(id) {
 
   window.mostrarPanelAdminSiCorresponde = mostrarPanelAdminSiCorresponde;
 })();
+
+
+
+
+
+/* =========================
+   CARTAS MULTIPLES
+========================= */
+
+async function loadCartas() {
+  const box = document.getElementById('list-cartas');
+  if (!box) return;
+
+  box.innerHTML = 'Cargando...';
+
+  const r = await fetch('/api/carta');
+  const cartas = await r.json();
+
+  if (!cartas.length) {
+    box.innerHTML = `
+      <div class="card-siga">
+        No hay cartas todavía 💜
+      </div>
+    `;
+    return;
+  }
+
+  box.innerHTML = cartas.map(c => `
+    <div class="card-siga">
+      <div style="
+        white-space:pre-wrap;
+        line-height:1.7;
+        margin-bottom:14px;
+      ">
+${c.contenido || ''}
+      </div>
+
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn"
+          onclick="editarCarta(${c.id})">
+          ✎ Editar
+        </button>
+
+        <button class="btn-cancel"
+          onclick="eliminarCarta(${c.id})">
+          Eliminar
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function nuevaCarta() {
+  const texto = prompt('Escribe tu nueva carta:');
+
+  if (texto === null) return;
+
+  await fetch('/api/carta', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      contenido: texto
+    })
+  });
+
+  loadCartas();
+}
+
+async function editarCarta(id) {
+  const texto = prompt('Editar carta:');
+
+  if (texto === null) return;
+
+  await fetch('/api/carta/' + id, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      contenido: texto
+    })
+  });
+
+  loadCartas();
+}
+
+async function eliminarCarta(id) {
+  if (!confirm('¿Eliminar esta carta?')) return;
+
+  await fetch('/api/carta/' + id, {
+    method: 'DELETE'
+  });
+
+  loadCartas();
+}
+
+/* cargar al entrar */
+const _navigateOriginal = window.navigateTo;
+
+window.navigateTo = function (page) {
+  _navigateOriginal(page);
+
+  if (page === 'carta') {
+    loadCartas();
+  }
+};
