@@ -1,5 +1,5 @@
 /* ======================================================
-   🌌 EL UNIVERSO DEL VÍNCULO — Estilos
+   🌌 EL UNIVERSO DEL VÍNCULO — Estilos Corregidos
    Compatible con variables de style.css de SIGA.
    ====================================================== */
 
@@ -83,6 +83,8 @@
   justify-content: center;
   padding: 0 20px;
   min-height: 500px;
+  position: relative;
+  z-index: 10;
 }
 
 #universo-svg {
@@ -90,6 +92,7 @@
   height: auto;
   max-height: 70vh;
   overflow: visible;
+  pointer-events: auto !important; /* Fuerza a los planetas a recibir clics */
 }
 
 /* ── Núcleo del vínculo ───────────────────────────────── */
@@ -283,24 +286,28 @@
   to   { opacity: 1; transform: scale(1); }
 }
 
-/* ── Modal de nodo ────────────────────────────────────── */
-.universo-modal-overlay {
+/* ── Modal de nodo CORREGIDO ──────────────────────────── */
+#page-universo .universo-modal-overlay {
   position: fixed;
   inset: 0;
   background: rgba(8, 6, 18, 0.82);
   backdrop-filter: blur(8px);
-  z-index: 50;
-  display: flex;
+  z-index: 200; /* Lo movemos arriba del mapa */
+  display: none !important; /* EXTINTO por defecto */
   align-items: center;
   justify-content: center;
   padding: 20px;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.3s ease;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+  visibility: hidden;
 }
-.universo-modal-overlay.open {
+
+#page-universo .universo-modal-overlay.open {
+  display: flex !important; /* Solo vive si tiene la clase .open */
   opacity: 1;
   pointer-events: all;
+  visibility: visible;
 }
 
 .universo-modal {
@@ -317,7 +324,7 @@
   transition: transform 0.3s ease;
   position: relative;
 }
-.universo-modal-overlay.open .universo-modal {
+#page-universo .universo-modal-overlay.open .universo-modal {
   transform: translateY(0) scale(1);
 }
 
