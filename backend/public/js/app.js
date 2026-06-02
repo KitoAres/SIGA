@@ -686,45 +686,99 @@ async function loadPromesas() {
 
 // ── CARTA ─────────────────────────────────────────────────────
 async function loadCarta() {
+  const contenedor = document.getElementById('carta-lista');
+  if (!contenedor) return;
+
+  contenedor.innerHTML = '<p style="color:var(--text-muted);font-size:0.85rem;">Cargando cartas...</p>';
+
   try {
-    const data = await api('GET', '/api/cartas');
-    state.cartaId = data.id;
-    state.cartaOriginal = data.contenido || '';
-    $('carta-view').textContent = data.contenido || '';
-  } catch {
-    $('carta-view').textContent = 'No se pudo cargar la carta.';
+    const token = localStorage.getItem('siga_token') || '';
+    const resp = await fetch('/api/cartas', {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const cartas = await resp.json();
+
+    if (!cartas.length) {
+      contenedor.innerHTML = '<p style="color:var(--text-muted);font-size:0.85rem;">Aún no hay cartas. Escribe la primera.</p>';
+      return;
+    }
+
+    contenedor.innerHTML = cartas.map(c => `
+      <div class="carta-item" style="background:var(--bg-card2);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;margin-bottom:12px;cursor:pointer;" onclick="abrirCarta(${c.id})">
+        <div style="font-family:'Cormorant Garamond',serif;font-size:1.05rem;color:var(--text-primary);">${c.titulo}</div>
+        <div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px;">${c.fecha || ''} ${c.creado_en ? '· ' + new Date(c.creado_en).toLocaleDateString('es') : ''}</div>
+      </div>
+    `).join('');
+  } catch (e) {
+    contenedor.innerHTML = '<p style="color:var(--danger);font-size:0.85rem;">Error cargando cartas.</p>';
   }
 }
 
-function editCarta() {
-  $('carta-view').style.display = 'none';
-  $('carta-edit').style.display = 'block';
-  $('carta-edit').value = state.cartaOriginal;
-  $('btn-edit-carta').style.display = 'none';
-  $('btn-save-carta').style.display = 'inline-block';
-  $('btn-cancel-carta').style.display = 'inline-block';
+async function abrirCarta(id) {
+  const token = localStorage.getItem('siga_token') || '';
+  const resp = await fetch(`/api/cartas/${id}`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  const carta = await resp.json();
+  if (!carta) return;
+
+  document.getElementById('carta-titulo-input').value = carta.titulo || '';
+  document.getElementById('carta-fecha-input').value = carta.fecha || '';
+  document.getElementById('carta-contenido-input').value = carta.contenido || '';
+  document.getElementById('carta-editor-id').value = carta.id;
+  document.getElementById('carta-editor').style.display = 'block';
+  document.getElementById('carta-lista').style.display = 'none';
 }
 
-async function saveCarta() {
-  const contenido = $('carta-edit').value;
-  try {
-    await api('PUT', '/api/cartas/' + state.cartaId, { contenido });
-    state.cartaOriginal = contenido;
-    $('carta-view').textContent = contenido;
-    cancelCarta();
-    toast('Carta guardada con cariño ♡');
-  } catch {
-    toast('Error al guardar la carta.');
-  }
+async function guardarCarta() {
+  const token = localStorage.getItem('siga_token') || '';
+  const id = document.getElementById('carta-editor-id').value;
+  const body = {
+    titulo:    document.getElementById('carta-titulo-input').value,
+    contenido: document.getElementById('carta-contenido-input').value,
+    fecha:     document.getElementById('carta-fecha-input').value || null
+  };
+
+  const url    = id ? `/api/cartas/${id}` : '/api/cartas';
+  const method = id ? 'PUT' : 'POST';
+
+  await fetch(url, {
+    method,
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify(body)
+  });
+
+  cerrarEditorCarta();
+  loadCarta();
 }
 
-function cancelCarta() {
-  $('carta-view').style.display = 'block';
-  $('carta-edit').style.display = 'none';
-  $('btn-edit-carta').style.display = 'inline-block';
-  $('btn-save-carta').style.display = 'none';
-  $('btn-cancel-carta').style.display = 'none';
+async function eliminarCarta() {
+  const id = document.getElementById('carta-editor-id').value;
+  if (!id) return;
+  if (!confirm('¿Borrar esta carta?')) return;
+  const token = localStorage.getItem('siga_token') || '';
+  await fetch(`/api/cartas/${id}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  cerrarEditorCarta();
+  loadCarta();
 }
+
+function nuevaCarta() {
+  document.getElementById('carta-titulo-input').value = '';
+  document.getElementById('carta-fecha-input').value = '';
+  document.getElementById('carta-contenido-input').value = '';
+  document.getElementById('carta-editor-id').value = '';
+  document.getElementById('carta-editor').style.display = 'block';
+  document.getElementById('carta-lista').style.display = 'none';
+}
+
+function cerrarEditorCarta() {
+  document.getElementById('carta-editor').style.display = 'none';
+  document.getElementById('carta-lista').style.display = 'block';
+}
+
 
 // ── MODAL CRUD ────────────────────────────────────────────────
 function openModal(type, id, ...args) {
