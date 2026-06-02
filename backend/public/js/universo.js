@@ -1,5 +1,5 @@
 /* ======================================================
-   🌌 EL UNIVERSO DEL VÍNCULO — JS principal
+   🌌 EL UNIVERSO DEL VÍNCULO — JS principal Corregido
    Integrado en SIGA. No toca módulos existentes.
    ====================================================== */
 
@@ -21,13 +21,13 @@
 
   /* ── Config nodos ───────────────────────────────────── */
   const NODOS = [
-    { id: 'islas',         icono: '🪐', label: 'Isla del Primer\nEncuentro', angulo: -90,  radio: 0.34 },
+    { id: 'islas',        icono: '🪐', label: 'Isla del Primer\nEncuentro', angulo: -90,  radio: 0.34 },
     { id: 'bosque',        icono: '🎵', label: 'Bosque de\nlas Canciones',   angulo: -20,  radio: 0.35 },
     { id: 'biblioteca',    icono: '📚', label: 'Biblioteca\nde Secretos',     angulo: 40,   radio: 0.33 },
-    { id: 'puertas',       icono: '🚪', label: 'Puerta del\nFuturo',          angulo: 100,  radio: 0.34 },
-    { id: 'rincon',        icono: '🌙', label: 'Rincón de\nla Calma',         angulo: 155,  radio: 0.33 },
-    { id: 'constelaciones',icono: '✨', label: 'Constelaciones',              angulo: 210,  radio: 0.35 },
-    { id: 'puentes',       icono: '🌉', label: 'Puentes de\nencuentro',       angulo: 265,  radio: 0.34 }
+    { id: 'puertas',       icono: '🚪', label: 'Puerta del\nFuturo',           angulo: 100,  radio: 0.34 },
+    { id: 'rincon',        icono: '🌙', label: 'Rincón de\nla Calma',          angulo: 155,  radio: 0.33 },
+    { id: 'constelaciones',icono: '✨', label: 'Constelaciones',               angulo: 210,  radio: 0.35 },
+    { id: 'puentes',       icono: '🌉', label: 'Puentes de\nencuentro',        angulo: 265,  radio: 0.34 }
   ];
 
   const COLORES_NODO = {
@@ -76,6 +76,7 @@
 
   function resizeCanvas() {
     const c = UNI.canvas;
+    if (!c) return;
     c.width  = c.offsetWidth;
     c.height = c.offsetHeight;
     generarEstrellas();
@@ -83,6 +84,7 @@
 
   function generarEstrellas() {
     UNI.stars = [];
+    if (!UNI.canvas) return;
     const n = Math.floor((UNI.canvas.width * UNI.canvas.height) / 5000);
     for (let i = 0; i < n; i++) {
       UNI.stars.push({
@@ -98,18 +100,17 @@
 
   let tick = 0;
   function animLoop() {
+    if (!UNI.canvas || !UNI.ctx) return;
     UNI.raf = requestAnimationFrame(animLoop);
     tick++;
     const ctx = UNI.ctx;
     const W   = UNI.canvas.width;
     const H   = UNI.canvas.height;
 
-    // Fondo
     ctx.clearRect(0, 0, W, H);
     ctx.fillStyle = '#080612';
     ctx.fillRect(0, 0, W, H);
 
-    // Neblina de fondo
     const grd = ctx.createRadialGradient(W * 0.5, H * 0.5, 0, W * 0.5, H * 0.5, W * 0.6);
     grd.addColorStop(0,   'rgba(60,20,100,0.25)');
     grd.addColorStop(0.5, 'rgba(20,15,45,0.15)');
@@ -117,7 +118,6 @@
     ctx.fillStyle = grd;
     ctx.fillRect(0, 0, W, H);
 
-    // Estrellas
     for (const s of UNI.stars) {
       s.op += s.opSpeed;
       const op = s.opBase * (0.5 + 0.5 * Math.sin(s.op));
@@ -127,12 +127,12 @@
       ctx.fill();
     }
 
-    // Partículas flotantes
     if (tick % 20 === 0 && UNI.datos) emitirParticula();
-    actualizarParticulas(ctx, W, H);
+    actualizarParticulas(ctx);
   }
 
   function emitirParticula() {
+    if (!UNI.canvas) return;
     const W = UNI.canvas.width;
     const H = UNI.canvas.height;
     const colores = ['#b482dc', '#7aaef0', '#e8789a', '#7acfaa'];
@@ -156,9 +156,7 @@
       if (p.op <= 0) continue;
       ctx.beginPath();
       ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-      ctx.fillStyle = colorConAlpha(p.color.replace(')', '').replace('rgb(', ''), p.op);
-      // fallback directo
-      ctx.fillStyle = p.color.replace(')', `,${p.op})`).replace('#', 'rgba(').replace(/rgba\(([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2}),/, (_, r, g, b) => `rgba(${parseInt(r,16)},${parseInt(g,16)},${parseInt(b,16)},`);
+      ctx.fillStyle = p.color;
       ctx.fill();
     }
     UNI.particles = UNI.particles.filter(p => p.op > 0);
@@ -178,7 +176,6 @@
 
     let inner = '';
 
-    // Defs (gradientes, filtros)
     inner += `<defs>
       <radialGradient id="gradNucleo" cx="50%" cy="50%" r="50%">
         <stop offset="0%"   stop-color="#d4a0ff" stop-opacity="0.9"/>
@@ -195,24 +192,16 @@
       </filter>
     </defs>`;
 
-    // Pulso exterior del núcleo
     inner += `<circle class="nucleo-glow" cx="${CX}" cy="${CY}" r="55" fill="url(#gradNucleo)" filter="url(#glow)"/>`;
-
-    // Anillo decorativo
     inner += `<circle class="nucleo-ring" cx="${CX}" cy="${CY}" r="44" fill="none" stroke="rgba(180,130,220,0.4)" stroke-width="1" stroke-dasharray="6 4" transform-origin="${CX} ${CY}"/>`;
-
-    // Esfera núcleo
     inner += `<circle class="nucleo-sphere" cx="${CX}" cy="${CY}" r="38" fill="url(#gradNucleo)" filter="url(#glow)" transform-origin="${CX} ${CY}"/>`;
 
-    // Texto del núcleo
     inner += `<text x="${CX}" y="${CY - 6}" text-anchor="middle" font-family="Cormorant Garamond,serif" font-size="11" fill="rgba(240,236,255,0.9)">✦ Núcleo del</text>`;
     inner += `<text x="${CX}" y="${CY + 8}" text-anchor="middle" font-family="Cormorant Garamond,serif" font-size="11" fill="rgba(240,236,255,0.9)">vínculo</text>`;
 
-    // Energía en texto
     const energia = datos?.nucleo?.energia ?? 0;
     inner += `<text x="${CX}" y="${CY + 24}" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="9" fill="rgba(180,130,220,0.7)">${energia}% energía</text>`;
 
-    // Nodos + puentes
     for (const nodo of NODOS) {
       const anR  = rad(nodo.angulo);
       const rPx  = Math.min(W, H) * nodo.radio;
@@ -220,34 +209,24 @@
       const ny   = CY + Math.sin(anR) * rPx;
       const col  = COLORES_NODO[nodo.id] || '#b482dc';
       const items = datos?.nodos?.[nodo.id]?.items ?? 0;
-      const radio = 20 + Math.min(items * 2, 12); // tamaño según actividad
+      const radio = 20 + Math.min(items * 2, 12);
 
-      // Línea puente
       inner += `<line class="puente-line" x1="${CX}" y1="${CY}" x2="${nx}" y2="${ny}"/>`;
-
-      // Partícula en la línea
-      const mx = lerp(CX, nx, 0.55);
-      const my = lerp(CY, ny, 0.55);
-      inner += `<circle r="2" fill="${col}" opacity="0.6" style="--dx:${(nx-CX)*0.3}px;--dy:${(ny-CY)*0.3}px;">
+      inner += `<circle r="2" fill="${col}" opacity="0.6">
         <animateMotion dur="${2.5 + Math.random()}s" repeatCount="indefinite" path="M${CX},${CY} L${nx},${ny}"/>
       </circle>`;
 
-      // Círculo nodo con glow
       inner += `<g class="nodo-group" data-nodo="${nodo.id}" onclick="UniversoModal.abrir('${nodo.id}')" style="--cx:${nx}px;--cy:${ny}px;">`;
       inner += `<circle cx="${nx}" cy="${ny}" r="${radio + 6}" fill="${col}" opacity="0.12" filter="url(#glow-soft)"/>`;
       inner += `<circle class="nodo-circle" cx="${nx}" cy="${ny}" r="${radio}" fill="${colorConAlpha(col, 0.22)}" stroke="${col}" stroke-width="1.5" filter="url(#glow-soft)"/>`;
-
-      // Icono emoji en foreignObject
       inner += `<text x="${nx}" y="${ny + 5}" text-anchor="middle" dominant-baseline="middle" class="nodo-icon">${nodo.icono}</text>`;
 
-      // Etiqueta bajo el nodo
       const lineas = nodo.label.split('\n');
       const oy = ny + radio + 14;
       for (let i = 0; i < lineas.length; i++) {
         inner += `<text x="${nx}" y="${oy + i * 13}" text-anchor="middle" class="nodo-label">${lineas[i]}</text>`;
       }
 
-      // Badge de conteo
       if (items > 0) {
         inner += `<circle cx="${nx + radio - 4}" cy="${ny - radio + 4}" r="9" fill="rgba(10,8,20,0.9)" stroke="${col}" stroke-width="1"/>`;
         inner += `<text x="${nx + radio - 4}" y="${ny - radio + 4}" text-anchor="middle" dominant-baseline="middle" font-family="DM Sans,sans-serif" font-size="8" fill="${col}">${items > 99 ? '99+' : items}</text>`;
@@ -295,7 +274,7 @@
         </div>`;
 
       try {
-        const token = localStorage.getItem('siga_token') || '';
+        const token = sessionStorage.getItem('siga_token') || ''; /* CORREGIDO A SESSIONSTORAGE */
         const resp  = await fetch(`/api/universo/nodo/${nodoId}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -331,7 +310,7 @@
         } else {
           for (const item of items.slice(0, 6)) {
             const titulo  = item.titulo  || item.texto  || item.artista || item.nombre || item.mensaje || '—';
-            const sub     = item.fecha   || item.frase  || item.hora_inicio || '';
+            const sub       = item.fecha   || item.frase  || item.hora_inicio || '';
             html += `<div class="universo-modal-item">
               <div class="universo-modal-item-title">${titulo}</div>
               ${sub ? `<div class="universo-modal-item-sub">${sub}</div>` : ''}
@@ -358,7 +337,7 @@
   /* ── SIGy en el universo ─────────────────────────────── */
   async function cargarMensajeSIGy() {
     try {
-      const token = localStorage.getItem('siga_token') || '';
+      const token = sessionStorage.getItem('siga_token') || ''; /* CORREGIDO A SESSIONSTORAGE */
       const resp  = await fetch('/api/universo/sigy', {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -375,7 +354,7 @@
   /* ── Eventos activos ─────────────────────────────────── */
   async function cargarEventos() {
     try {
-      const token = localStorage.getItem('siga_token') || '';
+      const token = sessionStorage.getItem('siga_token') || ''; /* CORREGIDO A SESSIONSTORAGE */
       const resp  = await fetch('/api/universo/eventos', {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -402,18 +381,18 @@
   /* ── Carga principal ─────────────────────────────────── */
   async function cargarUniverso() {
     const loading = document.getElementById('universo-loading');
-    const wrapper = document.getElementById('universo-wrapper-inner');
+    const wrapper = document.getElementById('universo-wrapper'); /* FIJADO AL WRAPPER EN VEZ DE INNER */
 
     try {
-      const token = localStorage.getItem('siga_token') || '';
+      const token = sessionStorage.getItem('siga_token') || ''; /* CORREGIDO A SESSIONSTORAGE */
       const resp  = await fetch('/api/universo', {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await resp.json();
       UNI.datos = data?.datos;
 
-      if (loading)  loading.style.display = 'none';
-      if (wrapper)  wrapper.style.display = 'flex';
+      if (loading)  loading.style.setProperty('display', 'none', 'important'); /* FUERZA APAGADO */
+      if (wrapper)  wrapper.style.setProperty('display', 'flex', 'important');
 
       dibujarMapa(UNI.datos);
       actualizarBarraEnergia(UNI.datos?.nucleo?.energia ?? 0);
@@ -421,8 +400,6 @@
       setTimeout(cargarMensajeSIGy, 1200);
 
       UNI.loaded = true;
-
-      // SIGy rota mensajes cada 45s
       UNI.sigyTimer = setInterval(cargarMensajeSIGy, 45000);
 
     } catch (err) {
@@ -433,7 +410,7 @@
 
   /* ── Inicialización ──────────────────────────────────── */
   window.initUniverso = function () {
-    if (UNI.raf) return; // ya iniciado
+    if (UNI.raf) return;
 
     setTimeout(() => {
       initCanvas();
