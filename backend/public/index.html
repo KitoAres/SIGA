@@ -320,24 +320,33 @@
     </section>
 
     <!-- CARTA -->
-    <section class="page" id="page-carta">
-      <div class="page-header">
-        <div>
-          <h1 class="page-title">Mi <span>carta</span></h1>
-          <p class="page-subtitle">Para ti, que de alguna manera inexplicable llegaste a quedarte.</p>
-        </div>
-        <div style="display:flex;gap:8px;">
-          <button class="btn" id="btn-edit-carta" onclick="editCarta()">✎ Editar</button>
-          <button class="btn-save" id="btn-save-carta" style="display:none;" onclick="saveCarta()">Guardar</button>
-          <button class="btn-cancel" id="btn-cancel-carta" style="display:none;" onclick="cancelCarta()">Cancelar</button>
-        </div>
-      </div>
+  <section class="page" id="page-carta">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Cartas <span>para ti</span></h1>
+      <p class="page-subtitle">Cada carta guarda algo real.</p>
+    </div>
+    <button class="btn-primary" onclick="nuevaCarta()">+ Nueva carta</button>
+  </div>
 
-      <div class="carta-container">
-        <div class="carta-paper" id="carta-view"></div>
-        <textarea class="carta-edit-area" id="carta-edit" style="display:none;"></textarea>
+  <!-- Lista de cartas -->
+  <div id="carta-lista"></div>
+
+  <!-- Editor -->
+  <div id="carta-editor" style="display:none;">
+    <input type="hidden" id="carta-editor-id"/>
+    <div style="display:flex;flex-direction:column;gap:12px;max-width:640px;">
+      <input type="text" id="carta-titulo-input" placeholder="Título de la carta" class="input-field"/>
+      <input type="date" id="carta-fecha-input" class="input-field"/>
+      <textarea id="carta-contenido-input" placeholder="Escribe aquí..." class="input-field" rows="12" style="resize:vertical;"></textarea>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="btn-primary" onclick="guardarCarta()">Guardar</button>
+        <button class="btn-secondary" onclick="cerrarEditorCarta()">Cancelar</button>
+        <button class="btn-danger" onclick="eliminarCarta()" id="carta-btn-eliminar">Borrar carta</button>
       </div>
-    </section>
+    </div>
+  </div>
+</section>
 
     <!-- ¿NOS VEMOS? -->
     <section class="page" id="page-tiempo">
