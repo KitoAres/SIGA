@@ -326,13 +326,13 @@
       <h1 class="page-title">Cartas <span>para ti</span></h1>
       <p class="page-subtitle">Cada carta guarda algo real.</p>
     </div>
-    <button class="btn-save" onclick="nuevaCarta()">+ Nueva carta</button>
+    <button class="btn-add" onclick="nuevaCarta()">+ Nueva carta</button>
   </div>
 
   <!-- Lista de cartas -->
   <div id="carta-lista"></div>
 
-  <!-- Vista lectura (para quien recibe) -->
+  <!-- Vista lectura bonita (todos ven esto al abrir una carta) -->
   <div id="carta-vista" style="display:none; max-width:640px;">
     <div style="
       background: var(--bg-card2);
@@ -363,12 +363,12 @@
       "></div>
     </div>
     <div style="display:flex; gap:10px; margin-top:16px; flex-wrap:wrap;">
-      <button class="btn btn-sm btn-edit" onclick="cerrarVistaCarta()">← Volver</button>
-      <button class="btn btn-sm btn-edit" id="carta-btn-editar-vista" onclick="pasarAEditar()" style="display:none;">Editar</button>
+      <button class="btn btn-sm" onclick="cerrarVistaCarta()">← Volver</button>
+      <button class="btn btn-sm btn-edit" id="carta-btn-editar-vista" onclick="pasarAEditorCarta()" style="display:none;">Editar carta</button>
     </div>
   </div>
 
-  <!-- Editor (solo para quien escribe) -->
+  <!-- Editor (aparece solo al crear nueva o al tocar Editar) -->
   <div id="carta-editor" style="display:none; max-width:640px;">
     <input type="hidden" id="carta-editor-id"/>
     <div style="display:flex; flex-direction:column; gap:14px;">
@@ -428,6 +428,9 @@
     </div>
   </div>
 </section>
+
+
+  
     <!-- ¿NOS VEMOS? -->
     <section class="page" id="page-tiempo">
 
