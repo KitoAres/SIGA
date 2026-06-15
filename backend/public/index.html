@@ -7,6 +7,44 @@
   <link rel="stylesheet" href="/css/style.css?v=nuevo"/>
   <link rel="stylesheet" href="/css/sigy.css?v=sigy-11"/>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💜</text></svg>"/>
+  <style>
+    html, body {
+      background: transparent !important;
+      background-image: none !important;
+    }
+    #login-screen {
+      background: transparent !important;
+      background-image: none !important;
+    }
+    #app, .main-content, .page {
+      background: transparent !important;
+    }
+    #bg-video {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      object-fit: cover !important;
+      z-index: -100 !important; 
+      pointer-events: none !important;
+    }
+    body::after {
+      display: none !important;
+    }
+    body::before {
+      content: '' !important;
+      position: fixed !important;
+      top: 0 !important; 
+      left: 0 !important;
+      width: 100vw !important; 
+      height: 100vh !important;
+      background: rgba(10, 8, 18, 0.70) !important;
+      z-index: -99 !important;
+      pointer-events: none !important;
+    }
+  </style>
+  </head>
 </head>
 <body>
 
