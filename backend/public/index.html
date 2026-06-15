@@ -10,7 +10,10 @@
 </head>
 <body>
 
-<!-- ── LOGIN ─────────────────────────────────── -->
+<video autoplay loop muted playsinline id="bg-video">
+  <source src="/img/fondo.webm" type="video/webm">
+  <source src="/img/fondo.mp4" type="video/mp4">
+</video>
 <div id="login-screen">
   <div class="login-card">
     <div class="login-logo">S<span>I</span>GA</div>
@@ -22,16 +25,13 @@
   </div>
 </div>
 
-<!-- ── APP ────────────────────────────────────── -->
 <div id="app">
 
-  <!-- Hamburger móvil -->
   <button class="hamburger" id="hamburger" onclick="toggleSidebar()" aria-label="Menú">
     <span></span><span></span><span></span>
   </button>
   <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
 
-  <!-- SIDEBAR -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">S<span>I</span>GA</div>
@@ -116,10 +116,8 @@
 
 </aside>
 
-<!-- MAIN -->
 <main class="main-content">
 
-    <!-- DASHBOARD -->
     <section class="page active" id="page-dashboard">
       <div class="page-header">
         <div>
@@ -192,9 +190,7 @@
         </div>
       </div>
     </section>
-    <!-- Analisis siga test y mas -->
-
-  <section class="page" id="page-analisis">
+    <section class="page" id="page-analisis">
       <div class="page-header">
         <div>
           <h1 class="page-title">Análisis <span>SIGA</span></h1>
@@ -259,7 +255,6 @@
     </section>
   
 
-    <!-- RECUERDOS -->
     <section class="page" id="page-recuerdos">
       <div class="page-header">
         <div>
@@ -271,7 +266,6 @@
       <div class="items-grid" id="list-recuerdos"></div>
     </section>
 
-    <!-- PLANES -->
     <section class="page" id="page-citas">
       <div class="page-header">
         <div>
@@ -283,7 +277,6 @@
       <div class="items-grid" id="list-citas"></div>
     </section>
 
-    <!-- PLAYLIST -->
     <section class="page" id="page-playlist">
       <div class="page-header">
         <div>
@@ -295,7 +288,6 @@
       <div class="items-grid" id="list-playlist"></div>
     </section>
 
-    <!-- RAZONES -->
     <section class="page" id="page-razones">
       <div class="page-header">
         <div>
@@ -307,7 +299,6 @@
       <div class="items-grid" id="list-razones"></div>
     </section>
 
-    <!-- PROMESAS -->
     <section class="page" id="page-promesas">
       <div class="page-header">
         <div>
@@ -319,7 +310,6 @@
       <div class="items-grid" id="list-promesas"></div>
     </section>
 
-<!-- CARTA -->
 <section class="page" id="page-carta">
   <div class="page-header">
     <div>
@@ -329,10 +319,8 @@
     <button class="btn-add" onclick="nuevaCarta()">+ Nueva carta</button>
   </div>
 
-  <!-- Lista de cartas -->
   <div id="carta-lista"></div>
 
-  <!-- Vista lectura bonita (todos ven esto al abrir una carta) -->
   <div id="carta-vista" style="display:none; max-width:640px;">
     <div style="
       background: var(--bg-card2);
@@ -368,7 +356,6 @@
     </div>
   </div>
 
-  <!-- Editor (aparece solo al crear nueva o al tocar Editar) -->
   <div id="carta-editor" style="display:none; max-width:640px;">
     <input type="hidden" id="carta-editor-id"/>
     <div style="display:flex; flex-direction:column; gap:14px;">
@@ -431,10 +418,8 @@
 
 
   
-    <!-- ¿NOS VEMOS? -->
     <section class="page" id="page-tiempo">
 
-      <!-- LOGIN DEL MÓDULO -->
       <div id="tiempo-login-wrap" class="tiempo-login-wrap">
         <div class="tiempo-login-card">
           <div class="tiempo-login-icon">🕐</div>
@@ -452,7 +437,6 @@
         </div>
       </div>
 
-      <!-- PANEL PRINCIPAL -->
       <div id="tiempo-panel" class="tiempo-panel">
         <div class="page-header">
           <div>
@@ -493,7 +477,6 @@
     </section>
 
 
-    <!-- MISIONES  SIGA -->
     <section class="page" id="page-eventos">
       <div class="page-header">
         <div>
@@ -540,7 +523,6 @@
       <div class="items-grid" id="list-eventos"></div>
     </section>
 
-    <!-- CAJITA ESPECIAL -->
     <section class="page" id="page-cajita">
       <div class="page-header">
         <div>
@@ -562,7 +544,6 @@
     </section>
 
 
-<!-- MI ESPACIO -->
 <section class="page" id="page-espacio">
   <div class="page-header">
     <div>
@@ -593,7 +574,6 @@
   </div>
 </section>
 
-<!-- MODO AVIÓN -->
 <section class="page" id="page-calma">
   <div class="page-header">
     <div>
@@ -616,7 +596,6 @@
 </section>
 
 
-<!-- PANEL ADMIN -->
 <section class="page" id="page-admin">
   <div class="page-header">
     <div>
@@ -703,7 +682,6 @@
     </div>
 </section>
 
-<!-- ── INTRODUCCIÓN SIGY ─────────────────────────────────── -->
 <section class="page" id="page-sigy-intro">
   <div class="sigy-intro-wrap">
 
@@ -767,9 +745,6 @@
   </div>
 </section>
 
-<!-- ── MODALES ─────────────────────────────────── -->
-
-<!-- Modal genérico CRUD -->
 <div class="modal-overlay" id="modal-crud">
   <div class="modal">
     <h2 class="modal-title" id="modal-crud-title">Nuevo</h2>
@@ -781,7 +756,6 @@
   </div>
 </div>
 
-<!-- Modal Nuestro Tiempo -->
 <div class="modal-overlay" id="modal-tiempo">
   <div class="modal">
     <h2 class="modal-title" id="modal-tiempo-title">Agregar disponibilidad</h2>
@@ -808,7 +782,6 @@
     </div>
   </div>
 </div>
-<!-- Modal Mi Cuenta -->
 <div class="modal-overlay" id="modal-perfil">
   <div class="modal">
     <h2 class="modal-title">Mi cuenta</h2>
@@ -1025,5 +998,3 @@
 
 </body>
 </html>
-
-  
