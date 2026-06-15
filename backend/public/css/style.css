@@ -2354,26 +2354,34 @@ body {
   overflow-x: hidden !important;
 }
 
+/* 1. Hacemos que el fondo del body sea totalmente transparente */
 body {
-  background: linear-gradient(rgba(6, 5, 14, 0.70), rgba(6, 5, 14, 0.90)) !important;
-  background-attachment: fixed !important;
+  background: transparent !important;
 }
 
-/* ── ESTILOS DEL VIDEO DE FONDO ──────────────── */
+/* 2. El video va hasta el fondo del todo (z-index: -2) */
 #bg-video {
   position: fixed;
-  top: 50%;
-  left: 50%;
-  min-width: 100%;
-  min-height: 100%;
-  width: auto;
-  height: auto;
-  transform: translateX(-50%) translateY(-50%);
-  z-index: -1;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
   object-fit: cover;
+  z-index: -2;
   pointer-events: none;
 }
 
+/* 3. Creamos un filtro oscuro entre el video y tu sistema (z-index: -1) */
+body::before {
+  content: '' !important;
+  position: fixed !important;
+  inset: 0 !important;
+  background: linear-gradient(rgba(6, 5, 14, 0.60), rgba(6, 5, 14, 0.85)) !important;
+  z-index: -1 !important;
+  pointer-events: none !important;
+}
+
+/* 4. Quitamos el fondo del login para que se vea el video detrás */
 #login-screen {
   background: transparent !important;
 }
