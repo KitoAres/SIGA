@@ -3819,3 +3819,35 @@ Si entras y lees esto... pues si le meti mucho amor e insomnio aqui*/
 .espacio-history-item small {
   opacity: 0.75;
 }
+
+
+/* ======================================================
+   FORZAR VIDEO DE FONDO (OPCIÓN NUCLEAR)
+   ====================================================== */
+html, body {
+  background: transparent !important;
+}
+
+#app, .main-content, #login-screen {
+  background: transparent !important;
+}
+
+#bg-video {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  object-fit: cover !important;
+  z-index: -2 !important;
+  pointer-events: none !important;
+}
+
+body::before {
+  content: '' !important;
+  position: fixed !important;
+  inset: 0 !important;
+  background: linear-gradient(rgba(6, 5, 14, 0.60), rgba(6, 5, 14, 0.85)) !important;
+  z-index: -1 !important;
+  pointer-events: none !important;
+}
