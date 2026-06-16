@@ -7,18 +7,18 @@
   <link rel="stylesheet" href="/css/style.css?v=nuevo"/>
   <link rel="stylesheet" href="/css/sigy.css?v=sigy-11"/>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💜</text></svg>"/>
-  <style>
+ <style>
     html, body {
       background: transparent !important;
-      background-image: none !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
     }
-    #login-screen {
+    #login-screen, #app, .main-content, .page {
       background: transparent !important;
-      background-image: none !important;
     }
-    #app, .main-content, .page {
-      background: transparent !important;
-    }
+    /* El video debe estar fijo y por detrás de todo */
     #bg-video {
       position: fixed !important;
       top: 0 !important;
@@ -29,9 +29,7 @@
       z-index: -100 !important; 
       pointer-events: none !important;
     }
-    body::after {
-      display: none !important;
-    }
+    /* Capa oscura para leer el texto */
     body::before {
       content: '' !important;
       position: fixed !important;
@@ -43,7 +41,7 @@
       z-index: -99 !important;
       pointer-events: none !important;
     }
-  </style>
+</style>
   </head>
 </head>
 <body>
