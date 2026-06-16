@@ -2354,36 +2354,14 @@ body {
   overflow-x: hidden !important;
 }
 
-/* 1. Hacemos que el fondo del body sea totalmente transparente */
 body {
-  background: transparent !important;
-}
-
-/* 2. El video va hasta el fondo del todo (z-index: -2) */
-#bg-video {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  object-fit: cover;
-  z-index: -2;
-  pointer-events: none;
-}
-
-/* 3. Creamos un filtro oscuro entre el video y tu sistema (z-index: -1) */
-body::before {
-  content: '' !important;
-  position: fixed !important;
-  inset: 0 !important;
-  background: linear-gradient(rgba(6, 5, 14, 0.60), rgba(6, 5, 14, 0.85)) !important;
-  z-index: -1 !important;
-  pointer-events: none !important;
-}
-
-/* 4. Quitamos el fondo del login para que se vea el video detrás */
-#login-screen {
-  background: transparent !important;
+  background:
+    linear-gradient(rgba(6, 5, 14, 0.88), rgba(6, 5, 14, 0.95)),
+    url("/img/fondo.jpg") !important;
+  background-size: cover !important;
+  background-position: center center !important;
+  background-attachment: fixed !important;
+  background-repeat: no-repeat !important;
 }
 
 body::before,
@@ -3819,80 +3797,3 @@ Si entras y lees esto... pues si le meti mucho amor e insomnio aqui*/
 .espacio-history-item small {
   opacity: 0.75;
 }
-
-
-/* ======================================================
-   FORZAR VIDEO DE FONDO (OPCIÓN NUCLEAR)
-   ====================================================== */
-html, body {
-  background: transparent !important;
-}
-
-#app, .main-content, #login-screen {
-  background: transparent !important;
-}
-
-#bg-video {
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  width: 100vw !important;
-  height: 100vh !important;
-  object-fit: cover !important;
-  z-index: -2 !important;
-  pointer-events: none !important;
-}
-
-body::before {
-  content: '' !important;
-  position: fixed !important;
-  inset: 0 !important;
-  background: linear-gradient(rgba(6, 5, 14, 0.60), rgba(6, 5, 14, 0.85)) !important;
-  z-index: -1 !important;
-  pointer-events: none !important;
-}
-
-
-/* ======================================================
-   FIX DEFINITIVO DEL VIDEO DE FONDO Y LOGIN
-   ====================================================== */
-html, body {
-  background: transparent !important;
-  background-image: none !important;
-}
-
-/* Hacemos transparente el login para que se vea el video */
-#login-screen {
-  background: transparent !important;
-  background-image: none !important;
-}
-
-#app, .main-content, .page {
-  background: transparent !important;
-}
-
-/* El video bien al fondo */
-#bg-video {
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  width: 100vw !important;
-  height: 100vh !important;
-  object-fit: cover !important;
-  z-index: -100 !important; 
-  pointer-events: none !important;
-}
-
-/* Un filtro oscuro semi-transparente para que puedas leer las letras de SIGA */
-body::before {
-  content: '' !important;
-  position: fixed !important;
-  top: 0 !important; 
-  left: 0 !important;
-  width: 100vw !important; 
-  height: 100vh !important;
-  background: rgba(10, 8, 18, 0.75) !important; /* Filtro oscuro */
-  z-index: -99 !important; /* Arriba del video, abajo de todo el sistema */
-  pointer-events: none !important;
-}
-
