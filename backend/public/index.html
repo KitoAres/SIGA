@@ -21,7 +21,28 @@
     <div class="login-error" id="login-error"></div>
   </div>
 </div>
-
+<!-- ====================== REGISTRO MODAL ====================== -->
+<div id="register-screen" style="display: none;">
+  <div class="login-card">
+    <div class="login-logo">S<span>I</span>GA</div>
+    <div class="login-sub">Crear nueva cuenta</div>
+    
+    <form id="registerForm">
+      <input type="text" id="reg-nombre" placeholder="Tu nombre completo" required />
+      <input type="email" id="reg-email" placeholder="Correo electrónico" required />
+      <input type="password" id="reg-password" placeholder="Contraseña (mínimo 6 caracteres)" required minlength="6" />
+      
+      <button type="submit" class="btn-primary">Crear Cuenta</button>
+    </form>
+    
+    <div id="register-message" class="login-error" style="color: #4ade80;"></div>
+    
+    <p style="text-align:center; margin-top:15px;">
+      ¿Ya tienes cuenta? 
+      <a href="#" onclick="switchToLogin()" style="color:#e91e63;">Volver al login</a>
+    </p>
+  </div>
+</div>
 <!-- ── APP ────────────────────────────────────── -->
 <div id="app">
 
@@ -1021,6 +1042,52 @@
     }, 300);
   };
 })();
+
+  // ====================== REGISTRO ======================
+function showRegisterScreen() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('register-screen').style.display = 'flex';
+}
+
+function switchToLogin() {
+  document.getElementById('register-screen').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+}
+
+document.getElementById('registerForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+
+  const nombre = document.getElementById('reg-nombre').value.trim();
+  const email = document.getElementById('reg-email').value.trim();
+  const password = document.getElementById('reg-password').value;
+
+  const messageEl = document.getElementById('register-message');
+
+  messageEl.textContent = 'Creando cuenta...';
+  messageEl.style.color = '#4ade80';
+
+  try {
+    const res = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nombre, email, password })
+    });
+
+    const data = await res.json();
+
+    if (data.ok) {
+      messageEl.style.color = '#4ade80';
+      messageEl.textContent = '✅ Cuenta creada! Revisa tu correo para verificarla.';
+      document.getElementById('registerForm').reset();
+    } else {
+      messageEl.style.color = '#f87171';
+      messageEl.textContent = data.error || 'Error al crear cuenta';
+    }
+  } catch (err) {
+    messageEl.style.color = '#f87171';
+    messageEl.textContent = 'Error de conexión';
+  }
+});
 </script>
 
 </body>
