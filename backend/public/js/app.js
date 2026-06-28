@@ -1268,12 +1268,16 @@ function editarCajitaSeguro(id) {
     normalizarFecha(item.fecha)
   );
 }
-// ── MI CUENTA / PERFIL ─────────────────────────────────────────
+// ── MI CUENTA / PERFIL MODIFICADO ─────────────────────────────────────────
 async function abrirModalPerfil() {
   if (!state.currentUser || !state.currentUser.id) {
     toast('Primero inicia sesión.');
     return;
   }
+
+  // Resetear mensajes de vinculación previos
+  $('perfil-vincular-message').textContent = '';
+  $('perfil-input-codigo').value = '';
 
   try {
     const data = await api('GET', '/api/auth/perfil/' + state.currentUser.id);
@@ -1285,8 +1289,15 @@ async function abrirModalPerfil() {
 
     const u = data.usuario;
 
-    // Inyectar el código de pareja en la tarjeta superior del modal
+    // Mostrar el código de pareja propio
     $('perfil-codigo-pareja').textContent = u.codigo_pareja || '—';
+
+    // Si ya está vinculado con alguien (tiene pareja_id), ocultamos el formulario de vinculación
+    if (u.pareja_id) {
+      $('perfil-seccion-vincular').style.display = 'none';
+    } else {
+      $('perfil-seccion-vincular').style.display = 'block';
+    }
 
     $('perfil-display-name').value = u.display_name || u.nombre || u.usuario || '';
     $('perfil-usuario').value = u.usuario || '';
@@ -1301,59 +1312,46 @@ async function abrirModalPerfil() {
   }
 }
 
-async function guardarPerfil() {
-  if (!state.currentUser || !state.currentUser.id) {
-    toast('No hay usuario activo.');
+// Nueva función para ejecutar la vinculación activa desde el perfil abierto
+async function vincularDesdePerfil() {
+  const codigo = $('perfil-input-codigo').value.trim().toUpperCase();
+  const msgEl  = $('perfil-vincular-message');
+
+  if (!codigo || codigo.length !== 6) {
+    msgEl.style.color = '#f87171';
+    msgEl.textContent = 'El código debe tener 6 caracteres.';
     return;
   }
 
-  const body = {
-    display_name: $('perfil-display-name').value.trim(),
-    nombre: $('perfil-display-name').value.trim(),
-    usuario: $('perfil-usuario').value.trim(),
-    contrasena_actual: $('perfil-contrasena-actual').value.trim(),
-    nueva_contrasena: $('perfil-nueva-contrasena').value.trim(),
-    color_perfil: $('perfil-color').value
-  };
-
-  if (!body.display_name) {
-    toast('El nombre visible no puede estar vacío.');
-    return;
-  }
-
-  if (!body.usuario) {
-    toast('El usuario no puede estar vacío.');
-    return;
-  }
+  msgEl.style.color = '#aaa';
+  msgEl.textContent = 'Vinculando...';
 
   try {
-    const data = await api('PUT', '/api/auth/perfil/' + state.currentUser.id, body);
+    // Reutiliza tu endpoint existente del backend pasando el ID activo del estado
+    const res = await fetch('/api/auth/vincular', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ usuario_id: state.currentUser.id, codigo_pareja: codigo })
+    });
+    const data = await res.json();
 
-    if (!data.ok) {
-      toast(data.error || 'No se pudo actualizar.');
-      return;
+    if (data.ok) {
+      msgEl.style.color = '#4ade80';
+      msgEl.textContent = '✅ ¡Vinculación exitosa! Reiniciando espacio...';
+      
+      setTimeout(() => {
+        closeModal('modal-perfil');
+        // Forzar recarga limpia para inicializar la interfaz nueva y vacía de la relación
+        window.location.reload();
+      }, 2000);
+    } else {
+      msgEl.style.color = '#f87171';
+      msgEl.textContent = data.error || 'Código incorrecto o ya usado.';
     }
-
-    const u = data.usuario;
-
-    state.currentUser = {
-      id: u.id,
-      usuario: u.usuario,
-      nombre: u.nombre,
-      display_name: u.display_name,
-      color_perfil: u.color_perfil,
-      rol: u.rol
-    };
-
-    sessionStorage.setItem('siga_user', JSON.stringify(state.currentUser));
-
-    renderUsuarioActual();
-    closeModal('modal-perfil');
-
-    toast('Perfil actualizado ♡');
   } catch (err) {
     console.error(err);
-    toast('Error al guardar perfil.');
+    msgEl.style.color = '#f87171';
+    msgEl.textContent = 'Error de conexión.';
   }
 }
 // ── PREGUNTA FINAL ────────────────────────────────────────────
