@@ -30,7 +30,7 @@
     <div class="login-logo">S<span>I</span>GA</div>
     <div class="login-sub">Crear nueva cuenta</div>
 
-   <!-- Paso 1: datos básicos -->
+    <!-- Paso 1: datos básicos -->
     <div id="reg-paso-1">
       <form id="registerForm">
         <input type="text"     id="reg-nombre"   placeholder="Tu nombre"                      required/>
@@ -427,7 +427,7 @@
     </div>
   </div>
 
-  <!-- Editor (aparece solo al crear nueva o al tocar Editar) -->
+  <!-- Editor (aparece solo al campo crear nueva o al tocar Editar) -->
   <div id="carta-editor" style="display:none; max-width:640px;">
     <input type="hidden" id="carta-editor-id"/>
     <div style="display:flex; flex-direction:column; gap:14px;">
@@ -910,6 +910,8 @@
 <script src="/js/sigy-widget.js?v=sigy-6"></script>
 <script src="/js/sigy-sprites.js?v=sigy-4"></script>
 <script src="/js/analisis.js"></script>
+
+<script>
 /* ======================================================
    FIX DEFINITIVO DE NAVEGACIÓN SIGA
    Fuerza que cada sección se muestre al hacer clic
@@ -1109,7 +1111,7 @@
     e.preventDefault();
 
     const nombre   = document.getElementById('reg-nombre').value.trim();
-    const email    = document.getElementById('reg-email').value.trim(); // Se añadió captura del correo
+    const email    = document.getElementById('reg-email').value.trim(); 
     const usuario  = document.getElementById('reg-usuario').value.trim().toLowerCase().replace(/\s+/g,'');
     const password = document.getElementById('reg-password').value;
     const msgEl    = document.getElementById('register-message');
@@ -1128,7 +1130,7 @@
       const res  = await fetch('/api/auth/register', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ nombre, usuario, email, password }) // Se añadió email en el payload
+        body:    JSON.stringify({ nombre, usuario, email, password }) 
       });
       const data = await res.json();
 
