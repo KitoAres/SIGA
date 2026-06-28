@@ -15,7 +15,7 @@
   <div class="login-card">
     <div class="login-logo">S<span>I</span>GA</div>
     <div class="login-sub">Sistema Integral de Gestión de Amor</div>
-    <input type="text" id="login-user" placeholder="Usuario" autocomplete="off"/>
+    <input type="text" id="login-user" placeholder="Usuario o Email" autocomplete="off"/>
     <input type="password" id="login-pass" placeholder="Contraseña"/>
     <button class="btn-primary" onclick="doLogin()">Entrar ♡</button>
     <div class="login-error" id="login-error"></div>
@@ -34,6 +34,7 @@
     <div id="reg-paso-1">
       <form id="registerForm">
         <input type="text"     id="reg-nombre"   placeholder="Tu nombre"                      required/>
+        <input type="email"    id="reg-email"    placeholder="Tu correo electrónico"          required/>
         <input type="text"     id="reg-usuario"  placeholder="Nombre de usuario (sin espacios)" required/>
         <input type="password" id="reg-password" placeholder="Contraseña (mínimo 6 caracteres)" required minlength="6"/>
         <button type="submit" class="btn-primary" style="margin-top:8px;">Crear cuenta ♡</button>
@@ -1104,11 +1105,13 @@
     e.preventDefault();
 
     const nombre   = document.getElementById('reg-nombre').value.trim();
+    const email    = document.getElementById('reg-email').value.trim(); // Se añadió captura del correo
     const usuario  = document.getElementById('reg-usuario').value.trim().toLowerCase().replace(/\s+/g,'');
     const password = document.getElementById('reg-password').value;
     const msgEl    = document.getElementById('register-message');
 
-    if (!nombre || !usuario || !password) {
+    // Validación actualizada
+    if (!nombre || !usuario || !email || !password) {
       msgEl.style.color   = '#f87171';
       msgEl.textContent   = 'Completa todos los campos.';
       return;
@@ -1121,7 +1124,7 @@
       const res  = await fetch('/api/auth/register', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ nombre, usuario, password })
+        body:    JSON.stringify({ nombre, usuario, email, password }) // Se añadió email en el payload
       });
       const data = await res.json();
 
