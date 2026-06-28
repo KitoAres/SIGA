@@ -109,7 +109,7 @@ router.get('/resumen', ...protegerAdmin(async (req, res) => {
   );
 
   const usuarios = await pool.query(
-    `SELECT id, usuario, nombre, display_name, rol
+    `SELECT id, usuario, nombre, display_name, rol, pareja_id
      FROM usuarios
      WHERE COALESCE(rol, '') <> 'admin'
      ORDER BY id ASC`
@@ -127,7 +127,7 @@ router.get('/resumen', ...protegerAdmin(async (req, res) => {
     },
     accesos: {
       resumen: accesosResumen.rows[0] || {},
-      recientes: accesosRecientes.rows,
+      recentes: accesosRecientes.rows,
       por_usuario: accesosPorUsuario.rows
     },
     usuarios: usuarios.rows
@@ -186,8 +186,6 @@ router.get('/detalle/:fuente', ...protegerAdmin(async (req, res) => {
 }));
 
 // POST /api/admin/ajuste
-// Permite sumar o quitar puntos manualmente.
-// puntos puede ser positivo o negativo.
 router.post('/ajuste', ...protegerAdmin(async (req, res) => {
   const {
     usuario_afectado_id,
@@ -206,13 +204,12 @@ router.post('/ajuste', ...protegerAdmin(async (req, res) => {
   }
 
   const fuenteFinal = normalizarFuente(fuente || 'ajuste_admin');
-
   const descripcionFinal = String(descripcion || '').trim()
     || (puntosNumero > 0 ? 'Ajuste manual de puntos' : 'Descuento manual de puntos');
 
   const result = await pool.query(
     `INSERT INTO puntos_conexion
-      (usuario_id, fuente, referencia_id, descripcion, puntos)
+       (usuario_id, fuente, referencia_id, descripcion, puntos)
      VALUES ($1, $2, NULL, $3, $4)
      RETURNING *`,
     [
@@ -230,7 +227,6 @@ router.post('/ajuste', ...protegerAdmin(async (req, res) => {
 }));
 
 // DELETE /api/admin/puntos/:id
-// Borra un registro de puntos. Esto baja/sube el total según el registro eliminado.
 router.delete('/puntos/:id', ...protegerAdmin(async (req, res) => {
   const result = await pool.query(
     `DELETE FROM puntos_conexion
@@ -253,7 +249,6 @@ router.delete('/puntos/:id', ...protegerAdmin(async (req, res) => {
 }));
 
 // DELETE /api/admin/accesos/:id
-// Borra un acceso individual del historial admin.
 router.delete('/accesos/:id', ...protegerAdmin(async (req, res) => {
   const result = await pool.query(
     `DELETE FROM accesos_sistema
