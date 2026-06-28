@@ -873,10 +873,21 @@
     <h2 class="modal-title">Mi cuenta</h2>
 
     <div class="modal-form">
-      <!-- Tarjeta del código de pareja -->
+      <!-- Tarjeta del código propio de vinculación -->
       <div style="background:rgba(180,130,220,0.08); border:1px solid rgba(180,130,220,0.25); border-radius:12px; padding:14px; margin-bottom:16px; text-align:center;">
         <div style="font-size:0.72rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:4px;">Tu código de vinculación</div>
         <code id="perfil-codigo-pareja" style="font-size:1.3rem; font-weight:700; color:var(--accent-purple); letter-spacing:0.1em;">—</code>
+      </div>
+
+      <!-- NUEVO: Sección para ingresar el código de la pareja si no está vinculado -->
+      <div id="perfil-seccion-vincular" style="background:rgba(233,30,99,0.05); border:1px solid rgba(233,30,99,0.2); border-radius:12px; padding:14px; margin-bottom:16px;">
+        <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase; letter-spacing:0.05em;">Vincular con tu pareja</div>
+        <div style="display:flex; gap:8px;">
+          <input type="text" id="perfil-input-codigo" placeholder="Ej: A3F7K2" maxlength="6"
+            style="flex:1; background:var(--bg-card2); border:1px solid var(--border); border-radius:8px; padding:8px 12px; color:var(--text-primary); font-family:monospace; font-size:1rem; letter-spacing:0.1em; outline:none; text-transform:uppercase;"/>
+          <button onclick="vincularDesdePerfil()" class="btn-primary" style="width:auto; padding:8px 14px; font-size:0.85rem; margin:0;">Vincular</button>
+        </div>
+        <div id="perfil-vincular-message" style="font-size:0.8rem; margin-top:6px; min-height:16px;"></div>
       </div>
 
       <label>Nombre visible</label>
@@ -901,7 +912,6 @@
     </div>
   </div>
 </div>
-
 
 <script src="/js/app.js?v=modo-avion-1"></script>
 <script src="/js/espacio.js?v=mi-espacio-1"></script>
