@@ -439,26 +439,39 @@ router.put('/perfil/:id', requireAuth, async (req, res) => {
 
 // ====================== REGISTRO CON EMAIL ======================
 router.post('/register', async (req, res) => {
-  const { email, password, nombre } = req.body;
+  const { email, password, nombre, usuario } = req.body;
+
+  // Se adapta para aceptar tanto email como un campo opcional o manual de usuario
+  const finalUsuario = usuario || email.split('@')[0];
 
   if (!email || !password || !nombre) {
     return res.status(400).json({ ok: false, error: 'Faltan email, contraseña o nombre' });
   }
 
   try {
-    // Verificar si ya existe
-    const existe = await pool.query('SELECT id FROM usuarios WHERE email = $1', [email.toLowerCase()]);
-    if (existe.rows.length > 0) {
+    // Verificar si ya existe el email
+    const existeEmail = await pool.query('SELECT id FROM usuarios WHERE email = $1', [email.toLowerCase()]);
+    if (existeEmail.rows.length > 0) {
       return res.status(400).json({ ok: false, error: 'Este correo ya está registrado' });
+    }
+
+    // Verificar si ya existe el nombre de usuario
+    const existeUsuario = await pool.query('SELECT id FROM usuarios WHERE usuario = $1', [finalUsuario.toLowerCase()]);
+    if (existeUsuario.rows.length > 0) {
+      return res.status(400).json({ ok: false, error: 'Este nombre de usuario ya está en uso' });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // Generar un código de pareja aleatorio de 6 caracteres alfanuméricos en mayúsculas
+    const codigoParejaGenerado = Math.random().toString(36).substring(2, 8).toUpperCase();
+
+    // Inserción en la base de datos incluyendo el código generado
     const result = await pool.query(`
-      INSERT INTO usuarios (email, contrasena, nombre, usuario, verificado, rol)
-      VALUES ($1, $2, $3, $4, false, 'user')
-      RETURNING id, email, nombre
-    `, [email.toLowerCase(), hashedPassword, nombre, email.split('@')[0]]);
+      INSERT INTO usuarios (email, contrasena, nombre, usuario, verificado, rol, codigo_pareja)
+      VALUES ($1, $2, $3, $4, false, 'user', $5)
+      RETURNING id, email, nombre, codigo_pareja
+    `, [email.toLowerCase(), hashedPassword, nombre, finalUsuario.toLowerCase(), codigoParejaGenerado]);
 
     const newUser = result.rows[0];
 
@@ -482,14 +495,18 @@ router.post('/register', async (req, res) => {
       `
     });
 
+    // Respuesta JSON estructurada con los datos correctos para el frontend
     res.json({ 
       ok: true, 
+      id: newUser.id,
+      codigo_pareja: newUser.codigo_pareja,
       mensaje: 'Cuenta creada. Revisa tu correo para verificarla.' 
     });
 
   } catch (err) {
     console.error(err);
-    res.status(500).json({ ok: false, error: 'Error al crear la cuenta' });
+    res.status(500).json({ ok: false, error: 'Error al crear la cuenta: ' + err.message });
   }
 });
+
 module.exports = router;
