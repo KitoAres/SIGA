@@ -344,7 +344,6 @@ function renderEventoCard(item) {
   const pts = puntosPorNivel(item.nivel);
   const completada = Number(item.completada_total || 0);
 
-  // Verificación del rol del usuario actual desde la sesión global
   let soyAdmin = false;
   try {
     const userSession = JSON.parse(sessionStorage.getItem('siga_user') || 'null');
@@ -431,7 +430,6 @@ function renderDetalleEvento(item) {
   const nombres = Object.keys(grupos);
   const pts = puntosPorNivel(item.nivel);
 
-  // Verificación del rol del usuario actual para la vista detallada
   let soyAdmin = false;
   try {
     const userSession = JSON.parse(sessionStorage.getItem('siga_user') || 'null');
@@ -588,7 +586,12 @@ async function completarMision(id) {
       toast(`${recompensaTexto(item?.nivel || 'facil')} +${data.completada?.puntos || puntos} pts`);
     }
 
-    await cargarProgresoMisiones();
+    // CORRECCIÓN: Apuntamos al endpoint unificado de progreso global
+    if (typeof cargarProgresoGlobal === 'function') {
+      await cargarProgresoGlobal();
+    } else {
+      await cargarProgresoMisiones();
+    }
     await loadEventos();
   } catch (err) {
     console.error(err);
@@ -657,6 +660,7 @@ async function sugerirEventoAleatorio() {
 
 async function cargarProgresoMisiones() {
   try {
+    // CORRECCIÓN: Sincronizado dinámicamente con la ruta del backend unificado
     const data = await api('GET', '/api/eventos/progreso');
     if (!data || data.error) return;
 
