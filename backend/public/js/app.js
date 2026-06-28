@@ -1285,6 +1285,9 @@ async function abrirModalPerfil() {
 
     const u = data.usuario;
 
+    // Inyectar el código de pareja en la tarjeta superior del modal
+    $('perfil-codigo-pareja').textContent = u.codigo_pareja || '—';
+
     $('perfil-display-name').value = u.display_name || u.nombre || u.usuario || '';
     $('perfil-usuario').value = u.usuario || '';
     $('perfil-contrasena-actual').value = '';
