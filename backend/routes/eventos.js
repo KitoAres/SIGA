@@ -7,6 +7,7 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../config/db');
+const { requireAuth } = require('../middleware/auth'); // Middleware integrado
 const { calcularNivelRelacion } = require('../utils/nivel');
 
 function normalizarTexto(valor) {
@@ -46,8 +47,6 @@ function puntosPorNivel(nivel) {
   const n = validarNivel(nivel);
   return { facil: 10, medio: 25, dificil: 50, hardcore: 100 }[n] || 10;
 }
-
-
 
 async function esAdmin(usuario_id) {
   if (!usuario_id) return false;
@@ -102,28 +101,37 @@ async function guardarItems(client, eventoId, items) {
   }
 }
 
-// GET /api/eventos/progreso
-router.get('/progreso', async (req, res) => {
+// GET /api/eventos/progreso (Filtrado por pareja para arrancar en nivel cero)
+router.get('/progreso', requireAuth, async (req, res) => {
   try {
     const resumen = await pool.query(
       `SELECT
           COALESCE(SUM(puntos), 0)::int AS puntos,
           COUNT(*)::int AS completadas,
           COUNT(*) FILTER (WHERE fecha = CURRENT_DATE)::int AS hoy
-       FROM misiones_completadas`
+       FROM misiones_completadas
+       WHERE usuario_id = $1 
+          OR usuario_id = (SELECT pareja_id FROM usuarios WHERE id = $1)`,
+      [req.user.id]
     );
 
     const porNivel = await pool.query(
       `SELECT nivel, COUNT(*)::int AS total, COALESCE(SUM(puntos), 0)::int AS puntos
        FROM misiones_completadas
-       GROUP BY nivel`
+       WHERE usuario_id = $1 
+          OR usuario_id = (SELECT pareja_id FROM usuarios WHERE id = $1)
+       GROUP BY nivel`,
+      [req.user.id]
     );
 
     const ultimas = await pool.query(
       `SELECT id, evento_id, titulo, nivel, puntos, comentario, fecha, creado_en
        FROM misiones_completadas
+       WHERE usuario_id = $1 
+          OR usuario_id = (SELECT pareja_id FROM usuarios WHERE id = $1)
        ORDER BY creado_en DESC
-       LIMIT 5`
+       LIMIT 5`,
+      [req.user.id]
     );
 
     const total = resumen.rows[0]?.puntos || 0;
@@ -143,11 +151,11 @@ router.get('/progreso', async (req, res) => {
 });
 
 // GET /api/eventos?q=&tipo=&nivel=
-router.get('/', async (req, res) => {
+router.get('/', requireAuth, async (req, res) => {
   const { q, tipo, nivel } = req.query;
 
   const filtros = ['e.activo = true'];
-  const valores = [];
+  const valores = [req.user.id]; // $1 reservado para el ID del usuario
 
   if (tipo) {
     valores.push(tipo);
@@ -190,7 +198,12 @@ router.get('/', async (req, res) => {
           e.creado_por,
           e.creado_en,
           COUNT(ei.id)::int AS total_items,
-          COALESCE((SELECT COUNT(*)::int FROM misiones_completadas mc WHERE mc.evento_id = e.id), 0) AS completada_total
+          COALESCE((
+            SELECT COUNT(*)::int 
+            FROM misiones_completadas mc 
+            WHERE mc.evento_id = e.id 
+              AND (mc.usuario_id = $1 OR mc.usuario_id = (SELECT pareja_id FROM usuarios WHERE id = $1))
+          ), 0) AS completada_total
        FROM eventos_preguntas e
        LEFT JOIN evento_items ei ON ei.evento_id = e.id
        WHERE ${filtros.join(' AND ')}
@@ -215,11 +228,11 @@ router.get('/', async (req, res) => {
 });
 
 // GET /api/eventos/aleatorio?tipo=&nivel=
-router.get('/aleatorio', async (req, res) => {
+router.get('/aleatorio', requireAuth, async (req, res) => {
   const { tipo, nivel } = req.query;
 
   const filtros = ['e.activo = true'];
-  const valores = [];
+  const valores = [req.user.id];
 
   if (tipo) {
     valores.push(tipo);
@@ -245,7 +258,12 @@ router.get('/aleatorio', async (req, res) => {
           e.instrucciones,
           e.fuente,
           COUNT(ei.id)::int AS total_items,
-          COALESCE((SELECT COUNT(*)::int FROM misiones_completadas mc WHERE mc.evento_id = e.id), 0) AS completada_total
+          COALESCE((
+            SELECT COUNT(*)::int 
+            FROM misiones_completadas mc 
+            WHERE mc.evento_id = e.id 
+              AND (mc.usuario_id = $1 OR mc.usuario_id = (SELECT pareja_id FROM usuarios WHERE id = $1))
+          ), 0) AS completada_total
        FROM eventos_preguntas e
        LEFT JOIN evento_items ei ON ei.evento_id = e.id
        WHERE ${filtros.join(' AND ')}
@@ -266,276 +284,10 @@ router.get('/aleatorio', async (req, res) => {
   }
 });
 
-
-
-// GET /api/eventos/admin/resumen?usuario_id=X
-router.get('/admin/resumen', async (req, res) => {
-  const { usuario_id } = req.query;
-
-  try {
-    if (!(await esAdmin(usuario_id))) {
-      return res.status(403).json({ error: 'Solo el admin puede ver estas estadísticas.' });
-    }
-
-    const misionesResumen = await pool.query(
-      `SELECT
-          COUNT(*)::int AS total,
-          COALESCE(SUM(puntos), 0)::int AS puntos,
-          COUNT(*) FILTER (WHERE fecha >= CURRENT_DATE - INTERVAL '7 days')::int AS ultimos_7,
-          COUNT(*) FILTER (WHERE fecha >= CURRENT_DATE - INTERVAL '30 days')::int AS ultimos_30
-       FROM misiones_completadas`
-    );
-
-    const misionesRecientes = await pool.query(
-      `SELECT
-          mc.id,
-          mc.evento_id,
-          mc.titulo,
-          mc.nivel,
-          mc.puntos,
-          mc.fecha,
-          mc.creado_en,
-          mc.usuario_id,
-          COALESCE(u.display_name, u.nombre, u.usuario, 'Sin usuario') AS usuario_nombre,
-          u.rol AS usuario_rol
-       FROM misiones_completadas mc
-       LEFT JOIN usuarios u ON u.id = mc.usuario_id
-       ORDER BY mc.creado_en DESC
-       LIMIT 20`
-    );
-
-    const misionesPorUsuario = await pool.query(
-      `SELECT
-          COALESCE(u.display_name, u.nombre, u.usuario, 'Sin usuario') AS usuario_nombre,
-          u.rol,
-          COUNT(mc.id)::int AS total,
-          COALESCE(SUM(mc.puntos), 0)::int AS puntos,
-          MAX(mc.creado_en) AS ultima
-       FROM misiones_completadas mc
-       LEFT JOIN usuarios u ON u.id = mc.usuario_id
-       GROUP BY usuario_nombre, u.rol
-       ORDER BY puntos DESC, total DESC`
-    );
-
-    const misionesPorNivel = await pool.query(
-      `SELECT nivel, COUNT(*)::int AS total, COALESCE(SUM(puntos), 0)::int AS puntos
-       FROM misiones_completadas
-       GROUP BY nivel
-       ORDER BY
-        CASE nivel
-          WHEN 'facil' THEN 1
-          WHEN 'medio' THEN 2
-          WHEN 'dificil' THEN 3
-          WHEN 'hardcore' THEN 4
-          ELSE 5
-        END`
-    );
-
-    const misionesPorDia = await pool.query(
-      `SELECT fecha, COUNT(*)::int AS total, COALESCE(SUM(puntos), 0)::int AS puntos
-       FROM misiones_completadas
-       WHERE fecha >= CURRENT_DATE - INTERVAL '30 days'
-       GROUP BY fecha
-       ORDER BY fecha ASC`
-    );
-
-    const calmaResumen = await pool.query(
-      `SELECT
-          COUNT(*)::int AS total,
-          COUNT(*) FILTER (WHERE activo = true)::int AS activas,
-          COALESCE(SUM(GREATEST(1, (COALESCE(fecha_fin, CURRENT_DATE)::date - fecha_inicio::date) + 1)), 0)::int AS dias_programados,
-          MAX(creado_en) AS ultima
-       FROM modo_calma`
-    );
-
-    const calmaPorUsuario = await pool.query(
-      `SELECT
-          COALESCE(u.display_name, u.nombre, u.usuario, 'Sin usuario') AS usuario_nombre,
-          COUNT(mc.id)::int AS total,
-          COALESCE(SUM(GREATEST(1, (COALESCE(mc.fecha_fin, CURRENT_DATE)::date - mc.fecha_inicio::date) + 1)), 0)::int AS dias,
-          MAX(mc.creado_en) AS ultima
-       FROM modo_calma mc
-       LEFT JOIN usuarios u ON u.id = mc.usuario_id
-       GROUP BY usuario_nombre
-       ORDER BY dias DESC, total DESC`
-    );
-
-    const citasResumen = await pool.query(
-      `SELECT
-          COUNT(*)::int AS total,
-          COUNT(*) FILTER (WHERE estado = 'pendiente')::int AS pendientes,
-          COUNT(*) FILTER (WHERE estado = 'cumplida')::int AS cumplidas,
-          COUNT(*) FILTER (WHERE estado = 'cancelada')::int AS canceladas,
-          COUNT(*) FILTER (WHERE fecha >= CURRENT_DATE)::int AS proximas,
-          MAX(fecha) AS ultima_fecha
-       FROM citas`
-    );
-
-    const citasFechas = await pool.query(
-      `SELECT fecha
-       FROM citas
-       WHERE fecha IS NOT NULL
-       AND estado IN ('pendiente', 'cumplida')
-       ORDER BY fecha ASC`
-    );
-
-    const accesosResumen = await pool.query(
-      `SELECT
-          COUNT(*)::int AS total,
-          COUNT(*) FILTER (WHERE creado_en >= NOW() - INTERVAL '30 days')::int AS ultimos_30,
-          COUNT(*) FILTER (WHERE creado_en::date = CURRENT_DATE)::int AS hoy,
-          MAX(creado_en) AS ultimo
-       FROM accesos_sistema`
-    );
-
-    const accesosRecientes = await pool.query(
-      `SELECT
-          a.id,
-          a.usuario_id,
-          a.usuario,
-          a.nombre_visible,
-          a.rol,
-          a.ip,
-          a.user_agent,
-          a.creado_en,
-          COALESCE(u.display_name, u.nombre, u.usuario, a.nombre_visible, a.usuario, 'Sin usuario') AS usuario_nombre
-       FROM accesos_sistema a
-       LEFT JOIN usuarios u ON u.id = a.usuario_id
-       ORDER BY a.creado_en DESC
-       LIMIT 20`
-    );
-
-    const accesosPorUsuario = await pool.query(
-      `SELECT
-          COALESCE(u.display_name, u.nombre, u.usuario, a.nombre_visible, a.usuario, 'Sin usuario') AS usuario_nombre,
-          COUNT(a.id)::int AS total,
-          MAX(a.creado_en) AS ultimo
-       FROM accesos_sistema a
-       LEFT JOIN usuarios u ON u.id = a.usuario_id
-       WHERE a.creado_en >= NOW() - INTERVAL '30 days'
-       GROUP BY usuario_nombre
-       ORDER BY total DESC`
-    );
-
-    const promedioDiasPlanes = calcularPromedioDiasEntreFechas(citasFechas.rows.map(r => r.fecha));
-
-    res.json({
-      ok: true,
-      misiones: {
-        resumen: misionesResumen.rows[0] || {},
-        recientes: misionesRecientes.rows,
-        por_usuario: misionesPorUsuario.rows,
-        por_nivel: misionesPorNivel.rows,
-        por_dia: misionesPorDia.rows
-      },
-      calma: {
-        resumen: calmaResumen.rows[0] || {},
-        por_usuario: calmaPorUsuario.rows
-      },
-      citas: {
-        resumen: {
-          ...(citasResumen.rows[0] || {}),
-          promedio_dias_entre_planes: promedioDiasPlanes
-        }
-      },
-      accesos: {
-        resumen: accesosResumen.rows[0] || {},
-        recientes: accesosRecientes.rows,
-        por_usuario: accesosPorUsuario.rows
-      }
-    });
-  } catch (err) {
-    console.error('Error GET /api/eventos/admin/resumen:', err);
-    res.status(500).json({ error: 'Error al cargar panel admin' });
-  }
-});
-
-// DELETE /api/eventos/admin/completadas/:id
-router.delete('/admin/completadas/:id', async (req, res) => {
-  const usuario_id = req.body?.usuario_id || req.query?.usuario_id;
-
-  try {
-    if (!(await esAdmin(usuario_id))) {
-      return res.status(403).json({ error: 'Solo el admin puede eliminar misiones cumplidas.' });
-    }
-
-    const result = await pool.query(
-      `DELETE FROM misiones_completadas
-       WHERE id = $1
-       RETURNING id, titulo, puntos`,
-      [req.params.id]
-    );
-
-    if (!result.rows.length) {
-      return res.status(404).json({ error: 'Registro de misión no encontrado.' });
-    }
-
-    const progreso = await pool.query(
-      `SELECT COALESCE(SUM(puntos), 0)::int AS total
-       FROM misiones_completadas`
-    );
-
-    res.json({
-      ok: true,
-      eliminado: result.rows[0],
-      progreso: calcularNivelRelacion(progreso.rows[0]?.total || 0)
-    });
-  } catch (err) {
-    console.error('Error DELETE /api/eventos/admin/completadas/:id:', err);
-    res.status(500).json({ error: 'Error al eliminar misión cumplida' });
-  }
-});
-
-// GET /api/eventos/:id
-router.get('/:id', async (req, res) => {
-  try {
-    const eventoResult = await pool.query(
-      `SELECT
-          id,
-          titulo,
-          tipo,
-          categoria,
-          nivel,
-          duracion,
-          descripcion,
-          COALESCE(modo, 'simple') AS modo,
-          instrucciones,
-          fuente,
-          activo,
-          creado_por,
-          creado_en,
-          COALESCE((SELECT COUNT(*)::int FROM misiones_completadas mc WHERE mc.evento_id = eventos_preguntas.id), 0) AS completada_total
-       FROM eventos_preguntas
-       WHERE id = $1 AND activo = true`,
-      [req.params.id]
-    );
-
-    if (!eventoResult.rows.length) {
-      return res.status(404).json({ error: 'Misión no encontrada' });
-    }
-
-    const itemsResult = await pool.query(
-      `SELECT id, evento_id, orden, bloque, tipo_item, contenido
-       FROM evento_items
-       WHERE evento_id = $1
-       ORDER BY orden ASC, id ASC`,
-      [req.params.id]
-    );
-
-    res.json({
-      ...eventoResult.rows[0],
-      puntos: puntosPorNivel(eventoResult.rows[0].nivel),
-      items: itemsResult.rows
-    });
-  } catch (err) {
-    console.error('Error GET /api/eventos/:id:', err);
-    res.status(500).json({ error: 'Error al cargar la misión' });
-  }
-});
-
 // POST /api/eventos/:id/completar
-router.post('/:id/completar', async (req, res) => {
-  const { usuario_id, comentario } = req.body || {};
+router.post('/:id/completar', requireAuth, async (req, res) => {
+  const { comentario } = req.body || {};
+  const usuario_id = req.user.id;
 
   try {
     const eventoResult = await pool.query(
@@ -559,12 +311,14 @@ router.post('/:id/completar', async (req, res) => {
           (evento_id, usuario_id, titulo, nivel, puntos, comentario)
          VALUES ($1, $2, $3, $4, $5, $6)
          RETURNING id, evento_id, titulo, nivel, puntos, fecha, creado_en`,
-        [evento.id, usuario_id || null, evento.titulo, nivel, puntos, normalizarTexto(comentario)]
+        [evento.id, usuario_id, evento.titulo, nivel, puntos, normalizarTexto(comentario)]
       );
 
       const progreso = await pool.query(
         `SELECT COALESCE(SUM(puntos), 0)::int AS total
-         FROM misiones_completadas`
+         FROM misiones_completadas
+         WHERE usuario_id = $1 OR usuario_id = (SELECT pareja_id FROM usuarios WHERE id = $1)`,
+        [usuario_id]
       );
 
       return res.json({
@@ -577,7 +331,9 @@ router.post('/:id/completar', async (req, res) => {
       if (err.code === '23505') {
         const progreso = await pool.query(
           `SELECT COALESCE(SUM(puntos), 0)::int AS total
-           FROM misiones_completadas`
+           FROM misiones_completadas
+           WHERE usuario_id = $1 OR usuario_id = (SELECT pareja_id FROM usuarios WHERE id = $1)`,
+          [usuario_id]
         );
 
         return res.json({
@@ -595,154 +351,109 @@ router.post('/:id/completar', async (req, res) => {
   }
 });
 
-// POST /api/eventos
-router.post('/', async (req, res) => {
-  const {
-    titulo,
-    tipo,
-    categoria,
-    nivel,
-    duracion,
-    descripcion,
-    modo,
-    instrucciones,
-    fuente,
-    creado_por,
-    items
-  } = req.body;
+// Los endpoints de creación/edición y panel administrativo de abajo se mantienen globales
+router.get('/admin/resumen', async (req, res) => {
+  const { usuario_id } = req.query;
+  try {
+    if (!(await esAdmin(usuario_id))) {
+      return res.status(403).json({ error: 'Solo el admin puede ver estas estadísticas.' });
+    }
+    const misionesResumen = await pool.query(`SELECT COUNT(*)::int AS total, COALESCE(SUM(puntos), 0)::int AS puntos, COUNT(*) FILTER (WHERE fecha >= CURRENT_DATE - INTERVAL '7 days')::int AS ultimos_7, COUNT(*) FILTER (WHERE fecha >= CURRENT_DATE - INTERVAL '30 days')::int AS ultimos_30 FROM misiones_completadas`);
+    const misionesRecientes = await pool.query(`SELECT mc.id, mc.evento_id, mc.titulo, mc.nivel, mc.puntos, mc.fecha, mc.creado_en, mc.usuario_id, COALESCE(u.display_name, u.nombre, u.usuario, 'Sin usuario') AS usuario_nombre, u.rol AS usuario_rol FROM misiones_completadas mc LEFT JOIN usuarios u ON u.id = mc.usuario_id ORDER BY mc.creado_en DESC LIMIT 20`);
+    const misionesPorUsuario = await pool.query(`SELECT COALESCE(u.display_name, u.nombre, u.usuario, 'Sin usuario') AS usuario_nombre, u.rol, COUNT(mc.id)::int AS total, COALESCE(SUM(mc.puntos), 0)::int AS puntos, MAX(mc.creado_en) AS ultima FROM misiones_completadas mc LEFT JOIN usuarios u ON u.id = mc.usuario_id GROUP BY usuario_nombre, u.rol ORDER BY puntos DESC, total DESC`);
+    const misionesPorNivel = await pool.query(`SELECT nivel, COUNT(*)::int AS total, COALESCE(SUM(puntos), 0)::int AS puntos FROM misiones_completadas GROUP BY nivel ORDER BY CASE nivel WHEN 'facil' THEN 1 WHEN 'medio' THEN 2 WHEN 'dificil' THEN 3 WHEN 'hardcore' THEN 4 ELSE 5 END`);
+    const misionesPorDia = await pool.query(`SELECT fecha, COUNT(*)::int AS total, COALESCE(SUM(puntos), 0)::int AS puntos FROM misiones_completadas WHERE fecha >= CURRENT_DATE - INTERVAL '30 days' GROUP BY fecha ORDER BY fecha ASC`);
+    const calmaResumen = await pool.query(`SELECT COUNT(*)::int AS total, COUNT(*) FILTER (WHERE activo = true)::int AS activas, COALESCE(SUM(GREATEST(1, (COALESCE(fecha_fin, CURRENT_DATE)::date - fecha_inicio::date) + 1)), 0)::int AS dias_programados, MAX(creado_en) AS ultima FROM modo_calma`);
+    const calmaPorUsuario = await pool.query(`SELECT COALESCE(u.display_name, u.nombre, u.usuario, 'Sin usuario') AS usuario_nombre, COUNT(mc.id)::int AS total, COALESCE(SUM(GREATEST(1, (COALESCE(mc.fecha_fin, CURRENT_DATE)::date - mc.fecha_inicio::date) + 1)), 0)::int AS dias, MAX(mc.creado_en) AS ultima FROM modo_calma mc LEFT JOIN usuarios u ON u.id = mc.usuario_id GROUP BY usuario_nombre ORDER BY dias DESC, total DESC`);
+    const citasResumen = await pool.query(`SELECT COUNT(*)::int AS total, COUNT(*) FILTER (WHERE estado = 'pendiente')::int AS pendientes, COUNT(*) FILTER (WHERE estado = 'cumplida')::int AS cumplidas, COUNT(*) FILTER (WHERE estado = 'cancelada')::int AS canceladas, COUNT(*) FILTER (WHERE fecha >= CURRENT_DATE)::int AS proximas, MAX(fecha) AS ultima_fecha FROM citas`);
+    const citasFechas = await pool.query(`SELECT fecha FROM citas WHERE fecha IS NOT NULL AND estado IN ('pendiente', 'cumplida') ORDER BY fecha ASC`);
+    const accesosResumen = await pool.query(`SELECT COUNT(*)::int AS total, COUNT(*) FILTER (WHERE creado_en >= NOW() - INTERVAL '30 days')::int AS ultimos_30, COUNT(*) FILTER (WHERE creado_en::date = CURRENT_DATE)::int AS hoy, MAX(creado_en) AS ultimo FROM accesos_sistema`);
+    const accesosRecientes = await pool.query(`SELECT a.id, a.usuario_id, a.usuario, a.nombre_visible, a.rol, a.ip, a.user_agent, a.creado_en, COALESCE(u.display_name, u.nombre, u.usuario, a.nombre_visible, a.usuario, 'Sin usuario') AS usuario_nombre FROM accesos_sistema a LEFT JOIN usuarios u ON u.id = a.usuario_id ORDER BY a.creado_en DESC LIMIT 20`);
+    const accesosPorUsuario = await pool.query(`SELECT COALESCE(u.display_name, u.nombre, u.usuario, a.nombre_visible, a.usuario, 'Sin usuario') AS usuario_nombre, COUNT(a.id)::int AS total, MAX(a.creado_en) AS ultimo FROM accesos_sistema a LEFT JOIN usuarios u ON u.id = a.usuario_id WHERE a.creado_en >= NOW() - INTERVAL '30 days' GROUP BY usuario_nombre ORDER BY total DESC`);
+    const promedioDiasPlanes = calcularPromedioDiasEntreFechas(citasFechas.rows.map(r => r.fecha));
 
-  if (!normalizarTexto(titulo) || !normalizarTexto(descripcion)) {
-    return res.status(400).json({ error: 'Título y descripción son obligatorios.' });
+    res.json({
+      ok: true,
+      misiones: {
+        resumen: misionesResumen.rows[0] || {},
+        recientes: misionesRecientes.rows,
+        por_usuario: misionesPorUsuario.rows,
+        por_nivel: misionesPorNivel.rows,
+        por_dia: misionesPorDia.rows
+      },
+      calma: {
+        resumen: calmaResumen.rows[0] || {},
+        por_usuario: calmaPorUsuario.rows
+      },
+      citas: {
+        resumen: { ...(citasResumen.rows[0] || {}), promedio_dias_entre_planes: promedioDiasPlanes }
+      },
+      accesos: {
+        resumen: accesosResumen.rows[0] || {},
+        recientes: accesosRecientes.rows,
+        por_usuario: accesosPorUsuario.rows
+      }
+    });
+  } catch (err) {
+    console.error('Error:', err);
+    res.status(500).json({ error: 'Error al cargar panel admin' });
   }
+});
 
+router.delete('/admin/completadas/:id', async (req, res) => {
+  const usuario_id = req.body?.usuario_id || req.query?.usuario_id;
+  try {
+    if (!(await esAdmin(usuario_id))) return res.status(403).json({ error: 'Solo el admin puede eliminar misiones cumplidas.' });
+    const result = await pool.query(`DELETE FROM misiones_completadas WHERE id = $1 RETURNING id, titulo, puntos`, [req.params.id]);
+    if (!result.rows.length) return res.status(404).json({ error: 'Registro de misión no encontrado.' });
+    const progreso = await pool.query(`SELECT COALESCE(SUM(puntos), 0)::int AS total FROM misiones_completadas`);
+    res.json({ ok: true, eliminado: result.rows[0], progreso: calcularNivelRelacion(progreso.rows[0]?.total || 0) });
+  } catch (err) { res.status(500).json({ error: 'Error al eliminar misión cumplida' }); }
+});
+
+router.get('/:id', async (req, res) => {
+  try {
+    const eventoResult = await pool.query(`SELECT id, titulo, tipo, categoria, nivel, duracion, descripcion, COALESCE(modo, 'simple') AS modo, instrucciones, fuente, activo, creado_por, creado_en, COALESCE((SELECT COUNT(*)::int FROM misiones_completadas mc WHERE mc.evento_id = eventos_preguntas.id), 0) AS completada_total FROM eventos_preguntas WHERE id = $1 AND activo = true`, [req.params.id]);
+    if (!eventoResult.rows.length) return res.status(404).json({ error: 'Misión no encontrada' });
+    const itemsResult = await pool.query(`SELECT id, evento_id, orden, bloque, tipo_item, contenido FROM evento_items WHERE evento_id = $1 ORDER BY orden ASC, id ASC`, [req.params.id]);
+    res.json({ ...eventoResult.rows[0], puntos: puntosPorNivel(eventoResult.rows[0].nivel), items: itemsResult.rows });
+  } catch (err) { res.status(500).json({ error: 'Error al cargar la misión' }); }
+});
+
+router.post('/', async (req, res) => {
+  const { titulo, tipo, categoria, nivel, duracion, descripcion, modo, instrucciones, fuente, creado_por, items } = req.body;
+  if (!normalizarTexto(titulo) || !normalizarTexto(descripcion)) return res.status(400).json({ error: 'Título y descripción son obligatorios.' });
   const client = await pool.connect();
-
   try {
     await client.query('BEGIN');
-
-    const result = await client.query(
-      `INSERT INTO eventos_preguntas
-        (titulo, tipo, categoria, nivel, duracion, descripcion, modo, instrucciones, fuente, creado_por)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-       RETURNING id`,
-      [
-        normalizarTexto(titulo),
-        validarTipo(tipo),
-        normalizarTexto(categoria),
-        validarNivel(nivel),
-        normalizarTexto(duracion),
-        normalizarTexto(descripcion),
-        validarModo(modo),
-        normalizarTexto(instrucciones),
-        normalizarTexto(fuente),
-        creado_por || null
-      ]
-    );
-
+    const result = await client.query(`INSERT INTO eventos_preguntas (titulo, tipo, categoria, nivel, duracion, descripcion, modo, instrucciones, fuente, creado_por) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id`, [normalizarTexto(titulo), validarTipo(tipo), normalizarTexto(categoria), validarNivel(nivel), normalizarTexto(duracion), normalizarTexto(descripcion), validarModo(modo), normalizarTexto(instrucciones), normalizarTexto(fuente), creado_por || null]);
     const eventoId = result.rows[0].id;
     await guardarItems(client, eventoId, items);
-
     await client.query('COMMIT');
-
     res.json({ ok: true, id: eventoId });
-  } catch (err) {
-    await client.query('ROLLBACK');
-    console.error('Error POST /api/eventos:', err);
-    res.status(500).json({ error: 'Error al guardar la misión' });
-  } finally {
-    client.release();
-  }
+  } catch (err) { await client.query('ROLLBACK'); res.status(500).json({ error: 'Error al guardar la misión' }); } finally { client.release(); }
 });
 
-// PUT /api/eventos/:id
 router.put('/:id', async (req, res) => {
-  const {
-    titulo,
-    tipo,
-    categoria,
-    nivel,
-    duracion,
-    descripcion,
-    modo,
-    instrucciones,
-    fuente,
-    items
-  } = req.body;
-
-  if (!normalizarTexto(titulo) || !normalizarTexto(descripcion)) {
-    return res.status(400).json({ error: 'Título y descripción son obligatorios.' });
-  }
-
+  const { titulo, tipo, categoria, nivel, duracion, descripcion, modo, instrucciones, fuente, items } = req.body;
+  if (!normalizarTexto(titulo) || !normalizarTexto(descripcion)) return res.status(400).json({ error: 'Título y descripción son obligatorios.' });
   const client = await pool.connect();
-
   try {
     await client.query('BEGIN');
-
-    const result = await client.query(
-      `UPDATE eventos_preguntas
-       SET titulo = $1,
-           tipo = $2,
-           categoria = $3,
-           nivel = $4,
-           duracion = $5,
-           descripcion = $6,
-           modo = $7,
-           instrucciones = $8,
-           fuente = $9
-       WHERE id = $10
-       RETURNING id`,
-      [
-        normalizarTexto(titulo),
-        validarTipo(tipo),
-        normalizarTexto(categoria),
-        validarNivel(nivel),
-        normalizarTexto(duracion),
-        normalizarTexto(descripcion),
-        validarModo(modo),
-        normalizarTexto(instrucciones),
-        normalizarTexto(fuente),
-        req.params.id
-      ]
-    );
-
-    if (!result.rows.length) {
-      await client.query('ROLLBACK');
-      return res.status(404).json({ error: 'Misión no encontrada' });
-    }
-
+    const result = await client.query(`UPDATE eventos_preguntas SET titulo = $1, tipo = $2, categoria = $3, nivel = $4, duracion = $5, descripcion = $6, modo = $7, instrucciones = $8, fuente = $9 WHERE id = $10 RETURNING id`, [normalizarTexto(titulo), validarTipo(tipo), normalizarTexto(categoria), validarNivel(nivel), normalizarTexto(duracion), normalizarTexto(descripcion), validarModo(modo), normalizarTexto(instrucciones), normalizarTexto(fuente), req.params.id]);
+    if (!result.rows.length) { await client.query('ROLLBACK'); return res.status(404).json({ error: 'Misión no encontrada' }); }
     await guardarItems(client, req.params.id, items);
-
     await client.query('COMMIT');
     res.json({ ok: true });
-  } catch (err) {
-    await client.query('ROLLBACK');
-    console.error('Error PUT /api/eventos:', err);
-    res.status(500).json({ error: 'Error al actualizar la misión' });
-  } finally {
-    client.release();
-  }
+  } catch (err) { await client.query('ROLLBACK'); res.status(500).json({ error: 'Error al actualizar la misión' }); } finally { client.release(); }
 });
 
-// DELETE /api/eventos/:id
 router.delete('/:id', async (req, res) => {
   try {
-    const result = await pool.query(
-      `UPDATE eventos_preguntas
-       SET activo = false
-       WHERE id = $1
-       RETURNING id`,
-      [req.params.id]
-    );
-
-    if (!result.rows.length) {
-      return res.status(404).json({ error: 'Misión no encontrada' });
-    }
-
+    const result = await pool.query(`UPDATE eventos_preguntas SET activo = false WHERE id = $1 RETURNING id`, [req.params.id]);
+    if (!result.rows.length) return res.status(404).json({ error: 'Misión no encontrada' });
     res.json({ ok: true });
-  } catch (err) {
-    console.error('Error DELETE /api/eventos:', err);
-    res.status(500).json({ error: 'Error al eliminar la misión' });
-  }
+  } catch (err) { res.status(500).json({ error: 'Error al eliminar la misión' }); }
 });
 
 module.exports = router;
