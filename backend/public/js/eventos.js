@@ -344,6 +344,17 @@ function renderEventoCard(item) {
   const pts = puntosPorNivel(item.nivel);
   const completada = Number(item.completada_total || 0);
 
+  // Verificación del rol del usuario actual desde la sesión global
+  let soyAdmin = false;
+  try {
+    const userSession = JSON.parse(sessionStorage.getItem('siga_user') || 'null');
+    if (userSession && userSession.rol === 'admin') {
+      soyAdmin = true;
+    }
+  } catch (e) {
+    console.warn('No se pudo validar el rol de administración:', e);
+  }
+
   return `
     <div class="item-card evento-card ${eventoNivelClass(item.nivel)}">
       <div class="evento-card-top">
@@ -368,8 +379,10 @@ function renderEventoCard(item) {
         <button class="btn btn-sm btn-mision-done" onclick="completarMision(${item.id})">Cumplida +${pts}</button>
         <button class="btn btn-sm" onclick="crearPlanDesdeEvento(${item.id})">Usar en plan</button>
         <button class="btn btn-sm" onclick="copiarEvento(${item.id})">Copiar</button>
-        <button class="btn btn-sm btn-edit" onclick="editarEventoDesdeCache(${item.id})">Editar</button>
-        <button class="btn btn-sm btn-delete" onclick="eliminarEvento(${item.id})">Eliminar</button>
+        ${soyAdmin ? `
+          <button class="btn btn-sm btn-edit" onclick="editarEventoDesdeCache(${item.id})">Editar</button>
+          <button class="btn btn-sm btn-delete" onclick="eliminarEvento(${item.id})">Eliminar</button>
+        ` : ''}
       </div>
     </div>
   `;
@@ -418,6 +431,17 @@ function renderDetalleEvento(item) {
   const nombres = Object.keys(grupos);
   const pts = puntosPorNivel(item.nivel);
 
+  // Verificación del rol del usuario actual para la vista detallada
+  let soyAdmin = false;
+  try {
+    const userSession = JSON.parse(sessionStorage.getItem('siga_user') || 'null');
+    if (userSession && userSession.rol === 'admin') {
+      soyAdmin = true;
+    }
+  } catch (e) {
+    console.warn('No se pudo validar el rol de administración:', e);
+  }
+
   const bloquesHtml = nombres.map(nombre => `
     <div class="evento-bloque">
       <div class="evento-bloque-title">${esc(nombre)}</div>
@@ -465,7 +489,9 @@ function renderDetalleEvento(item) {
       <button class="btn btn-sm btn-mision-done" onclick="completarMision(${item.id})">Marcar cumplida +${pts}</button>
       <button class="btn btn-sm" onclick="crearPlanDesdeEvento(${item.id})">Usar en plan</button>
       <button class="btn btn-sm" onclick="copiarEventoCompleto(${item.id})">Copiar guía completa</button>
-      <button class="btn btn-sm btn-edit" onclick="editarEventoDesdeDetalle(${item.id})">Editar</button>
+      ${soyAdmin ? `
+        <button class="btn btn-sm btn-edit" onclick="editarEventoDesdeDetalle(${item.id})">Editar</button>
+      ` : ''}
     </div>
   `;
 }
@@ -674,7 +700,6 @@ function lanzarConfettiMision() {
     setTimeout(() => p.remove(), 1800);
   }
 }
-
 
 window.loadEventos = loadEventos;
 window.abrirModalEvento = abrirModalEvento;
