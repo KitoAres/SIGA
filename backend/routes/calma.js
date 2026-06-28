@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../config/db');
+const { requireAuth } = require('../middleware/auth');
 
 // GET /api/calma/estado
-// Devuelve si alguien está en Modo avión.
-router.get('/estado', async (req, res) => {
+router.get('/estado', requireAuth, async (req, res) => {
   try {
     const result = await pool.query(
       `SELECT
@@ -21,9 +21,11 @@ router.get('/estado', async (req, res) => {
           u.rol
        FROM modo_calma mc
        LEFT JOIN usuarios u ON u.id = mc.usuario_id
-       WHERE mc.activo = true
+       WHERE mc.activo = true 
+         AND (mc.usuario_id = $1 OR mc.usuario_id = (SELECT pareja_id FROM usuarios WHERE id = $1))
        ORDER BY mc.creado_en DESC
-       LIMIT 1`
+       LIMIT 1`,
+      [req.user.id]
     );
 
     if (!result.rows.length) {
@@ -49,8 +51,7 @@ router.get('/estado', async (req, res) => {
 });
 
 // GET /api/calma/activa
-// Compatibilidad por si alguna parte vieja todavía llama /activa.
-router.get('/activa', async (req, res) => {
+router.get('/activa', requireAuth, async (req, res) => {
   try {
     const result = await pool.query(
       `SELECT
@@ -68,8 +69,10 @@ router.get('/activa', async (req, res) => {
        FROM modo_calma mc
        LEFT JOIN usuarios u ON u.id = mc.usuario_id
        WHERE mc.activo = true
+         AND (mc.usuario_id = $1 OR mc.usuario_id = (SELECT pareja_id FROM usuarios WHERE id = $1))
        ORDER BY mc.creado_en DESC
-       LIMIT 1`
+       LIMIT 1`,
+      [req.user.id]
     );
 
     if (!result.rows.length) {
@@ -91,16 +94,9 @@ router.get('/activa', async (req, res) => {
 });
 
 // POST /api/calma/activar
-// Activa Modo avión para el usuario que lo pide.
-router.post('/activar', async (req, res) => {
-  const { usuario_id, mensaje } = req.body;
-
-  if (!usuario_id) {
-    return res.status(400).json({
-      ok: false,
-      error: 'Falta usuario_id'
-    });
-  }
+router.post('/activar', requireAuth, async (req, res) => {
+  const usuario_id = req.user.id;
+  const { mensaje } = req.body;
 
   try {
     const usuarioResult = await pool.query(
@@ -126,18 +122,20 @@ router.post('/activar', async (req, res) => {
       });
     }
 
-    // Un solo Modo avión activo a la vez.
+    // Desactivar modos avión previos que pertenezcan a este espacio de pareja
     await pool.query(
       `UPDATE modo_calma
        SET activo = false
-       WHERE activo = true`
+       WHERE activo = true 
+         AND (usuario_id = $1 OR usuario_id = (SELECT pareja_id FROM usuarios WHERE id = $1))`,
+      [usuario_id]
     );
 
     const insert = await pool.query(
       `INSERT INTO modo_calma
-        (usuario_id, fecha_inicio, fecha_fin, mensaje, activo)
+         (usuario_id, fecha_inicio, fecha_fin, mensaje, activo)
        VALUES
-        ($1, CURRENT_DATE, CURRENT_DATE, $2, true)
+         ($1, CURRENT_DATE, CURRENT_DATE, $2, true)
        RETURNING *`,
       [
         usuario_id,
@@ -161,24 +159,18 @@ router.post('/activar', async (req, res) => {
 });
 
 // POST /api/calma/desactivar
-// Solo quien activó Modo avión puede desactivarlo.
-router.post('/desactivar', async (req, res) => {
-  const { usuario_id } = req.body;
-
-  if (!usuario_id) {
-    return res.status(400).json({
-      ok: false,
-      error: 'Falta usuario_id'
-    });
-  }
+router.post('/desactivar', requireAuth, async (req, res) => {
+  const usuario_id = req.user.id;
 
   try {
     const activo = await pool.query(
       `SELECT id, usuario_id
        FROM modo_calma
        WHERE activo = true
+         AND (usuario_id = $1 OR usuario_id = (SELECT pareja_id FROM usuarios WHERE id = $1))
        ORDER BY creado_en DESC
-       LIMIT 1`
+       LIMIT 1`,
+      [usuario_id]
     );
 
     if (!activo.rows.length) {
@@ -219,7 +211,7 @@ router.post('/desactivar', async (req, res) => {
   }
 });
 
-// Rutas viejas desactivadas con respuesta suave para evitar errores si quedó algún botón viejo.
+// Respuestas heredadas para compatibilidad con endpoints obsoletos
 router.post('/', async (req, res) => {
   res.status(410).json({ ok: false, error: 'Modo calma fue reemplazado por Modo avión. Usa /api/calma/activar.' });
 });
