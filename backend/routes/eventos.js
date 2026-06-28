@@ -101,32 +101,35 @@ async function guardarItems(client, eventoId, items) {
   }
 }
 
-// GET /api/eventos/progreso (CORREGIDO: Suma conjunta desde puntos_conexion por pareja)
+// GET /api/eventos/progreso (Unificado totalmente a puntos_conexion)
 router.get('/progreso', requireAuth, async (req, res) => {
   try {
+    // 1. Suma total de puntos de la pareja
     const resumen = await pool.query(
       `SELECT
           COALESCE(SUM(puntos), 0)::int AS puntos,
           COUNT(*)::int AS completadas,
-          COUNT(*) FILTER (WHERE fecha = CURRENT_DATE)::int AS hoy
+          COUNT(*) FILTER (WHERE creado_en::date = CURRENT_DATE)::int AS hoy
        FROM puntos_conexion
        WHERE usuario_id = $1 
           OR usuario_id = (SELECT pareja_id FROM usuarios WHERE id = $1)`,
       [req.user.id]
     );
 
+    // 2. Agrupación por fuente (recuerdos, cajita, misiones, etc.) para evitar el crash
     const porNivel = await pool.query(
-      `SELECT nivel, COUNT(*)::int AS total, COALESCE(SUM(puntos), 0)::int AS puntos
-       FROM misiones_completadas
+      `SELECT fuente AS nivel, COUNT(*)::int AS total, COALESCE(SUM(puntos), 0)::int AS puntos
+       FROM puntos_conexion
        WHERE usuario_id = $1 
           OR usuario_id = (SELECT pareja_id FROM usuarios WHERE id = $1)
-       GROUP BY nivel`,
+       GROUP BY fuente`,
       [req.user.id]
     );
 
+    // 3. Últimos movimientos reflejados
     const ultimas = await pool.query(
-      `SELECT id, evento_id, titulo, nivel, puntos, comentario, fecha, creado_en
-       FROM misiones_completadas
+      `SELECT id, NULL AS evento_id, fuente AS titulo, 'medio' AS nivel, puntos, descripcion AS comentario, creado_en::date AS fecha, creado_en
+       FROM puntos_conexion
        WHERE usuario_id = $1 
           OR usuario_id = (SELECT pareja_id FROM usuarios WHERE id = $1)
        ORDER BY creado_en DESC
