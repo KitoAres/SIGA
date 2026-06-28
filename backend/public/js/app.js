@@ -2413,9 +2413,30 @@ function editarRecuerdoSeguro(id) {
 
 /* SIGA — loader para admin.js y puntos.js. Pegar al FINAL de backend/public/js/app.js */
 (function cargarModulosExtraSIGA(){
-  function cargarScript(src,id){if(document.getElementById(id))return;const s=document.createElement('script');s.src=src+'?v=puntos-globales-2';s.id=id;document.body.appendChild(s)}
-  cargarScript('/js/puntos.js','siga-puntos-js');
-  cargarScript('/js/admin.js','siga-admin-js');
+  function cargarScript(src, id, callback){
+    if(document.getElementById(id)) {
+      if (callback) callback();
+      return;
+    }
+    const s = document.createElement('script');
+    s.src = src + '?v=puntos-globales-2';
+    s.id = id;
+    s.async = true;
+    if (callback) {
+      s.onload = callback;
+    }
+    document.body.appendChild(s);
+  }
+
+  // Cargamos puntos.js y, en cuanto termine de bajarse, forzamos la actualización de los marcadores
+  cargarScript('/js/puntos.js', 'siga-puntos-js', function() {
+    console.log('✓ [SIGA] puntos.js cargado con éxito. Sincronizando marcador...');
+    if (typeof cargarProgresoGlobal === 'function') {
+      cargarProgresoGlobal();
+    }
+  });
+
+  cargarScript('/js/admin.js', 'siga-admin-js');
 })();
 
 // ======================================================
