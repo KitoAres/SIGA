@@ -14,7 +14,7 @@ const {
 // Nota para Francin, si algún día lees este código:
 // Esta parte busca los momentos donde ambos coinciden.
 // No intenta presionar, solo mostrar una posibilidad bonita:
-// “aquí sí podríamos vernos, si ambos quieren”. ♡
+// “aquí sí podríamos vernos, si ambos queremos”. ♡
 // ─────────────────────────────────────────────────────────────
 
 async function obtenerUsuario(usuario_id) {
