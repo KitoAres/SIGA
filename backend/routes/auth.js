@@ -39,8 +39,6 @@ async function validarPassword(contrasenaIngresada, contrasenaGuardada) {
     return bcrypt.compare(contrasenaIngresada, contrasenaGuardada);
   }
 
-  // Compatibilidad temporal: permite entrar si todavía está en texto plano.
-  // Después del login la convierte automáticamente a hash.
   return contrasenaIngresada === contrasenaGuardada;
 }
 
@@ -76,7 +74,6 @@ async function registrarAcceso(req, usuario) {
       ]
     );
   } catch (err) {
-    // No bloquea el login si la tabla de accesos todavía no existe.
     console.warn('No se pudo registrar acceso:', err.message);
   }
 }
@@ -117,11 +114,8 @@ async function registrarDebugLogin(usuario) {
 
 async function notificarAccesoElla(usuario) {
   try {
-    // Por defecto queda apagado para evitar sensación de vigilancia.
-    // Si lo quieres activar para uso personal: NOTIFICAR_ACCESO_ELLA=true
     if (process.env.NOTIFICAR_ACCESO_ELLA !== 'true') return;
 
-    // Detecta al usuario "ella" por su rol — robusto ante cambios de nombre de usuario.
     const rol = String(usuario.rol || '').toLowerCase().trim();
     const esElla = rol === 'ella';
 
@@ -244,7 +238,6 @@ router.post('/login', async (req, res) => {
     });
   } catch (err) {
     console.error('ERROR LOGIN REAL:', err);
-
     res.status(500).json({
       ok: false,
       error: 'Error login real: ' + err.message
@@ -271,6 +264,8 @@ router.get('/perfil/:id', requireAuth, async (req, res) => {
           usuario,
           nombre,
           rol,
+          codigo_pareja,
+          pareja_id,
           COALESCE(display_name,nombre,usuario) AS display_name,
           COALESCE(color_perfil,'#22d3ee') AS color_perfil
        FROM usuarios
@@ -315,7 +310,7 @@ router.put('/perfil/:id', requireAuth, async (req, res) => {
   if (!esPropioPerfil && !esAdmin) {
     return res.status(403).json({
       ok: false,
-      error: 'No puedes editar el perfil de otro usuario.'
+      error: 'No puedes edit el perfil de otro usuario.'
     });
   }
 
@@ -415,6 +410,8 @@ router.put('/perfil/:id', requireAuth, async (req, res) => {
           usuario,
           nombre,
           rol,
+          codigo_pareja,
+          pareja_id,
           COALESCE(display_name,nombre,usuario) AS display_name,
           COALESCE(color_perfil,'#22d3ee') AS color_perfil
        FROM usuarios
@@ -436,12 +433,9 @@ router.put('/perfil/:id', requireAuth, async (req, res) => {
   }
 });
 
-
 // ====================== REGISTRO CON EMAIL ======================
 router.post('/register', async (req, res) => {
   const { email, password, nombre, usuario } = req.body;
-
-  // Se adapta para aceptar tanto email como un campo opcional o manual de usuario
   const finalUsuario = usuario || email.split('@')[0];
 
   if (!email || !password || !nombre) {
@@ -449,24 +443,19 @@ router.post('/register', async (req, res) => {
   }
 
   try {
-    // Verificar si ya existe el email
     const existeEmail = await pool.query('SELECT id FROM usuarios WHERE email = $1', [email.toLowerCase()]);
     if (existeEmail.rows.length > 0) {
       return res.status(400).json({ ok: false, error: 'Este correo ya está registrado' });
     }
 
-    // Verificar si ya existe el nombre de usuario
     const existeUsuario = await pool.query('SELECT id FROM usuarios WHERE usuario = $1', [finalUsuario.toLowerCase()]);
     if (existeUsuario.rows.length > 0) {
       return res.status(400).json({ ok: false, error: 'Este nombre de usuario ya está en uso' });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Generar un código de pareja aleatorio de 6 caracteres alfanuméricos en mayúsculas
     const codigoParejaGenerado = Math.random().toString(36).substring(2, 8).toUpperCase();
 
-    // Inserción en la base de datos incluyendo el código generado
     const result = await pool.query(`
       INSERT INTO usuarios (email, contrasena, nombre, usuario, verificado, rol, codigo_pareja)
       VALUES ($1, $2, $3, $4, false, 'user', $5)
@@ -475,7 +464,6 @@ router.post('/register', async (req, res) => {
 
     const newUser = result.rows[0];
 
-    // Enviar email de verificación
     const token = jwt.sign(
       { userId: newUser.id, purpose: 'verify' },
       process.env.JWT_SECRET,
@@ -495,7 +483,6 @@ router.post('/register', async (req, res) => {
       `
     });
 
-    // Respuesta JSON estructurada con los datos correctos para el frontend
     res.json({ 
       ok: true, 
       id: newUser.id,
@@ -506,6 +493,46 @@ router.post('/register', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ ok: false, error: 'Error al crear la cuenta: ' + err.message });
+  }
+});
+
+// ====================== NUEVO: VINCULACIÓN DE PAREJA ======================
+router.post('/vincular', async (req, res) => {
+  const { usuario_id, codigo_pareja } = req.body;
+
+  if (!usuario_id || !codigo_pareja) {
+    return res.status(400).json({ ok: false, error: 'Faltan parámetros requeridos.' });
+  }
+
+  try {
+    // Buscar el usuario dueño del código
+    const targetRes = await pool.query(
+      'SELECT id, pareja_id FROM usuarios WHERE codigo_pareja = $1 LIMIT 1',
+      [codigo_pareja.trim().toUpperCase()]
+    );
+
+    if (!targetRes.rows.length) {
+      return res.status(404).json({ ok: false, error: 'El código de vinculación no existe.' });
+    }
+
+    const pareja = targetRes.rows[0];
+
+    if (pareja.id === Number(usuario_id)) {
+      return res.status(400).json({ ok: false, error: 'No puedes vincularte con tu propio código.' });
+    }
+
+    if (pareja.pareja_id) {
+      return res.status(400).json({ ok: false, error: 'Esta pareja ya está vinculada con otra cuenta.' });
+    }
+
+    // Actualizar de manera bidireccional los campos pareja_id
+    await pool.query('UPDATE usuarios SET pareja_id = $1 WHERE id = $2', [pareja.id, usuario_id]);
+    await pool.query('UPDATE usuarios SET pareja_id = $1 WHERE id = $2', [usuario_id, pareja.id]);
+
+    res.json({ ok: true, message: 'Vinculación completada con éxito.' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ ok: false, error: 'Error interno al procesar la vinculación: ' + err.message });
   }
 });
 
