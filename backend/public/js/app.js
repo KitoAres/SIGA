@@ -307,8 +307,17 @@ function closeSidebar() {
   $('sidebar-overlay').classList.remove('open');
 }
 
-// ── DASHBOARD ─────────────────────────────────────────────────
+// ── DASHBOARD DINÁMICO CORREGIDO ───────────────────────────────
 async function loadDashboard() {
+  // Inyectar el saludo con el nombre real del usuario conectado
+  if (state.currentUser) {
+    const welcomeMsg = $('welcome-msg');
+    if (welcomeMsg) {
+      const nombreUsuario = state.currentUser.display_name || state.currentUser.nombre || state.currentUser.usuario;
+      welcomeMsg.textContent = `¡Hola de nuevo, ${nombreUsuario}! ♡`;
+    }
+  }
+
   try {
     const data = await api('GET', '/api/dashboard/resumen');
     $('stat-dias').textContent      = data.dias      ?? '—';
@@ -318,7 +327,7 @@ async function loadDashboard() {
   } catch {
     // Silencioso si no hay DB aún
   }
-cargarFraseDelDia();
+  cargarFraseDelDia();
   await cargarAvisoMatchDashboard();
   if (typeof cargarProgresoGlobal === 'function') {
   await cargarProgresoGlobal();
