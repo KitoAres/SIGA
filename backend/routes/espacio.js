@@ -64,7 +64,6 @@ async function registrarPuntosEspacio(usuario_id, herramienta, compartido) {
 }
 
 // GET /api/espacio/historial
-// Ya no recibe usuario_id. Usa el usuario real del token.
 router.get('/historial', requireAuth, async (req, res) => {
   const usuario_id = req.user.id;
   const usuario = req.user;
@@ -108,9 +107,10 @@ router.get('/historial', requireAuth, async (req, res) => {
        FROM espacio_personal_registros e
        LEFT JOIN usuarios u ON u.id = e.usuario_id
        WHERE COALESCE(e.compartido, false) = true
-         AND u.rol IN ('yo', 'ella')
+         AND (e.usuario_id = $1 OR e.usuario_id = (SELECT pareja_id FROM usuarios WHERE id = $1))
        ORDER BY e.creado_en DESC
-       LIMIT 20`
+       LIMIT 20`,
+      [usuario_id]
     );
 
     res.json({
@@ -126,7 +126,6 @@ router.get('/historial', requireAuth, async (req, res) => {
     });
   } catch (err) {
     console.error('Error GET /api/espacio/historial:', err);
-
     res.status(500).json({
       ok: false,
       error: 'Error al cargar Mi espacio.'
@@ -135,7 +134,6 @@ router.get('/historial', requireAuth, async (req, res) => {
 });
 
 // POST /api/espacio/usar
-// Ya no acepta usuario_id desde el navegador. Usa req.user.id.
 router.post('/usar', requireAuth, async (req, res) => {
   const usuario_id = req.user.id;
   const herramienta = validarHerramienta(req.body.herramienta);
@@ -179,7 +177,6 @@ router.post('/usar', requireAuth, async (req, res) => {
     });
   } catch (err) {
     console.error('Error POST /api/espacio/usar:', err);
-
     res.status(500).json({
       ok: false,
       error: 'Error al guardar herramienta.'
