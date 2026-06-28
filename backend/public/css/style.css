@@ -3797,3 +3797,24 @@ Si entras y lees esto... pues si le meti mucho amor e insomnio aqui*/
 .espacio-history-item small {
   opacity: 0.75;
 }
+
+/* ======================================================
+   REGISTRO — pantalla que tapa el app igual que el login
+   ====================================================== */
+#register-screen {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1001; /* encima del login (1000) */
+  background:
+    linear-gradient(rgba(8, 6, 18, 0.82), rgba(8, 6, 18, 0.92)),
+    url("/img/fondo.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  animation: fadeIn 0.4s ease;
+  overflow-y: auto;
+  padding: 24px 16px;
+}
