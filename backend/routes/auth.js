@@ -436,4 +436,60 @@ router.put('/perfil/:id', requireAuth, async (req, res) => {
   }
 });
 
+
+// ====================== REGISTRO CON EMAIL ======================
+router.post('/register', async (req, res) => {
+  const { email, password, nombre } = req.body;
+
+  if (!email || !password || !nombre) {
+    return res.status(400).json({ ok: false, error: 'Faltan email, contraseña o nombre' });
+  }
+
+  try {
+    // Verificar si ya existe
+    const existe = await pool.query('SELECT id FROM usuarios WHERE email = $1', [email.toLowerCase()]);
+    if (existe.rows.length > 0) {
+      return res.status(400).json({ ok: false, error: 'Este correo ya está registrado' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const result = await pool.query(`
+      INSERT INTO usuarios (email, contrasena, nombre, usuario, verificado, rol)
+      VALUES ($1, $2, $3, $4, false, 'user')
+      RETURNING id, email, nombre
+    `, [email.toLowerCase(), hashedPassword, nombre, email.split('@')[0]]);
+
+    const newUser = result.rows[0];
+
+    // Enviar email de verificación
+    const token = jwt.sign(
+      { userId: newUser.id, purpose: 'verify' },
+      process.env.JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+
+    const link = `https://${req.headers.host}/verify-email?token=${token}`;
+
+    await enviarEmail({
+      to: email,
+      subject: 'Verifica tu cuenta en SIGA',
+      html: `
+        <h2>Bienvenido a SIGA</h2>
+        <p>Haz clic en el siguiente enlace para verificar tu cuenta:</p>
+        <a href="${link}" style="padding:12px 24px; background:#e91e63; color:white; text-decoration:none; border-radius:8px;">Verificar Cuenta</a>
+        <p>El enlace expira en 24 horas.</p>
+      `
+    });
+
+    res.json({ 
+      ok: true, 
+      mensaje: 'Cuenta creada. Revisa tu correo para verificarla.' 
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ ok: false, error: 'Error al crear la cuenta' });
+  }
+});
 module.exports = router;
