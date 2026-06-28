@@ -7,7 +7,7 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../config/db');
-const { requireAuth } = require('../middleware/auth'); // Middleware integrado
+const { requireAuth, requireAdmin } = require('../middleware/auth'); // Middlewares de seguridad
 const { calcularNivelRelacion } = require('../utils/nivel');
 
 function normalizarTexto(valor) {
@@ -101,7 +101,7 @@ async function guardarItems(client, eventoId, items) {
   }
 }
 
-// GET /api/eventos/progreso (Filtrado por pareja para arrancar en nivel cero)
+// GET /api/eventos/progreso (CORREGIDO: Suma conjunta desde puntos_conexion por pareja)
 router.get('/progreso', requireAuth, async (req, res) => {
   try {
     const resumen = await pool.query(
@@ -109,7 +109,7 @@ router.get('/progreso', requireAuth, async (req, res) => {
           COALESCE(SUM(puntos), 0)::int AS puntos,
           COUNT(*)::int AS completadas,
           COUNT(*) FILTER (WHERE fecha = CURRENT_DATE)::int AS hoy
-       FROM misiones_completadas
+       FROM puntos_conexion
        WHERE usuario_id = $1 
           OR usuario_id = (SELECT pareja_id FROM usuarios WHERE id = $1)`,
       [req.user.id]
@@ -155,7 +155,7 @@ router.get('/', requireAuth, async (req, res) => {
   const { q, tipo, nivel } = req.query;
 
   const filtros = ['e.activo = true'];
-  const valores = [req.user.id]; // $1 reservado para el ID del usuario
+  const valores = [req.user.id];
 
   if (tipo) {
     valores.push(tipo);
@@ -351,7 +351,7 @@ router.post('/:id/completar', requireAuth, async (req, res) => {
   }
 });
 
-// Los endpoints de creación/edición y panel administrativo de abajo se mantienen globales
+// Endpoint administrativo de consulta global
 router.get('/admin/resumen', async (req, res) => {
   const { usuario_id } = req.query;
   try {
@@ -420,7 +420,8 @@ router.get('/:id', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Error al cargar la misión' }); }
 });
 
-router.post('/', async (req, res) => {
+// PROTEGIDO DESDE EL BACKEND: Solo cuentas administrativas modifican el catálogo global
+router.post('/', requireAuth, requireAdmin, async (req, res) => {
   const { titulo, tipo, categoria, nivel, duracion, descripcion, modo, instrucciones, fuente, creado_por, items } = req.body;
   if (!normalizarTexto(titulo) || !normalizarTexto(descripcion)) return res.status(400).json({ error: 'Título y descripción son obligatorios.' });
   const client = await pool.connect();
@@ -434,7 +435,8 @@ router.post('/', async (req, res) => {
   } catch (err) { await client.query('ROLLBACK'); res.status(500).json({ error: 'Error al guardar la misión' }); } finally { client.release(); }
 });
 
-router.put('/:id', async (req, res) => {
+// PROTEGIDO DESDE EL BACKEND: Solo cuentas administrativas editan misiones base
+router.put('/:id', requireAuth, requireAdmin, async (req, res) => {
   const { titulo, tipo, categoria, nivel, duracion, descripcion, modo, instrucciones, fuente, items } = req.body;
   if (!normalizarTexto(titulo) || !normalizarTexto(descripcion)) return res.status(400).json({ error: 'Título y descripción son obligatorios.' });
   const client = await pool.connect();
@@ -448,7 +450,8 @@ router.put('/:id', async (req, res) => {
   } catch (err) { await client.query('ROLLBACK'); res.status(500).json({ error: 'Error al actualizar la misión' }); } finally { client.release(); }
 });
 
-router.delete('/:id', async (req, res) => {
+// PROTEGIDO DESDE EL BACKEND: Solo cuentas administrativas eliminan del catálogo
+router.delete('/:id', requireAuth, requireAdmin, async (req, res) => {
   try {
     const result = await pool.query(`UPDATE eventos_preguntas SET activo = false WHERE id = $1 RETURNING id`, [req.params.id]);
     if (!result.rows.length) return res.status(404).json({ error: 'Misión no encontrada' });
