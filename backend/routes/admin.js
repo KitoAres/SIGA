@@ -74,27 +74,28 @@ router.get('/resumen', ...protegerAdmin(async (req, res) => {
      LIMIT 30`
   );
 
+  // CORRECCIÓN: Quitamos el filtro <> 'admin' para que no oculte nada
   const accesosResumen = await pool.query(
     `SELECT
         COUNT(*)::int AS total,
         COUNT(*) FILTER (WHERE creado_en >= NOW() - INTERVAL '30 days')::int AS ultimos_30,
         COUNT(*) FILTER (WHERE creado_en::date = CURRENT_DATE)::int AS hoy,
         MAX(creado_en) AS ultimo
-     FROM accesos_sistema
-     WHERE COALESCE(rol, '') <> 'admin'`
+     FROM accesos_sistema`
   );
 
+  // CORRECCIÓN: Quitamos el filtro <> 'admin' para ver todo en tiempo real
   const accesosRecientes = await pool.query(
     `SELECT
         a.*,
         COALESCE(u.display_name, u.nombre, u.usuario, a.nombre_visible, a.usuario, 'Sin usuario') AS usuario_nombre
      FROM accesos_sistema a
      LEFT JOIN usuarios u ON u.id = a.usuario_id
-     WHERE COALESCE(a.rol, '') <> 'admin'
      ORDER BY a.creado_en DESC
      LIMIT 30`
   );
 
+  // CORRECCIÓN: Quitamos el filtro <> 'admin' para auditar correctamente
   const accesosPorUsuario = await pool.query(
     `SELECT
         COALESCE(u.display_name, u.nombre, u.usuario, a.nombre_visible, a.usuario, 'Sin usuario') AS usuario_nombre,
@@ -102,8 +103,7 @@ router.get('/resumen', ...protegerAdmin(async (req, res) => {
         MAX(a.creado_en) AS ultimo
      FROM accesos_sistema a
      LEFT JOIN usuarios u ON u.id = a.usuario_id
-     WHERE COALESCE(a.rol, '') <> 'admin'
-       AND a.creado_en >= NOW() - INTERVAL '30 days'
+     WHERE a.creado_en >= NOW() - INTERVAL '30 days'
      GROUP BY usuario_nombre
      ORDER BY total DESC`
   );
@@ -111,7 +111,6 @@ router.get('/resumen', ...protegerAdmin(async (req, res) => {
   const usuarios = await pool.query(
     `SELECT id, usuario, nombre, display_name, rol, pareja_id
      FROM usuarios
-     WHERE COALESCE(rol, '') <> 'admin'
      ORDER BY id ASC`
   );
 
@@ -138,6 +137,7 @@ router.get('/resumen', ...protegerAdmin(async (req, res) => {
 router.get('/detalle/:fuente', ...protegerAdmin(async (req, res) => {
   const fuente = String(req.params.fuente || '').toLowerCase();
 
+  // CORRECCIÓN: Ver accesos sin filtros restrictivos
   if (fuente === 'accesos') {
     const result = await pool.query(
       `SELECT
@@ -145,7 +145,6 @@ router.get('/detalle/:fuente', ...protegerAdmin(async (req, res) => {
           COALESCE(u.display_name, u.nombre, u.usuario, a.nombre_visible, a.usuario, 'Sin usuario') AS usuario_nombre
        FROM accesos_sistema a
        LEFT JOIN usuarios u ON u.id = a.usuario_id
-       WHERE COALESCE(a.rol, '') <> 'admin'
        ORDER BY a.creado_en DESC
        LIMIT 250`
     );
@@ -157,6 +156,32 @@ router.get('/detalle/:fuente', ...protegerAdmin(async (req, res) => {
     });
   }
 
+  // NUEVO: Inspección de tablas dinámicas de parejas (Evita usar SQL manual en terminal)
+  const tablasMapeadas = {
+    recuerdos: 'recuerdos',
+    playlist: 'playlist',
+    razones: 'razones',
+    promesas: 'promesas',
+    cajita: 'cajita',
+    cartas: 'cartas'
+  };
+
+  if (tablasMapeadas[fuente]) {
+    const tablaReal = tablasMapeadas[fuente];
+    const result = await pool.query(
+      `SELECT t.*, COALESCE(u.display_name, u.nombre, u.usuario, 'Sin usuario') AS creador_nombre
+       FROM ${tablaReal} t
+       LEFT JOIN usuarios u ON u.id = t.usuario_id
+       ORDER BY t.id DESC LIMIT 200`
+    );
+    return res.json({
+      ok: true,
+      tipo: fuente,
+      items: result.rows
+    });
+  }
+
+  // Historial general por Puntos de conexión (Misiones, etc.)
   const valores = [];
   let where = '';
 
