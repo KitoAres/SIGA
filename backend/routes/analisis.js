@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../config/db'); 
+const { requireAuth } = require('../middleware/auth');
 
 // Catálogo de Tests con los 45 ítems completos
 const testsDisponibles = {
@@ -8,7 +9,7 @@ const testsDisponibles = {
         id: "sternberg",
         titulo: "Escala Triangular del Amor de Sternberg",
         descripcion: "Evalúa Intimidad, Pasión y Compromiso. Usa la escala del 1 (Nunca) al 5 (Siempre).",
-        dimensiones: ["Intimidad", "Compromiso", "Pasión"],
+        dimensions: ["Intimidad", "Compromiso", "Pasión"],
         preguntas: [
             // --- INTIMIDAD (21 ítems) ---
             { id: 1, txt: "Tengo una relación cariñosa con mi pareja.", dim: "Intimidad" },
@@ -71,13 +72,13 @@ router.get('/test/:id', (req, res) => {
     else res.status(404).json({ error: "Test no encontrado" });
 });
 
-// Guardar resultados en BD
-router.post('/guardar', async (req, res) => {
-    const { usuario, test_id, puntajes } = req.body;
+// Guardar resultados en BD (Usa el ID seguro del token)
+router.post('/guardar', requireAuth, async (req, res) => {
+    const { test_id, puntajes } = req.body;
+    const usuario_id = req.user.id;
     try {
-        const query = 'INSERT INTO siga_test_resultados (usuario, test_id, puntajes_json) VALUES ($1, $2, $3)';
-        // Ojo: si usas MySQL cambia $1, $2, $3 por ?, ?, ?
-        await db.query(query, [usuario, test_id, JSON.stringify(puntajes)]);
+        const query = 'INSERT INTO siga_test_resultados (usuario_id, test_id, puntajes_json) VALUES ($1, $2, $3)';
+        await db.query(query, [usuario_id, test_id, JSON.stringify(puntajes)]);
         res.json({ success: true, message: "Resultados guardados con éxito" });
     } catch (error) {
         console.error("Error al guardar test:", error);
@@ -85,19 +86,21 @@ router.post('/guardar', async (req, res) => {
     }
 });
 
-// Obtener los datos de ambos para que SiGy los analice
-router.get('/conjunto/:test_id', async (req, res) => {
+// Obtener los datos de la pareja para que SiGy los analice
+router.get('/conjunto/:test_id', requireAuth, async (req, res) => {
     const { test_id } = req.params;
+    const usuario_id = req.user.id;
     try {
         const query = `
-            SELECT usuario, puntajes_json, fecha 
+            SELECT usuario_id, puntajes_json, fecha 
             FROM siga_test_resultados 
             WHERE test_id = $1 
-            AND id IN (
-                SELECT MAX(id) FROM siga_test_resultados GROUP BY usuario, test_id
-            )
+              AND (usuario_id = $2 OR usuario_id = (SELECT pareja_id FROM usuarios WHERE id = $2))
+              AND id IN (
+                  SELECT MAX(id) FROM siga_test_resultados GROUP BY usuario_id, test_id
+              )
         `;
-        const result = await db.query(query, [test_id]);
+        const result = await db.query(query, [test_id, usuario_id]);
         const rows = result.rows ? result.rows : result[0];
         res.json(rows);
     } catch (error) {
@@ -107,18 +110,17 @@ router.get('/conjunto/:test_id', async (req, res) => {
 });
 
 // Obtener mis resultados y validar fecha del último test
-router.get('/mis-resultados/:test_id/:usuario', async (req, res) => {
+router.get('/mis-resultados/:test_id/:usuario_ignorado', requireAuth, async (req, res) => {
+    const usuario_id = req.user.id;
     try {
         const query = `
             SELECT puntajes_json, fecha 
             FROM siga_test_resultados 
-            WHERE test_id = $1 AND usuario = $2 
+            WHERE test_id = $1 AND usuario_id = $2 
             ORDER BY fecha DESC LIMIT 1
         `;
-        // Ajusta $1 y $2 por ? y ? si estás usando MySQL
-        const result = await db.query(query, [req.params.test_id, req.params.usuario]);
+        const result = await db.query(query, [req.params.test_id, usuario_id]);
         
-        // Manejo compatible con pg y mysql2
         let row = null;
         if (result.rows && result.rows.length > 0) row = result.rows[0];
         else if (Array.isArray(result) && result[0].length > 0) row = result[0][0];
@@ -134,13 +136,15 @@ router.get('/mis-resultados/:test_id/:usuario', async (req, res) => {
     }
 });
 
-// Obtener el historial completo de tests para el panel de administración
+// Obtener el historial completo de tests para el panel de administración (Acceso total global)
 router.get('/admin/historial', async (req, res) => {
     try {
         const query = `
-            SELECT id, usuario, test_id, puntajes_json, fecha 
-            FROM siga_test_resultados 
-            ORDER BY fecha DESC
+            SELECT r.id, r.usuario_id, r.test_id, r.puntajes_json, r.fecha,
+                   COALESCE(u.display_name, u.nombre, u.usuario, 'Usuario') AS usuario_nombre
+            FROM siga_test_resultados r
+            LEFT JOIN usuarios u ON u.id = r.usuario_id
+            ORDER BY r.fecha DESC
         `;
         const result = await db.query(query);
         const rows = result.rows ? result.rows : result[0];
