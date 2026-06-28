@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../config/db');
+const { requireAuth } = require('../middleware/auth');
 
 const {
   enviarEmail,
@@ -18,10 +19,9 @@ const {
 
 async function obtenerUsuario(usuario_id) {
   const r = await pool.query(
-    'SELECT id, usuario, nombre, rol FROM usuarios WHERE id=$1',
+    'SELECT id, usuario, nombre, rol, pareja_id FROM usuarios WHERE id=$1',
     [usuario_id]
   );
-
   return r.rows[0] || null;
 }
 
@@ -36,17 +36,14 @@ async function columnaExiste(tabla, columna) {
      ) AS existe`,
     [tabla, columna]
   );
-
   return !!r.rows[0]?.existe;
 }
 
 function normalizarFecha(value) {
   if (!value) return '';
-
   if (value instanceof Date) {
     return value.toISOString().slice(0, 10);
   }
-
   return String(value).slice(0, 10);
 }
 
@@ -99,14 +96,9 @@ async function notificarMatchesPorEmail(coincidencias) {
   }
 }
 
-router.get('/disponibilidad', async (req, res) => {
-  const { usuario_id } = req.query;
-
-  if (!usuario_id) {
-    return res.status(400).json({
-      error: 'Falta usuario_id'
-    });
-  }
+// GET /api/tiempo/disponibilidad
+router.get('/disponibilidad', requireAuth, async (req, res) => {
+  const usuario_id = req.user.id;
 
   try {
     const usuario = await obtenerUsuario(usuario_id);
@@ -117,37 +109,38 @@ router.get('/disponibilidad', async (req, res) => {
       });
     }
 
-    const sqlAdmin = `
-      SELECT
-        td.*,
-        u.nombre,
-        u.usuario,
-        u.rol,
-        COALESCE(u.display_name,u.nombre,u.usuario) AS display_name,
-        COALESCE(u.color_perfil,'#22d3ee') AS color_perfil
-      FROM tiempo_disponibilidad td
-      JOIN usuarios u ON u.id=td.usuario_id
-      WHERE u.rol IN ('yo','ella')
-      ORDER BY td.fecha ASC, td.hora_inicio ASC
-    `;
+    let r;
 
-    const sqlUser = `
-      SELECT
-        td.*,
-        u.nombre,
-        u.usuario,
-        u.rol,
-        COALESCE(u.display_name,u.nombre,u.usuario) AS display_name,
-        COALESCE(u.color_perfil,'#22d3ee') AS color_perfil
-      FROM tiempo_disponibilidad td
-      JOIN usuarios u ON u.id=td.usuario_id
-      WHERE td.usuario_id=$1
-      ORDER BY td.fecha ASC, td.hora_inicio ASC
-    `;
-
-    const r = usuario.rol === 'admin'
-      ? await pool.query(sqlAdmin)
-      : await pool.query(sqlUser, [usuario_id]);
+    if (usuario.rol === 'admin') {
+      // Si es admin, ve disponibilidades globales del sistema
+      r = await pool.query(`
+        SELECT
+          td.*,
+          u.nombre,
+          u.usuario,
+          u.rol,
+          COALESCE(u.display_name,u.nombre,u.usuario) AS display_name,
+          COALESCE(u.color_perfil,'#22d3ee') AS color_perfil
+        FROM tiempo_disponibilidad td
+        JOIN usuarios u ON u.id=td.usuario_id
+        ORDER BY td.fecha ASC, td.hora_inicio ASC
+      `);
+    } else {
+      // Si es usuario normal, ve solo sus propias disponibilidades en esta ruta
+      r = await pool.query(`
+        SELECT
+          td.*,
+          u.nombre,
+          u.usuario,
+          u.rol,
+          COALESCE(u.display_name,u.nombre,u.usuario) AS display_name,
+          COALESCE(u.color_perfil,'#22d3ee') AS color_perfil
+        FROM tiempo_disponibilidad td
+        JOIN usuarios u ON u.id=td.usuario_id
+        WHERE td.usuario_id=$1
+        ORDER BY td.fecha ASC, td.hora_inicio ASC
+      `, [usuario_id]);
+    }
 
     res.json(r.rows);
 
@@ -158,9 +151,10 @@ router.get('/disponibilidad', async (req, res) => {
   }
 });
 
-router.post('/disponibilidad', async (req, res) => {
+// POST /api/tiempo/disponibilidad
+router.post('/disponibilidad', requireAuth, async (req, res) => {
+  const usuario_id = req.user.id;
   const {
-    usuario_id,
     fecha,
     hora_inicio,
     hora_fin,
@@ -168,7 +162,7 @@ router.post('/disponibilidad', async (req, res) => {
     lugar
   } = req.body;
 
-  if (!usuario_id || !fecha || !hora_inicio || !hora_fin) {
+  if (!fecha || !hora_inicio || !hora_fin) {
     return res.status(400).json({
       error: 'Faltan campos obligatorios'
     });
@@ -229,21 +223,16 @@ router.post('/disponibilidad', async (req, res) => {
   }
 });
 
-router.put('/disponibilidad/:id', async (req, res) => {
+// PUT /api/tiempo/disponibilidad/:id
+router.put('/disponibilidad/:id', requireAuth, async (req, res) => {
+  const usuario_id = req.user.id;
   const {
-    usuario_id,
     fecha,
     hora_inicio,
     hora_fin,
     mensaje,
     lugar
   } = req.body;
-
-  if (!usuario_id) {
-    return res.status(400).json({
-      error: 'Falta usuario_id'
-    });
-  }
 
   if (!fecha || !hora_inicio || !hora_fin) {
     return res.status(400).json({
@@ -345,14 +334,9 @@ router.put('/disponibilidad/:id', async (req, res) => {
   }
 });
 
-router.delete('/disponibilidad/:id', async (req, res) => {
-  const { usuario_id } = req.body;
-
-  if (!usuario_id) {
-    return res.status(400).json({
-      error: 'Falta usuario_id'
-    });
-  }
+// DELETE /api/tiempo/disponibilidad/:id
+router.delete('/disponibilidad/:id', requireAuth, async (req, res) => {
+  const usuario_id = req.user.id;
 
   try {
     const usuario = await obtenerUsuario(usuario_id);
@@ -390,14 +374,9 @@ router.delete('/disponibilidad/:id', async (req, res) => {
   }
 });
 
-router.get('/coincidencias', async (req, res) => {
-  const { usuario_id } = req.query;
-
-  if (!usuario_id) {
-    return res.status(400).json({
-      error: 'Falta usuario_id'
-    });
-  }
+// GET /api/tiempo/coincidencias
+router.get('/coincidencias', requireAuth, async (req, res) => {
+  const usuario_id = req.user.id;
 
   try {
     const usuario = await obtenerUsuario(usuario_id);
@@ -412,17 +391,15 @@ router.get('/coincidencias', async (req, res) => {
     const vigente = `(a.fecha::date + LEAST(a.hora_fin,b.hora_fin)) >= NOW()`;
 
     if (usuario.rol === 'admin') {
+      // Lógica de desarrollo simplificada para el administrador
       const ur = await pool.query(
-        `SELECT id,rol
-         FROM usuarios
-         WHERE rol IN ('yo','ella')
-         ORDER BY id ASC`
+        `SELECT id FROM usuarios WHERE pareja_id IS NOT NULL ORDER BY id ASC LIMIT 2`
       );
 
-      const yo = ur.rows.find(u => u.rol === 'yo');
-      const ella = ur.rows.find(u => u.rol === 'ella');
+      const userA = ur.rows[0];
+      const userB = ur.rows[1];
 
-      if (!yo || !ella) {
+      if (!userA || !userB) {
         return res.json({
           coincidencias: [],
           sin_par: true
@@ -450,7 +427,7 @@ router.get('/coincidencias', async (req, res) => {
          WHERE GREATEST(a.hora_inicio,b.hora_inicio)<LEAST(a.hora_fin,b.hora_fin)
          AND ${vigente}
          ORDER BY a.fecha ASC,inicio_coincidencia ASC`,
-        [yo.id, ella.id]
+        [userA.id, userB.id]
       );
 
       const coincidencias = r.rows.map(x => ({
@@ -472,8 +449,6 @@ router.get('/coincidencias', async (req, res) => {
         }
       }));
 
-      // IMPORTANTE:
-      // Esperamos para que Vercel no corte el proceso.
       await notificarMatchesPorEmail(coincidencias);
 
       return res.json({
@@ -481,23 +456,15 @@ router.get('/coincidencias', async (req, res) => {
       });
     }
 
-    const or = await pool.query(
-      `SELECT id
-       FROM usuarios
-       WHERE id<>$1
-       AND rol IN ('yo','ella')
-       LIMIT 1`,
-      [usuario_id]
-    );
-
-    if (!or.rows.length) {
+    // LÓGICA DINÁMICA DE USUARIO: Encuentra al miembro de la pareja vinculado directamente
+    if (!usuario.pareja_id) {
       return res.json({
         coincidencias: [],
         sin_par: true
       });
     }
 
-    const otro_id = or.rows[0].id;
+    const otro_id = usuario.pareja_id;
 
     const r = await pool.query(
       `SELECT
@@ -547,8 +514,6 @@ router.get('/coincidencias', async (req, res) => {
       }
     }));
 
-    // IMPORTANTE:
-    // Esperamos para que Vercel no corte el proceso.
     await notificarMatchesPorEmail(coincidencias);
 
     res.json({
