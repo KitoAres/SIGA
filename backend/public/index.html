@@ -19,28 +19,65 @@
     <input type="password" id="login-pass" placeholder="Contraseña"/>
     <button class="btn-primary" onclick="doLogin()">Entrar ♡</button>
     <div class="login-error" id="login-error"></div>
+    <p style="text-align:center; margin-top:16px; font-size:0.85rem; color:#aaa;">
+      ¿No tienes cuenta? <a href="#" onclick="showRegisterScreen()" style="color:#e91e63; text-decoration:none; font-weight:500;">Crear una ♡</a>
+    </p>
   </div>
 </div>
-<!-- ====================== REGISTRO MODAL ====================== -->
-<div id="register-screen" style="display: none;">
-  <div class="login-card">
+<!-- ====================== REGISTRO ====================== -->
+<div id="register-screen" style="display:none;">
+  <div class="login-card" style="max-width:460px;">
     <div class="login-logo">S<span>I</span>GA</div>
     <div class="login-sub">Crear nueva cuenta</div>
-    
-    <form id="registerForm">
-      <input type="text" id="reg-nombre" placeholder="Tu nombre completo" required />
-      <input type="email" id="reg-email" placeholder="Correo electrónico" required />
-      <input type="password" id="reg-password" placeholder="Contraseña (mínimo 6 caracteres)" required minlength="6" />
-      
-      <button type="submit" class="btn-primary">Crear Cuenta</button>
-    </form>
-    
-    <div id="register-message" class="login-error" style="color: #4ade80;"></div>
-    
-    <p style="text-align:center; margin-top:15px;">
-      ¿Ya tienes cuenta? 
-      <a href="#" onclick="switchToLogin()" style="color:#e91e63;">Volver al login</a>
-    </p>
+
+    <!-- Paso 1: datos básicos -->
+    <div id="reg-paso-1">
+      <form id="registerForm">
+        <input type="text"     id="reg-nombre"   placeholder="Tu nombre"                      required/>
+        <input type="text"     id="reg-usuario"  placeholder="Nombre de usuario (sin espacios)" required/>
+        <input type="password" id="reg-password" placeholder="Contraseña (mínimo 6 caracteres)" required minlength="6"/>
+        <button type="submit" class="btn-primary" style="margin-top:8px;">Crear cuenta ♡</button>
+      </form>
+      <div id="register-message" style="font-size:0.85rem; margin-top:12px; min-height:20px; text-align:center;"></div>
+      <p style="text-align:center; margin-top:14px; font-size:0.85rem; color:#aaa;">
+        ¿Ya tienes cuenta? <a href="#" onclick="switchToLogin()" style="color:#e91e63; text-decoration:none;">Iniciar sesión</a>
+      </p>
+    </div>
+
+    <!-- Paso 2: código de pareja (aparece después de crear cuenta) -->
+    <div id="reg-paso-2" style="display:none;">
+      <div style="font-size:2rem; margin-bottom:12px;">🔗</div>
+      <p style="color:var(--text-secondary); font-size:0.9rem; line-height:1.6; margin-bottom:20px;">
+        Cuenta creada. Ahora vincúlate con tu pareja.<br>
+        <strong style="color:var(--text-primary);">Opción A:</strong> comparte tu código con ella para que se una a tu espacio.<br>
+        <strong style="color:var(--text-primary);">Opción B:</strong> si ella ya tiene cuenta, ingresa su código.
+      </p>
+
+      <!-- Mi código para compartir -->
+      <div style="background:rgba(180,130,220,0.08); border:1px solid rgba(180,130,220,0.25); border-radius:12px; padding:16px; margin-bottom:16px;">
+        <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:8px;">Tu código de pareja</div>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <code id="mi-codigo-pareja" style="font-size:1.4rem; font-weight:700; color:var(--accent-purple); letter-spacing:0.15em; flex:1;">—</code>
+          <button onclick="copiarCodigoPareja()" class="btn btn-sm" style="flex-shrink:0;">Copiar</button>
+        </div>
+      </div>
+
+      <!-- Ingresar código de la pareja -->
+      <div style="margin-bottom:16px;">
+        <div style="font-size:0.78rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase; letter-spacing:0.08em;">O ingresa el código de tu pareja</div>
+        <div style="display:flex; gap:8px;">
+          <input type="text" id="input-codigo-pareja" placeholder="Ej: A3F7K2" maxlength="6"
+            style="flex:1; background:var(--bg-card2); border:1px solid var(--border); border-radius:8px; padding:11px 14px; color:var(--text-primary); font-family:monospace; font-size:1.1rem; letter-spacing:0.1em; outline:none; text-transform:uppercase;"/>
+          <button onclick="vincularConCodigo()" class="btn-primary" style="width:auto; padding:11px 18px; font-size:0.9rem;">Vincular</button>
+        </div>
+        <div id="vincular-message" style="font-size:0.82rem; margin-top:8px; min-height:18px;"></div>
+      </div>
+
+      <!-- Saltar por ahora -->
+      <button onclick="saltarVinculacion()" style="width:100%; padding:10px; background:none; border:1px solid var(--border); border-radius:8px; color:var(--text-muted); cursor:pointer; font-size:0.85rem; font-family:'DM Sans',sans-serif;">
+        Vincularme después →
+      </button>
+    </div>
   </div>
 </div>
 <!-- ── APP ────────────────────────────────────── -->
@@ -1044,53 +1081,123 @@
 })();
 
   // ====================== REGISTRO ======================
-function showRegisterScreen() {
-  document.getElementById('login-screen').style.display = 'none';
-  document.getElementById('register-screen').style.display = 'flex';
-}
 
-function switchToLogin() {
-  document.getElementById('register-screen').style.display = 'none';
-  document.getElementById('login-screen').style.display = 'flex';
-}
+  // Variable temporal para guardar el usuario recién creado durante el registro
+  let _regNuevoUsuario = null;
 
-document.getElementById('registerForm').addEventListener('submit', async function(e) {
-  e.preventDefault();
-
-  const nombre = document.getElementById('reg-nombre').value.trim();
-  const email = document.getElementById('reg-email').value.trim();
-  const password = document.getElementById('reg-password').value;
-
-  const messageEl = document.getElementById('register-message');
-
-  messageEl.textContent = 'Creando cuenta...';
-  messageEl.style.color = '#4ade80';
-
-  try {
-    const res = await fetch('/api/auth/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ nombre, email, password })
-    });
-
-    const data = await res.json();
-
-    if (data.ok) {
-      messageEl.style.color = '#4ade80';
-      messageEl.textContent = '✅ Cuenta creada! Revisa tu correo para verificarla.';
-      document.getElementById('registerForm').reset();
-    } else {
-      messageEl.style.color = '#f87171';
-      messageEl.textContent = data.error || 'Error al crear cuenta';
-    }
-  } catch (err) {
-    messageEl.style.color = '#f87171';
-    messageEl.textContent = 'Error de conexión';
+  function showRegisterScreen() {
+    document.getElementById('login-screen').style.display    = 'none';
+    document.getElementById('register-screen').style.display = 'flex';
+    // Resetear al paso 1 por si venía del paso 2
+    document.getElementById('reg-paso-1').style.display = 'block';
+    document.getElementById('reg-paso-2').style.display = 'none';
   }
-});
+
+  function switchToLogin() {
+    document.getElementById('register-screen').style.display = 'none';
+    document.getElementById('login-screen').style.display    = 'flex';
+    _regNuevoUsuario = null;
+  }
+
+  // Paso 1: crear cuenta
+  document.getElementById('registerForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const nombre   = document.getElementById('reg-nombre').value.trim();
+    const usuario  = document.getElementById('reg-usuario').value.trim().toLowerCase().replace(/\s+/g,'');
+    const password = document.getElementById('reg-password').value;
+    const msgEl    = document.getElementById('register-message');
+
+    if (!nombre || !usuario || !password) {
+      msgEl.style.color   = '#f87171';
+      msgEl.textContent   = 'Completa todos los campos.';
+      return;
+    }
+
+    msgEl.style.color   = '#aaa';
+    msgEl.textContent   = 'Creando cuenta...';
+
+    try {
+      const res  = await fetch('/api/auth/register', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ nombre, usuario, password })
+      });
+      const data = await res.json();
+
+      if (data.ok) {
+        _regNuevoUsuario = data; // guarda id y codigo_pareja
+        // Mostrar el código de pareja generado
+        document.getElementById('mi-codigo-pareja').textContent = data.codigo_pareja || '—';
+        // Pasar al paso 2
+        document.getElementById('reg-paso-1').style.display = 'none';
+        document.getElementById('reg-paso-2').style.display = 'block';
+      } else {
+        msgEl.style.color = '#f87171';
+        msgEl.textContent = data.error || 'Error al crear cuenta';
+      }
+    } catch {
+      msgEl.style.color = '#f87171';
+      msgEl.textContent = 'Error de conexión';
+    }
+  });
+
+  // Copiar código al portapapeles
+  function copiarCodigoPareja() {
+    const codigo = document.getElementById('mi-codigo-pareja').textContent;
+    navigator.clipboard.writeText(codigo).then(() => {
+      toast('Código copiado 💜');
+    });
+  }
+
+  // Paso 2 opción B: vincular con código de la pareja
+  async function vincularConCodigo() {
+    const codigo  = document.getElementById('input-codigo-pareja').value.trim().toUpperCase();
+    const msgEl   = document.getElementById('vincular-message');
+
+    if (!codigo || codigo.length !== 6) {
+      msgEl.style.color = '#f87171';
+      msgEl.textContent = 'El código debe tener 6 caracteres.';
+      return;
+    }
+
+    if (!_regNuevoUsuario) {
+      msgEl.style.color = '#f87171';
+      msgEl.textContent = 'Error: primero crea tu cuenta.';
+      return;
+    }
+
+    msgEl.style.color = '#aaa';
+    msgEl.textContent = 'Vinculando...';
+
+    try {
+      const res  = await fetch('/api/auth/vincular', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ usuario_id: _regNuevoUsuario.id, codigo_pareja: codigo })
+      });
+      const data = await res.json();
+
+      if (data.ok) {
+        msgEl.style.color = '#4ade80';
+        msgEl.textContent = '✅ ¡Vinculados! Ya pueden usar SIGA juntos.';
+        setTimeout(() => switchToLogin(), 2000);
+      } else {
+        msgEl.style.color = '#f87171';
+        msgEl.textContent = data.error || 'Código incorrecto o ya usado.';
+      }
+    } catch {
+      msgEl.style.color = '#f87171';
+      msgEl.textContent = 'Error de conexión';
+    }
+  }
+
+  // Saltar la vinculación por ahora (la cuenta queda sin pareja, puede vincular desde perfil)
+  function saltarVinculacion() {
+    toast('Puedes vincular tu pareja desde "Mi cuenta" cuando quieras.');
+    switchToLogin();
+  }
 </script>
 
 </body>
 </html>
-
-  
