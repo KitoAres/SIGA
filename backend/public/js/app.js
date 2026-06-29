@@ -1,4 +1,3 @@
-
 'use strict';
 
 // ── ESTADO GLOBAL ──────────────────────────────────────────────
@@ -138,6 +137,7 @@ function formatFechaLarga(d) {
     day: 'numeric'
   });
 }
+
 // ── LOGIN / LOGOUT ─────────────────────────────────────────────
 async function doLogin() {
   const usuario = $('login-user').value.trim();
@@ -169,7 +169,7 @@ async function doLogin() {
       $('login-screen').style.display = 'none';
       $('app').classList.add('visible');
 
-renderUsuarioActual();
+      renderUsuarioActual();
       forzarSeccion('dashboard');
     } else {
       $('login-error').textContent = data.error || 'Credenciales incorrectas.';
@@ -193,6 +193,7 @@ function doLogout() {
   $('login-user').value = '';
   $('login-pass').value = '';
 }
+
 function renderUsuarioActual() {
   if (!state.currentUser) return;
 
@@ -333,6 +334,7 @@ async function loadDashboard() {
   await cargarProgresoGlobal();
   }
 }
+
 function cargarFraseDelDia() {
   const el = $('frase-dia-text');
   if (!el) return;
@@ -457,14 +459,14 @@ function cargarFraseDelDia() {
   const frase = frases[diaDelAno % frases.length];
   el.textContent = frase;
 }
+
 async function cargarAvisoMatchDashboard() {
   const box = $('dashboard-match-alert');
   if (!box) return;
 
   if (!state.currentUser || !state.currentUser.id) return;
 
-  // Evita el parpadeo inicial: si loadDashboard se llama 2 o 3 veces,
-  // no vaciamos el cuadro mientras la API responde.
+  // Evita el parpadeo inicial
   if (cargarAvisoMatchDashboard._loading) return;
   cargarAvisoMatchDashboard._loading = true;
 
@@ -517,7 +519,6 @@ async function cargarAvisoMatchDashboard() {
       }
     }
 
-    // Solo actualiza si cambió. Así ya no aparece/desaparece al inicio.
     if (box.innerHTML.trim() !== html.trim()) {
       box.innerHTML = html;
     }
@@ -525,7 +526,6 @@ async function cargarAvisoMatchDashboard() {
     if (matches.length) mostrarAvisoMatch(matches);
   } catch (err) {
     console.warn('No se pudo cargar aviso de match en dashboard:', err);
-    // Si falla la API, dejamos lo último que había en pantalla.
   } finally {
     cargarAvisoMatchDashboard._loading = false;
   }
@@ -693,8 +693,6 @@ async function loadPromesas() {
   }
 }
 
-
-
 // ── LOAD Carta ───────────────────────────────────────────────────
 
 async function loadCarta() {
@@ -750,6 +748,7 @@ async function abrirCarta(id) {
     // Guardar id para editar después
     document.getElementById('carta-vista').dataset.id = carta.id;
     document.getElementById('carta-vista').dataset.fecha = carta.fecha ? carta.fecha.split('T')[0] : '';
+    
     // Llenar la vista bonita
     document.getElementById('carta-vista-titulo').textContent = carta.titulo || '';
     document.getElementById('carta-vista-fecha').textContent = carta.fecha ? formatDate(carta.fecha) : '';
@@ -772,6 +771,11 @@ async function abrirCarta(id) {
   }
 }
 
+function pasarAEditar() {
+  const id = document.getElementById('carta-vista').dataset.id;
+  if (id) abrirCarta(parseInt(id)); // Recarga los datos en vista
+}
+
 function pasarAEditorCarta() {
   const id = document.getElementById('carta-vista').dataset.id;
   if (!id) return;
@@ -779,7 +783,6 @@ function pasarAEditorCarta() {
   // Tomar los datos que ya están en la vista
   const titulo    = document.getElementById('carta-vista-titulo').textContent;
   const contenido = document.getElementById('carta-vista-contenido').textContent;
-  // La fecha la sacamos del dataset si la guardamos, o la dejamos vacía
   const fechaRaw  = document.getElementById('carta-vista').dataset.fecha || '';
 
   document.getElementById('carta-editor-id').value      = id;
@@ -839,68 +842,6 @@ function cerrarEditorCarta() {
   document.getElementById('carta-editor').style.display = 'none';
   document.getElementById('carta-vista').style.display  = 'none';
   document.getElementById('carta-lista').style.display  = 'block';
-}
-
-function cerrarVistaCarta() {
-  cerrarEditorCarta();
-}
-
-
-
-function pasarAEditar() {
-  const id = document.getElementById('carta-vista').dataset.id;
-  if (id) abrirCarta(parseInt(id));
-}
-
-async function guardarCarta() {
-  const token = localStorage.getItem('siga_token') || '';
-  const id = document.getElementById('carta-editor-id').value;
-  const body = {
-    titulo:    document.getElementById('carta-titulo-input').value,
-    contenido: document.getElementById('carta-contenido-input').value,
-    fecha:     document.getElementById('carta-fecha-input').value || null
-  };
-
-  const url    = id ? `/api/cartas/${id}` : '/api/cartas';
-  const method = id ? 'PUT' : 'POST';
-
-  await fetch(url, {
-    method,
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-    body: JSON.stringify(body)
-  });
-
-  cerrarEditorCarta();
-  loadCarta();
-}
-
-async function eliminarCarta() {
-  const id = document.getElementById('carta-editor-id').value;
-  if (!id) return;
-  if (!confirm('¿Borrar esta carta?')) return;
-  const token = localStorage.getItem('siga_token') || '';
-  await fetch(`/api/cartas/${id}`, {
-    method: 'DELETE',
-    headers: { Authorization: `Bearer ${token}` }
-  });
-  cerrarEditorCarta();
-  loadCarta();
-}
-
-function nuevaCarta() {
-  document.getElementById('carta-titulo-input').value = '';
-  document.getElementById('carta-fecha-input').value = '';
-  document.getElementById('carta-contenido-input').value = '';
-  document.getElementById('carta-editor-id').value = '';
-  document.getElementById('carta-lista').style.display = 'none';
-  document.getElementById('carta-vista').style.display = 'none';
-  document.getElementById('carta-editor').style.display = 'block';
-}
-
-function cerrarEditorCarta() {
-  document.getElementById('carta-editor').style.display = 'none';
-  document.getElementById('carta-vista').style.display = 'none';
-  document.getElementById('carta-lista').style.display = 'block';
 }
 
 function cerrarVistaCarta() {
@@ -1195,12 +1136,7 @@ async function deleteItem(type, id) {
     toast('Error al eliminar.');
   }
 }
-const modalPerfil = $('modal-perfil');
-if (modalPerfil) {
-  modalPerfil.addEventListener('click', function(e) {
-    if (e.target === this) closeModal('modal-perfil');
-  });
-}
+
 // ── CAJITA ESPECIAL ───────────────────────────────────────────
 async function loadCajita() {
   const container = $('list-cajita');
@@ -1277,6 +1213,7 @@ function editarCajitaSeguro(id) {
     normalizarFecha(item.fecha)
   );
 }
+
 // ── MI CUENTA / PERFIL MODIFICADO ─────────────────────────────────────────
 async function abrirModalPerfil() {
   if (!state.currentUser || !state.currentUser.id) {
@@ -1336,7 +1273,6 @@ async function vincularDesdePerfil() {
   msgEl.textContent = 'Vinculando...';
 
   try {
-    // Reutiliza tu endpoint existente del backend pasando el ID activo del estado
     const res = await fetch('/api/auth/vincular', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -1350,7 +1286,6 @@ async function vincularDesdePerfil() {
       
       setTimeout(() => {
         closeModal('modal-perfil');
-        // Forzar recarga limpia para inicializar la interfaz nueva y vacía de la relación
         window.location.reload();
       }, 2000);
     } else {
@@ -1363,6 +1298,7 @@ async function vincularDesdePerfil() {
     msgEl.textContent = 'Error de conexión.';
   }
 }
+
 // ── PREGUNTA FINAL ────────────────────────────────────────────
 function escapeNo(e) {
   const btnNo = $('btn-no');
@@ -1448,15 +1384,6 @@ function emptyState(icon, msg) {
   `;
 }
 
-// ── CERRAR MODALES CON ESC ────────────────────────────────────
-document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') {
-    if ($('modal-crud') && $('modal-crud').classList.contains('open')) closeModal('modal-crud');
-    if ($('modal-tiempo') && $('modal-tiempo').classList.contains('open')) closeModal('modal-tiempo');
-    if ($('modal-perfil') && $('modal-perfil').classList.contains('open')) closeModal('modal-perfil');
-  }
-});
-
 // Cerrar modal al click fuera
 const modalCrud = $('modal-crud');
 if (modalCrud) {
@@ -1465,12 +1392,13 @@ if (modalCrud) {
   });
 }
 
-const modalPerfil2 = $('modal-perfil');
-if (modalPerfil2) {
-  modalPerfil2.addEventListener('click', function(e) {
+const modalPerfil = $('modal-perfil');
+if (modalPerfil) {
+  modalPerfil.addEventListener('click', function(e) {
     if (e.target === this) closeModal('modal-perfil');
   });
 }
+
 /* ============================================================
    MÓDULO: Nuestro Tiempo
    ============================================================ */
@@ -1571,6 +1499,7 @@ function mostrarAvisoMatch(coincidencias) {
     setTimeout(() => aviso.remove(), 400);
   }, 4200);
 }
+
 // Estado del módulo tiempo (separado del estado global de SIGA)
 const tiempoState = {
   usuarioId:   null,
@@ -1689,6 +1618,7 @@ function initTiempoPage() {
 }
 
 window.initTiempoPage = initTiempoPage;
+
 // ── Tabs ───────────────────────────────────────────────────────
 function switchTiempoTab(tab) {
   tiempoState.tabActual = tab;
@@ -1806,13 +1736,6 @@ async function loadCoincidencias() {
 
       const otraLugar = textoLugar(otra.lugar);
       const otraMensaje = textoMensaje(otra.mensaje);
-
-      /*
-        Para Francin, si algún día inspeccionas este código:
-        esta tarjeta no está hecha para presionarte.
-        Está hecha para que, cuando ambos coincidan, no tengan que adivinar.
-        Si aparece un lugar o un mensaje, es solo una invitación suave. ♡
-      */
 
       if (c.hay_coincidencia) {
         return `
@@ -1984,14 +1907,13 @@ document.addEventListener('keydown', function(e) {
   }
 });
 
-// Cerrar modal tiempo con Esc (ya cubierto por el listener global arriba)
-// Pero agregamos el overlay click
 const mTiempo = $('modal-tiempo');
 if (mTiempo) {
   mTiempo.addEventListener('click', function(e) {
     if (e.target === this) closeModal('modal-tiempo');
   });
 }
+
 /* ======================================================
    FIX DEFINITIVO SIGA - MOSTRAR SECCIONES
    ====================================================== */
@@ -2078,16 +2000,6 @@ document.addEventListener('click', function(e) {
   else if (texto.includes('Mi espacio')) forzarSeccion('espacio');
   else if (texto.includes('Modo avión') || texto.includes('Modo calma')) forzarSeccion('calma');
 });
-
-// Desactivado: este refuerzo recargaba el dashboard al inicio y causaba parpadeo del cuadro de match.
-// setTimeout(function() {
-//   const login = document.getElementById('login-screen');
-//   const app = document.getElementById('app');
-//
-//   if ((login && login.style.display === 'none') || (app && app.classList.contains('visible'))) {
-//     forzarSeccion('dashboard');
-//   }
-// }, 500);
 
 /* ======================================================
    FIX FINAAAL: ¿NOS VEMOS? SIN MINI-LOGIN
@@ -2194,13 +2106,6 @@ setTimeout(function() {
 
 /* ======================================================
    MODO AVIÓN
-   Antes: Modo calma.
-   Ahora: un solo estado simple.
-   - Solo usuarios normales pueden activarlo.
-   - Solo quien lo activó puede desactivarlo.
-   - Admin/otro usuario solo mira el aviso.
-   estaria chido activar una funcion extra para desactivar para el admin
-   pero da paja. 
    ====================================================== */
 
 let calmaActual = null;
