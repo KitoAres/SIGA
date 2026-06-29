@@ -308,30 +308,86 @@ function closeSidebar() {
   $('sidebar-overlay').classList.remove('open');
 }
 
-// ── DASHBOARD DINÁMICO CORREGIDO ───────────────────────────────
-async function loadDashboard() {
-  // Inyectar el saludo con el nombre real del usuario conectado
-  if (state.currentUser) {
+// ── DASHBOARD DINÁMICO CORREGIDO Y CON ANIVERSARIO ─────────────
+
+function comprobarAniversario(diasTotales) {
+  const hoy = new Date();
+  const diaMes = hoy.getDate();
+  
+  // Condición: Si es día 8 del mes (tu fecha) o múltiplo exacto de 30 días
+  const esAniversario = (diaMes === 8) || (diasTotales > 0 && diasTotales % 30 === 0);
+
+  if (esAniversario) {
+    document.body.classList.add('siga-aniversario');
+
     const welcomeMsg = $('welcome-msg');
     if (welcomeMsg) {
-      const nombreUsuario = state.currentUser.display_name || state.currentUser.nombre || state.currentUser.usuario;
-      welcomeMsg.textContent = `¡Hola de nuevo, ${nombreUsuario}! ♡`;
+      const frasesAniversario = [
+        `¡Feliz cumple mes! Gracias por estos ${diasTotales} días. 💖`,
+        `¡Hoy celebramos ${diasTotales} días de historia! ✨`,
+        `¡Feliz día 8! Sigue sumando bonito. 🌸`,
+        `Una pequeña marca de tiempo para celebrar. ¡Feliz mes! 💘`,
+        `¡Feliz aniversario! Ya son ${diasTotales} días compartidos. 💌`
+      ];
+      welcomeMsg.textContent = frasesAniversario[Math.floor(Math.random() * frasesAniversario.length)];
+    }
+
+    // Pequeña lluvia de corazones automática al cargar el dashboard en aniversario
+    if (!comprobarAniversario.yaLanzo) {
+      const emojis = ['💖', '✨', '🌸', '💌', '💘'];
+      for (let i = 0; i < 20; i++) {
+        const p = document.createElement('div');
+        p.className = 'mision-confetti';
+        p.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+        p.style.left = Math.random() * 100 + 'vw';
+        p.style.animationDelay = (Math.random() * 0.4) + 's';
+        p.style.fontSize = (18 + Math.random() * 14) + 'px';
+        document.body.appendChild(p);
+        setTimeout(() => p.remove(), 1800);
+      }
+      comprobarAniversario.yaLanzo = true;
+    }
+  } else {
+    document.body.classList.remove('siga-aniversario');
+    // Saludo normal si no es aniversario
+    if (state.currentUser) {
+      const welcomeMsg = $('welcome-msg');
+      if (welcomeMsg) {
+        const nombreUsuario = state.currentUser.display_name || state.currentUser.nombre || state.currentUser.usuario;
+        welcomeMsg.textContent = `¡Hola de nuevo, ${nombreUsuario}! ♡`;
+      }
     }
   }
+}
 
+async function loadDashboard() {
   try {
     const data = await api('GET', '/api/dashboard/resumen');
+    
+    // Inyectamos el valor al HTML
     $('stat-dias').textContent      = data.dias      ?? '—';
     $('stat-recuerdos').textContent = data.recuerdos ?? '—';
     $('stat-citas').textContent     = data.citas     ?? '—';
     $('stat-razones').textContent   = data.razones   ?? '—';
+    
+    // Verificar si hoy toca celebración
+    comprobarAniversario(data.dias || 0);
+    
   } catch {
-    // Silencioso si no hay DB aún
+    // Fallback: Si falla la base de datos, ponemos saludo normal
+    if (state.currentUser) {
+      const welcomeMsg = $('welcome-msg');
+      if (welcomeMsg) {
+        const nombreUsuario = state.currentUser.display_name || state.currentUser.nombre || state.currentUser.usuario;
+        welcomeMsg.textContent = `¡Hola de nuevo, ${nombreUsuario}! ♡`;
+      }
+    }
   }
+
   cargarFraseDelDia();
   await cargarAvisoMatchDashboard();
   if (typeof cargarProgresoGlobal === 'function') {
-  await cargarProgresoGlobal();
+    await cargarProgresoGlobal();
   }
 }
 
