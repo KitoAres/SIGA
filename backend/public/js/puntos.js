@@ -4,8 +4,8 @@
   
   async function cargarProgresoGlobal(){
     try{
-      // CORRECCIÓN: Usamos la función api() para inyectar las cabeceras de autorización 
-      // y apuntamos a la ruta real unificada en el backend (/api/eventos/progreso)
+      // CORRECCIÓN: Se usa el helper api() para transmitir las cabeceras de autorización
+      // y se apunta a la ruta real unificada en el backend (/api/eventos/progreso)
       const data = await api('GET', '/api/eventos/progreso?x=' + Date.now());
       
       if(!data || data.error) return;
