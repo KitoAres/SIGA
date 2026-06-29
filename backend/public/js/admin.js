@@ -105,6 +105,7 @@
       razones: 'Razones',
       promesas: 'Promesas',
       cajita: 'Cajita',
+      cartas: 'Cartas',
       calma: 'Modo calma',
       espacio: 'Mi espacio',
       accesos: 'Accesos',
@@ -123,6 +124,7 @@
       razones: '💜',
       promesas: '🤍',
       cajita: '🎁',
+      cartas: '✉️',
       calma: '🌙',
       espacio: '🌿',
       accesos: '👤',
@@ -239,14 +241,14 @@
           </div>
 
           <div class="admin-box">
-            <div class="admin-box-title">Accesos recientes <span class="admin-muted">(sin admin)</span></div>
+            <div class="admin-box-title">Accesos recientes <span class="admin-muted">(Panel General)</span></div>
             <div id="admin-accesos-recientes" class="admin-list-mini">Cargando...</div>
           </div>
         </div>
 
         <div class="admin-two-cols" style="margin-top:20px;">
           <div class="admin-box">
-            <div class="admin-box-title">Actividad por usuario <span class="admin-muted">(sin admin)</span></div>
+            <div class="admin-box-title">Actividad por usuario <span class="admin-muted">(Panel General)</span></div>
             <div id="admin-actividad-usuarios" class="admin-list-mini">Cargando...</div>
           </div>
 
@@ -297,13 +299,31 @@
       }
 
       if (qs('admin-resumen-grid')) {
+        // Añadimos accesos directos al catálogo de inspección para no pisar consola
         const cards = [
           sourceCard('todos', resumen.registros || 0, resumen.puntos || 0),
-          sourceCard('accesos', accesos.resumen?.ultimos_30 || 0, 0),
+          sourceCard('accesos', accesos.resumen?.total || 0, 0),
+          sourceCard('cartas', 0, 0),
+          sourceCard('recuerdos', 0, 0),
+          sourceCard('playlist', 0, 0),
+          sourceCard('razones', 0, 0),
+          sourceCard('promesas', 0, 0),
+          sourceCard('cajita', 0, 0),
           ...fuentes.map(f => sourceCard(f.fuente, f.total, f.puntos))
         ];
 
-        qs('admin-resumen-grid').innerHTML = cards.join('');
+        // Remover duplicados visuales limpiando fuentes mapeadas fijas
+        const unicas = [];
+        const vistas = new Set();
+        cards.forEach(html => {
+          const match = html.match(/onclick="abrirDetalleAdmin\('(.+?)'\)"/);
+          if (match && !vistas.has(match[1])) {
+            vistas.add(match[1]);
+            unicas.push(html);
+          }
+        });
+
+        qs('admin-resumen-grid').innerHTML = unicas.join('');
       }
 
       if (qs('admin-puntos-recientes')) {
@@ -315,7 +335,7 @@
       }
 
       if (qs('admin-accesos-recientes')) {
-        const lista = accesos.recientes || [];
+        const lista = accesos.recentes || [];
 
         if (!lista.length) {
           qs('admin-accesos-recientes').innerHTML = '<div class="admin-empty">Sin accesos registrados.</div>';
@@ -340,7 +360,6 @@
         }
       }
 
-      // ¡AQUÍ ES DONDE SE PEGA! Se ejecuta inmediatamente después de cargar lo anterior
       await loadAnalisisAdmin();
 
     } catch (err) {
@@ -367,6 +386,20 @@
       esc(item.usuario_nombre || item.usuario || 'Usuario'),
       `${esc(item.rol || '—')} · ${fmt(item.creado_en)}${item.ip ? ' · IP ' + esc(item.ip) : ''}`,
       item.id ? `<button class="btn-admin-danger" onclick="eliminarAccesoAdmin(${item.id})">Eliminar</button>` : ''
+    );
+  }
+
+  // NUEVO: Renderizado polimórfico para inspeccionar las tablas de contenido de las parejas sin usar terminal SQL
+  function renderItemParejaGenerico(item, tipo) {
+    const titulo = esc(item.titulo || item.texto || item.contenido || 'Contenido sin título');
+    const subtitulo = esc(item.descripcion || item.frase || item.artista || 'Sin descripción extra');
+    const creador = esc(item.creador_nombre || 'Desconocido');
+    
+    return miniRow(
+      iconFuente(tipo),
+      `<strong>[${creador}]</strong> ${titulo}`,
+      `${subtitulo} ${item.fecha ? ' · ' + fmt(item.fecha) : ''}`,
+      ''
     );
   }
 
@@ -414,6 +447,10 @@
       }
 
       const items = data.items || [];
+      const tipoColeccion = data.tipo || fuente;
+
+      // Verificamos si es una inspección de tablas de parejas
+      const esTablaPareja = ['recuerdos', 'playlist', 'razones', 'promesas', 'cajita', 'cartas'].includes(tipoColeccion);
 
       box.innerHTML = `
         <div class="admin-detalle-header">
@@ -425,10 +462,14 @@
           </div>
         </div>
 
-        <div class="admin-detalle-list">
+        <div class="admin-detalle-list" style="max-height:450px; overflow-y:auto;">
           ${
             items.length
-              ? items.map(item => data.tipo === 'accesos' ? renderAccesoItem(item) : renderPuntoItem(item)).join('')
+              ? items.map(item => {
+                  if (tipoColeccion === 'accesos') return renderAccesoItem(item);
+                  if (esTablaPareja) return renderItemParejaGenerico(item, tipoColeccion);
+                  return renderPuntoItem(item);
+                }).join('')
               : '<div class="admin-empty">No hay registros.</div>'
           }
         </div>
