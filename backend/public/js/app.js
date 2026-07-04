@@ -673,27 +673,67 @@ function estadoLabel(e) {
 async function loadPlaylist() {
   const container = $('list-playlist');
   container.innerHTML = '<div style="color:var(--text-muted);padding:20px;">Cargando...</div>';
+  
   try {
     const items = await api('GET', '/api/playlist');
+    
     if (!items.length) {
       container.innerHTML = emptyState('🎵', 'La playlist está vacía.');
       return;
     }
-    container.innerHTML = items.map(s => `
-      <div class="song-item">
-        <div class="song-icon">♪</div>
-        <div class="song-info">
-          <div class="song-title">${esc(s.titulo)}</div>
-          <div class="song-artist">${esc(s.artista || '')}</div>
-          ${s.frase ? `<div class="song-frase">"${esc(s.frase)}"</div>` : ''}
+    
+    container.innerHTML = items.map(s => {
+      let reproductorHTML = '';
+      
+      // Los botones de editar y eliminar
+      let accionesHTML = `
+        <button class="btn btn-sm btn-edit" onclick="openModal('playlist', ${s.id}, '${esc(s.titulo)}', '${esc(s.artista||'')}', '${esc(s.enlace||'')}', '${esc(s.frase||'')}')">✎</button>
+        <button class="btn btn-sm btn-delete" onclick="deleteItem('playlist', ${s.id})">✕</button>
+      `;
+
+      if (s.enlace) {
+        // Magia: Si el link es de SoundCloud, creamos el iframe nativo
+        if (s.enlace.includes('soundcloud.com')) {
+          // Codificamos la URL para que el iframe de SoundCloud la entienda
+          const urlCodificada = encodeURIComponent(s.enlace);
+          
+          // Color %23b482dc es tu color morado pastel de SIGA
+          reproductorHTML = `
+            <div style="margin-top: 12px; width: 100%; border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05);">
+              <iframe width="100%" height="120" scrolling="no" frameborder="no" allow="autoplay" 
+                src="https://w.soundcloud.com/player/?url=${urlCodificada}&color=%23b482dc&auto_play=false&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false">
+              </iframe>
+            </div>
+          `;
+        } else {
+          // Fallback: Si es un link de Spotify, YouTube u otra cosa, mostramos el botón clásico
+          reproductorHTML = `<a class="btn-play" href="${esc(s.enlace)}" target="_blank" rel="noopener" style="margin-top: 5px; display: inline-block;">▶ Abrir enlace</a>`;
+        }
+      }
+
+      // Dibujamos la tarjeta de la canción adaptada para que el reproductor quepa bien
+      return `
+        <div class="song-item" style="display:flex; flex-direction:column; gap:8px;">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+            <div style="display:flex; gap:12px;">
+              <div class="song-icon">♪</div>
+              <div class="song-info">
+                <div class="song-title">${esc(s.titulo)}</div>
+                <div class="song-artist">${esc(s.artista || '')}</div>
+                ${s.frase ? `<div class="song-frase" style="margin-top:4px; font-style:italic;">"${esc(s.frase)}"</div>` : ''}
+              </div>
+            </div>
+            <div style="display:flex; gap:6px; align-items:center;">
+              ${accionesHTML}
+            </div>
+          </div>
+          
+          <!-- Si hay un reproductor o botón, lo metemos justo debajo -->
+          ${reproductorHTML}
         </div>
-        <div style="display:flex;gap:6px;align-items:center;">
-          ${s.enlace ? `<a class="btn-play" href="${esc(s.enlace)}" target="_blank" rel="noopener">▶ Escuchar</a>` : ''}
-          <button class="btn btn-sm btn-edit" onclick="openModal('playlist', ${s.id}, '${esc(s.titulo)}', '${esc(s.artista||'')}', '${esc(s.enlace||'')}', '${esc(s.frase||'')}')">✎</button>
-          <button class="btn btn-sm btn-delete" onclick="deleteItem('playlist', ${s.id})">✕</button>
-        </div>
-      </div>
-    `).join('');
+      `;
+    }).join('');
+    
   } catch {
     container.innerHTML = '<div style="color:var(--danger);padding:20px;">Error al cargar playlist.</div>';
   }
