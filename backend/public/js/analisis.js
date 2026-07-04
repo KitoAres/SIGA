@@ -1,6 +1,6 @@
 let testActual = null;
 
-// Extraemos el usuario correctamente del sessionStorage (donde app.js lo guarda)
+// Extraemos el usuario y el token correctamente del sessionStorage
 let usuarioLogueado = 'Franco';
 try {
     const userObj = JSON.parse(sessionStorage.getItem('siga_user'));
@@ -37,7 +37,6 @@ function cargarCatalogoTests() {
 // Validación de los 30 días
 async function validarYEmpezarTest(test_id) {
     try {
-        // CORRECCIÓN: Buscamos en sessionStorage
         const token = sessionStorage.getItem('siga_token');
         const res = await fetch(`/api/analisis/mis-resultados/${test_id}/${usuarioLogueado}`, {
             method: 'GET',
@@ -45,7 +44,13 @@ async function validarYEmpezarTest(test_id) {
                 'Authorization': `Bearer ${token}`
             }
         });
-        const data = await res.json();
+        
+        // Si responde 401 o 500, capturamos el JSON sin romper la página
+        const text = await res.text();
+        let data = {};
+        if (text) {
+            data = JSON.parse(text);
+        }
 
         if (!data.error && data.fecha) {
             const fechaUltimoTest = new Date(data.fecha);
@@ -53,14 +58,14 @@ async function validarYEmpezarTest(test_id) {
             const diasPasados = Math.floor((fechaActual - fechaUltimoTest) / (1000 * 60 * 60 * 24));
 
             if (diasPasados < 30) {
-                alert(`Deben pasar al menos 30 días para volver a evaluar este constructo y evitar sesgos. Te faltan ${30 - diasPasados} días we.`);
+                alert(`Deben pasar al menos 30 días para volver a evaluar este constructo y evitar sesgos. Te faltan ${30 - diasPasados} días.`);
                 return;
             }
         }
         
         iniciarTest(test_id);
     } catch (err) {
-        console.error(err);
+        console.error("Error validando test previo:", err);
         iniciarTest(test_id); // Si falla la red, igual lo dejamos pasar
     }
 }
@@ -102,10 +107,11 @@ function cerrarTest() {
     document.getElementById('lista-tests-disponibles').style.display = 'grid';
 }
 
+// ── AQUÍ ESTÁ LA CORRECCIÓN PRINCIPAL (Detector de errores del servidor) ──
 async function procesarTest() {
     const form = document.getElementById('formulario-test-activo');
     if(!form.checkValidity()) {
-        alert("Por favor, responde todas las preguntas we.");
+        alert("Por favor, responde todas las preguntas.");
         return;
     }
 
@@ -125,21 +131,35 @@ async function procesarTest() {
         puntajes[dim] = (puntajes[dim] / conteo[dim]).toFixed(2);
     }
 
-    // CORRECCIÓN: Buscamos en sessionStorage
     const token = sessionStorage.getItem('siga_token');
 
-    await fetch('/api/analisis/guardar', {
-        method: 'POST',
-        headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ usuario: usuarioLogueado, test_id: testActual.id, puntajes })
-    });
+    try {
+        const peticion = await fetch('/api/analisis/guardar', {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ usuario: usuarioLogueado, test_id: testActual.id, puntajes })
+        });
 
-    alert("¡Test guardado en la BD! Tienes 30 días de cooldown.");
-    cerrarTest();
-    switchAnalisisTab('mis');
+        const respuesta = await peticion.json();
+
+        // Si el backend lanzó error (401, 500, etc.) lo mostramos en pantalla
+        if (!peticion.ok || respuesta.error) {
+            alert("Error del servidor: " + (respuesta.error || "No se pudo guardar en la BD."));
+            return; 
+        }
+
+        // Si llegó hasta aquí, el guardado fue exitoso y real.
+        alert("¡Test guardado en la BD! Tienes 30 días de cooldown.");
+        cerrarTest();
+        switchAnalisisTab('mis');
+
+    } catch (error) {
+        console.error(error);
+        alert("Error de conexión: No se pudo contactar al servidor.");
+    }
 }
 
 async function cargarMisResultados() {
@@ -149,7 +169,6 @@ async function cargarMisResultados() {
     container.innerHTML = "<p>Procesando perfil individual...</p>";
 
     try {
-        // CORRECCIÓN: Buscamos en sessionStorage
         const token = sessionStorage.getItem('siga_token');
         const res = await fetch(`/api/analisis/mis-resultados/sternberg/${usuarioLogueado}`, {
             method: 'GET',
@@ -221,7 +240,6 @@ async function cargarMisResultados() {
 
 async function cargarNuestrosResultados() {
     try {
-        // CORRECCIÓN: Buscamos en sessionStorage
         const token = sessionStorage.getItem('siga_token');
         const res = await fetch(`/api/analisis/conjunto/sternberg`, {
             method: 'GET',
