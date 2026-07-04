@@ -691,10 +691,18 @@ async function loadPlaylist() {
       `;
 
       if (s.enlace) {
-        // 1. Detectar si es YouTube (Normal, Music o Shorts)
-        if (s.enlace.includes('youtube.com') || s.enlace.includes('youtu.be')) {
+        // 1. Detectar si es SPOTIFY
+        if (s.enlace.includes('spotify.com/track/')) {
+          const trackId = s.enlace.split('track/')[1].split('?')[0];
+          reproductorHTML = `
+            <div style="margin-top: 12px; width: 100%;">
+              <iframe style="border-radius:8px" src="https://open.spotify.com/embed/track/${trackId}?utm_source=generator&theme=0" width="100%" height="80" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>
+            </div>
+          `;
+        }
+        // 2. Detectar si es YOUTUBE
+        else if (s.enlace.includes('youtube.com') || s.enlace.includes('youtu.be')) {
           let videoId = '';
-          // Esta fórmula mágica extrae el ID exacto sin importar cómo copiaste el link
           const match = s.enlace.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|shorts\/))((\w|-){11})/);
           
           if (match && match[1]) {
@@ -703,13 +711,13 @@ async function loadPlaylist() {
               <div style="margin-top: 12px; width: 100%; border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05);">
                 <iframe width="100%" height="180" src="https://www.youtube.com/embed/${videoId}?rel=0" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
               </div>
-              <a href="${esc(s.enlace)}" target="_blank" rel="noopener" style="display:inline-block; font-size: 0.8rem; color: #aaa; margin-top: 6px; text-decoration: none;">
-                ↗ Abrir en YouTube si no reproduce
+              <a href="${esc(s.enlace)}" target="_blank" rel="noopener" style="display:inline-block; font-size: 0.75rem; color: #888; margin-top: 6px; text-decoration: none;">
+                ↗ Si el artista bloqueó el video (Error 153), ábrelo aquí
               </a>
             `;
           }
         } 
-        // 2. Detectar si es SoundCloud
+        // 3. Detectar si es SOUNDCLOUD
         else if (s.enlace.includes('soundcloud.com')) {
           const urlCodificada = encodeURIComponent(s.enlace);
           reproductorHTML = `
@@ -720,9 +728,9 @@ async function loadPlaylist() {
             </div>
           `;
         } 
-        // 3. Fallback para Spotify u otros enlaces
+        // 4. Fallback para cualquier otra cosa
         else {
-          reproductorHTML = `<a class="btn-play" href="${esc(s.enlace)}" target="_blank" rel="noopener" style="margin-top: 5px; display: inline-block;">▶ Abrir enlace externo</a>`;
+          reproductorHTML = `<a class="btn-play" href="${esc(s.enlace)}" target="_blank" rel="noopener" style="margin-top: 8px; display: inline-block;">▶ Abrir enlace</a>`;
         }
       }
 
