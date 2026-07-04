@@ -691,20 +691,21 @@ async function loadPlaylist() {
       `;
 
       if (s.enlace) {
-        // 1. Detectar si es YouTube
+        // 1. Detectar si es YouTube (Normal, Music o Shorts)
         if (s.enlace.includes('youtube.com') || s.enlace.includes('youtu.be')) {
           let videoId = '';
-          if (s.enlace.includes('youtu.be/')) {
-              videoId = s.enlace.split('youtu.be/')[1].split('?')[0];
-          } else if (s.enlace.includes('watch?v=')) {
-              videoId = s.enlace.split('watch?v=')[1].split('&')[0];
-          }
+          // Esta fórmula mágica extrae el ID exacto sin importar cómo copiaste el link
+          const match = s.enlace.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|shorts\/))((\w|-){11})/);
           
-          if (videoId) {
+          if (match && match[1]) {
+            videoId = match[1];
             reproductorHTML = `
               <div style="margin-top: 12px; width: 100%; border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05);">
-                <iframe width="100%" height="180" src="https://www.youtube.com/embed/${videoId}?rel=0&color=white" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                <iframe width="100%" height="180" src="https://www.youtube.com/embed/${videoId}?rel=0" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
               </div>
+              <a href="${esc(s.enlace)}" target="_blank" rel="noopener" style="display:inline-block; font-size: 0.8rem; color: #aaa; margin-top: 6px; text-decoration: none;">
+                ↗ Abrir en YouTube si no reproduce
+              </a>
             `;
           }
         } 
@@ -719,9 +720,9 @@ async function loadPlaylist() {
             </div>
           `;
         } 
-        // 3. Fallback para cualquier otro link
+        // 3. Fallback para Spotify u otros enlaces
         else {
-          reproductorHTML = `<a class="btn-play" href="${esc(s.enlace)}" target="_blank" rel="noopener" style="margin-top: 5px; display: inline-block;">▶ Abrir enlace</a>`;
+          reproductorHTML = `<a class="btn-play" href="${esc(s.enlace)}" target="_blank" rel="noopener" style="margin-top: 5px; display: inline-block;">▶ Abrir enlace externo</a>`;
         }
       }
 
