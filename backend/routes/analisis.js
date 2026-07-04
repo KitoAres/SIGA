@@ -82,10 +82,10 @@ router.post('/guardar', requireAuth, async (req, res) => {
         res.json({ success: true, message: "Resultados guardados con éxito" });
     } catch (error) {
         console.error("Error al guardar test:", error);
-        res.status(500).json({ error: "Error interno de base de datos" });
+        // AQUÍ ESTÁ EL CAMBIO: Ahora enviará el error real de PostgreSQL al frontend
+        res.status(500).json({ error: error.message });
     }
 });
-
 // Obtener los datos de la pareja para que SiGy los analice
 router.get('/conjunto/:test_id', requireAuth, async (req, res) => {
     const { test_id } = req.params;
