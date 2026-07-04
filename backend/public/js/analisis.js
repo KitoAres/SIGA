@@ -1,5 +1,15 @@
 let testActual = null;
-const usuarioLogueado = localStorage.getItem('siga_user') || 'Franco'; // O 'Francin', depende tu auth
+
+// Extraemos el usuario correctamente del sessionStorage (donde app.js lo guarda)
+let usuarioLogueado = 'Franco';
+try {
+    const userObj = JSON.parse(sessionStorage.getItem('siga_user'));
+    if (userObj && userObj.usuario) {
+        usuarioLogueado = userObj.usuario;
+    }
+} catch(e) {
+    console.warn("No se pudo parsear siga_user");
+}
 
 function switchAnalisisTab(tab) {
     document.querySelectorAll('.tiempo-tab').forEach(b => b.classList.remove('active'));
@@ -27,7 +37,8 @@ function cargarCatalogoTests() {
 // Validación de los 30 días
 async function validarYEmpezarTest(test_id) {
     try {
-        const token = localStorage.getItem('token') || localStorage.getItem('siga_token');
+        // CORRECCIÓN: Buscamos en sessionStorage
+        const token = sessionStorage.getItem('siga_token');
         const res = await fetch(`/api/analisis/mis-resultados/${test_id}/${usuarioLogueado}`, {
             method: 'GET',
             headers: {
@@ -36,7 +47,7 @@ async function validarYEmpezarTest(test_id) {
         });
         const data = await res.json();
 
-        if (!data.error) {
+        if (!data.error && data.fecha) {
             const fechaUltimoTest = new Date(data.fecha);
             const fechaActual = new Date();
             const diasPasados = Math.floor((fechaActual - fechaUltimoTest) / (1000 * 60 * 60 * 24));
@@ -114,7 +125,8 @@ async function procesarTest() {
         puntajes[dim] = (puntajes[dim] / conteo[dim]).toFixed(2);
     }
 
-    const token = localStorage.getItem('token') || localStorage.getItem('siga_token');
+    // CORRECCIÓN: Buscamos en sessionStorage
+    const token = sessionStorage.getItem('siga_token');
 
     await fetch('/api/analisis/guardar', {
         method: 'POST',
@@ -130,7 +142,6 @@ async function procesarTest() {
     switchAnalisisTab('mis');
 }
 
-// Nueva función: Muestra los resultados individuales
 async function cargarMisResultados() {
     const container = document.getElementById('mis-resultados-container');
     if (!container) return;
@@ -138,7 +149,8 @@ async function cargarMisResultados() {
     container.innerHTML = "<p>Procesando perfil individual...</p>";
 
     try {
-        const token = localStorage.getItem('token') || localStorage.getItem('siga_token');
+        // CORRECCIÓN: Buscamos en sessionStorage
+        const token = sessionStorage.getItem('siga_token');
         const res = await fetch(`/api/analisis/mis-resultados/sternberg/${usuarioLogueado}`, {
             method: 'GET',
             headers: {
@@ -155,7 +167,6 @@ async function cargarMisResultados() {
         const pts = typeof data.puntajes_json === 'string' ? JSON.parse(data.puntajes_json) : data.puntajes_json;
         const fecha = new Date(data.fecha).toLocaleDateString('es-BO');
 
-        // Matriz de interpretación cualitativa (Modelo puramente conductual)
         const obtenerAnalisisCualitativo = (dimension, valor) => {
             const val = parseFloat(valor);
             if (val < 2.50) {
@@ -210,7 +221,8 @@ async function cargarMisResultados() {
 
 async function cargarNuestrosResultados() {
     try {
-        const token = localStorage.getItem('token') || localStorage.getItem('siga_token');
+        // CORRECCIÓN: Buscamos en sessionStorage
+        const token = sessionStorage.getItem('siga_token');
         const res = await fetch(`/api/analisis/conjunto/sternberg`, {
             method: 'GET',
             headers: {
@@ -229,8 +241,8 @@ async function cargarNuestrosResultados() {
 
         const user1 = datos[0];
         const user2 = datos[1];
-        const pts1 = JSON.parse(user1.puntajes_json);
-        const pts2 = JSON.parse(user2.puntajes_json);
+        const pts1 = typeof user1.puntajes_json === 'string' ? JSON.parse(user1.puntajes_json) : user1.puntajes_json;
+        const pts2 = typeof user2.puntajes_json === 'string' ? JSON.parse(user2.puntajes_json) : user2.puntajes_json;
 
         let brechaPasion = Math.abs(pts1["Pasión"] - pts2["Pasión"]);
         let analisisSiGy = "Métricas estables. El vínculo muestra simetría, sigan manteniendo las misiones actuales.";
