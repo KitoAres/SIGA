@@ -685,19 +685,32 @@ async function loadPlaylist() {
     container.innerHTML = items.map(s => {
       let reproductorHTML = '';
       
-      // Los botones de editar y eliminar
       let accionesHTML = `
         <button class="btn btn-sm btn-edit" onclick="openModal('playlist', ${s.id}, '${esc(s.titulo)}', '${esc(s.artista||'')}', '${esc(s.enlace||'')}', '${esc(s.frase||'')}')">✎</button>
         <button class="btn btn-sm btn-delete" onclick="deleteItem('playlist', ${s.id})">✕</button>
       `;
 
       if (s.enlace) {
-        // Magia: Si el link es de SoundCloud, creamos el iframe nativo
-        if (s.enlace.includes('soundcloud.com')) {
-          // Codificamos la URL para que el iframe de SoundCloud la entienda
-          const urlCodificada = encodeURIComponent(s.enlace);
+        // 1. Detectar si es YouTube
+        if (s.enlace.includes('youtube.com') || s.enlace.includes('youtu.be')) {
+          let videoId = '';
+          if (s.enlace.includes('youtu.be/')) {
+              videoId = s.enlace.split('youtu.be/')[1].split('?')[0];
+          } else if (s.enlace.includes('watch?v=')) {
+              videoId = s.enlace.split('watch?v=')[1].split('&')[0];
+          }
           
-          // Color %23b482dc es tu color morado pastel de SIGA
+          if (videoId) {
+            reproductorHTML = `
+              <div style="margin-top: 12px; width: 100%; border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05);">
+                <iframe width="100%" height="180" src="https://www.youtube.com/embed/${videoId}?rel=0&color=white" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+              </div>
+            `;
+          }
+        } 
+        // 2. Detectar si es SoundCloud
+        else if (s.enlace.includes('soundcloud.com')) {
+          const urlCodificada = encodeURIComponent(s.enlace);
           reproductorHTML = `
             <div style="margin-top: 12px; width: 100%; border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05);">
               <iframe width="100%" height="120" scrolling="no" frameborder="no" allow="autoplay" 
@@ -705,13 +718,13 @@ async function loadPlaylist() {
               </iframe>
             </div>
           `;
-        } else {
-          // Fallback: Si es un link de Spotify, YouTube u otra cosa, mostramos el botón clásico
+        } 
+        // 3. Fallback para cualquier otro link
+        else {
           reproductorHTML = `<a class="btn-play" href="${esc(s.enlace)}" target="_blank" rel="noopener" style="margin-top: 5px; display: inline-block;">▶ Abrir enlace</a>`;
         }
       }
 
-      // Dibujamos la tarjeta de la canción adaptada para que el reproductor quepa bien
       return `
         <div class="song-item" style="display:flex; flex-direction:column; gap:8px;">
           <div style="display:flex; justify-content:space-between; align-items:flex-start;">
@@ -727,8 +740,6 @@ async function loadPlaylist() {
               ${accionesHTML}
             </div>
           </div>
-          
-          <!-- Si hay un reproductor o botón, lo metemos justo debajo -->
           ${reproductorHTML}
         </div>
       `;
@@ -738,7 +749,6 @@ async function loadPlaylist() {
     container.innerHTML = '<div style="color:var(--danger);padding:20px;">Error al cargar playlist.</div>';
   }
 }
-
 // ── RAZONES ───────────────────────────────────────────────────
 async function loadRazones() {
   const container = $('list-razones');
