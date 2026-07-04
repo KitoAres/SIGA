@@ -27,7 +27,13 @@ function cargarCatalogoTests() {
 // Validación de los 30 días
 async function validarYEmpezarTest(test_id) {
     try {
-        const res = await fetch(`/api/analisis/mis-resultados/${test_id}/${usuarioLogueado}`);
+        const token = localStorage.getItem('token') || localStorage.getItem('siga_token');
+        const res = await fetch(`/api/analisis/mis-resultados/${test_id}/${usuarioLogueado}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
         const data = await res.json();
 
         if (!data.error) {
@@ -108,9 +114,14 @@ async function procesarTest() {
         puntajes[dim] = (puntajes[dim] / conteo[dim]).toFixed(2);
     }
 
+    const token = localStorage.getItem('token') || localStorage.getItem('siga_token');
+
     await fetch('/api/analisis/guardar', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({ usuario: usuarioLogueado, test_id: testActual.id, puntajes })
     });
 
@@ -127,7 +138,13 @@ async function cargarMisResultados() {
     container.innerHTML = "<p>Procesando perfil individual...</p>";
 
     try {
-        const res = await fetch(`/api/analisis/mis-resultados/sternberg/${usuarioLogueado}`);
+        const token = localStorage.getItem('token') || localStorage.getItem('siga_token');
+        const res = await fetch(`/api/analisis/mis-resultados/sternberg/${usuarioLogueado}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
         const data = await res.json();
 
         if (data.error) {
@@ -193,7 +210,13 @@ async function cargarMisResultados() {
 
 async function cargarNuestrosResultados() {
     try {
-        const res = await fetch(`/api/analisis/conjunto/sternberg`);
+        const token = localStorage.getItem('token') || localStorage.getItem('siga_token');
+        const res = await fetch(`/api/analisis/conjunto/sternberg`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
         const datos = await res.json();
 
         if(!datos || datos.length < 2) {
