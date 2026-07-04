@@ -74,15 +74,20 @@ router.get('/test/:id', (req, res) => {
 
 // Guardar resultados en BD (Usa el ID seguro del token)
 router.post('/guardar', requireAuth, async (req, res) => {
-    const { test_id, puntajes } = req.body;
+    // 1. Agregamos "usuario" para recibirlo del frontend
+    const { test_id, puntajes, usuario } = req.body; 
     const usuario_id = req.user.id;
+    
     try {
-        const query = 'INSERT INTO siga_test_resultados (usuario_id, test_id, puntajes_json) VALUES ($1, $2, $3)';
-        await db.query(query, [usuario_id, test_id, JSON.stringify(puntajes)]);
+        // 2. Agregamos "usuario" a la consulta SQL y un $4 para su valor
+        const query = 'INSERT INTO siga_test_resultados (usuario_id, usuario, test_id, puntajes_json) VALUES ($1, $2, $3, $4)';
+        
+        // 3. Pasamos la variable "usuario" en el arreglo de datos
+        await db.query(query, [usuario_id, usuario, test_id, JSON.stringify(puntajes)]);
+        
         res.json({ success: true, message: "Resultados guardados con éxito" });
     } catch (error) {
         console.error("Error al guardar test:", error);
-        // AQUÍ ESTÁ EL CAMBIO: Ahora enviará el error real de PostgreSQL al frontend
         res.status(500).json({ error: error.message });
     }
 });
