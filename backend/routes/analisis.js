@@ -9,7 +9,7 @@ const testsDisponibles = {
         id: "sternberg",
         titulo: "Escala Triangular del Amor de Sternberg",
         descripcion: "Evalúa Intimidad, Pasión y Compromiso. Usa la escala del 1 (Nunca) al 5 (Siempre).",
-        dimensions: ["Intimidad", "Compromiso", "Pasión"],
+        dimensiones: ["Intimidad", "Compromiso", "Pasión"],
         preguntas: [
             // --- INTIMIDAD (21 ítems) ---
             { id: 1, txt: "Tengo una relación cariñosa con mi pareja.", dim: "Intimidad" },
