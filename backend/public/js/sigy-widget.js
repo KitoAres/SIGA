@@ -35,6 +35,7 @@
   const mensajitosIdle = [
     // Funcionales / SIGA
     'Puedo ayudarte a decirlo sin reclamo.',
+    'El Admin quiere que sepas que te ama y te extraña mucho.',
     'Quizás no necesitas una conversación enorme. Quizás solo necesitas decir: "¿nos vemos?"',
     'Si quieres verla, puedes invitarla. La respuesta ya no depende de ti.',
     'Una invitación no es una exigencia.',
