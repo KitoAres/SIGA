@@ -635,38 +635,36 @@ async function loadCitas() {
   container.innerHTML = '<div style="color:var(--text-muted);padding:20px;">Cargando...</div>';
   try {
     const items = await api('GET', '/api/citas');
+    
     if (!items.length) {
       container.innerHTML = emptyState('📅', 'Aún no hay citas planeadas.');
-      return;
-    }
-    container.innerHTML = items.map(c => `
-      <div class="item-card">
-        <div class="item-header">
-          <div>
-            <div class="item-title">${esc(c.titulo)}</div>
-            <div class="item-meta">📍 ${esc(c.lugar || '')} · ${formatDate(c.fecha)}</div>
+    } else {
+      container.innerHTML = items.map(c => `
+        <div class="item-card">
+          <div class="item-header">
+            <div>
+              <div class="item-title">${esc(c.titulo)}</div>
+              <div class="item-meta">📍 ${esc(c.lugar || '')} · ${formatDate(c.fecha)}</div>
+            </div>
+            <span class="badge ${badgeClass(c.estado)}">${estadoLabel(c.estado)}</span>
           </div>
-          <span class="badge ${badgeClass(c.estado)}">${estadoLabel(c.estado)}</span>
+          <p class="item-desc">${esc(c.descripcion || '')}</p>
+          <div class="item-actions">
+            <button class="btn btn-sm btn-edit" onclick="openModal('citas', ${c.id}, '${esc(c.titulo)}', '${esc(c.lugar||'')}', '${esc(c.descripcion||'')}', '${c.fecha ? c.fecha.split('T')[0] : ''}', '${c.estado}')">Editar</button>
+            <button class="btn btn-sm btn-delete" onclick="deleteItem('citas', ${c.id})">Eliminar</button>
+          </div>
         </div>
-        <p class="item-desc">${esc(c.descripcion || '')}</p>
-        <div class="item-actions">
-          <button class="btn btn-sm btn-edit" onclick="openModal('citas', ${c.id}, '${esc(c.titulo)}', '${esc(c.lugar||'')}', '${esc(c.descripcion||'')}', '${c.fecha ? c.fecha.split('T')[0] : ''}', '${c.estado}')">Editar</button>
-          <button class="btn btn-sm btn-delete" onclick="deleteItem('citas', ${c.id})">Eliminar</button>
-        </div>
-      </div>
-    `).join('');
+      `).join('');
+    }
+
+    // MAGIA: Aquí inyectamos el nuevo buzón directamente debajo de las citas
+    if (typeof cargarBuzonCitas === 'function') {
+      await cargarBuzonCitas();
+    }
+
   } catch {
     container.innerHTML = '<div style="color:var(--danger);padding:20px;">Error al cargar citas.</div>';
   }
-}
-
-function badgeClass(estado) {
-  if (estado === 'cumplida') return 'badge-done';
-  if (estado === 'cancelada') return 'badge-canceled';
-  return 'badge-pending';
-}
-function estadoLabel(e) {
-  return { pendiente: 'Pendiente', cumplida: 'Cumplida', cancelada: 'Cancelada' }[e] || e;
 }
 
 // ── PLAYLIST ──────────────────────────────────────────────────
@@ -2554,11 +2552,7 @@ async function cargarBuzonCitas() {
 }
 
 // Interceptamos la carga de Citas para inyectar el buzón debajo
-const loadCitasOriginal = loadCitas;
-window.loadCitas = async function() {
-  await loadCitasOriginal(); 
-  await cargarBuzonCitas(); 
-};
+
 
 // Crear nueva propuesta
 function abrirModalPropuesta() {
