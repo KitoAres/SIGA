@@ -2493,3 +2493,103 @@ function editarRecuerdoSeguro(id) {
 
   window.mostrarPanelAdminSiCorresponde = mostrarPanelAdminSiCorresponde;
 })();
+
+
+/* ============================================================
+   NUEVO MÓDULO: SOLICITUDES Y PROPUESTAS DE CITAS
+   ============================================================ */
+
+async function cargarBuzonCitas() {
+  const container = document.getElementById('list-citas'); // Reutilizamos tu contenedor de citas
+  if (!container) return;
+
+  try {
+    const req = await api('GET', '/api/citas/propuestas/todas');
+    if (!req || req.length === 0) {
+      container.innerHTML += `<div style="margin-top:30px; padding:20px; background:rgba(255,255,255,0.05); border-radius:10px; text-align:center;">
+        <h3>Buzón de Solicitudes 💌</h3>
+        <p style="color:#aaa; font-size:0.9rem;">No hay solicitudes de citas pendientes.</p>
+        <button class="btn-save" style="margin-top:10px;" onclick="abrirModalPropuesta()">Proponer una Cita</button>
+      </div>`;
+      return;
+    }
+
+    let html = `<div style="margin-top:30px; padding-top:20px; border-top:1px solid rgba(255,255,255,0.1);">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+        <h3 style="color:#fff;">Buzón de Solicitudes 💌</h3>
+        <button class="btn-save btn-sm" onclick="abrirModalPropuesta()">+ Nueva Propuesta</button>
+      </div>`;
+
+    req.forEach(p => {
+      let colorEstado = p.estado === 'pendiente' ? '#ffca28' : p.estado === 'aceptada' ? '#4ade80' : p.estado === 'rechazada' ? '#f87171' : '#60a5fa';
+      
+      html += `
+        <div style="background:rgba(0,0,0,0.3); border-left:4px solid ${colorEstado}; padding:15px; border-radius:8px; margin-bottom:10px;">
+          <div style="display:flex; justify-content:space-between;">
+            <strong style="color:#fff; font-size:1.1rem;">${esc(p.titulo)}</strong>
+            <span style="color:${colorEstado}; text-transform:uppercase; font-size:0.75rem; font-weight:bold;">${p.estado}</span>
+          </div>
+          <div style="color:#aaa; font-size:0.85rem; margin-top:5px;">
+            📅 ${p.fecha ? p.fecha.split('T')[0] : 'Sin fecha'} a las ⏰ ${p.hora ? p.hora.substring(0,5) : ''}<br>
+            👤 Propuesto por: ${p.remitente_nombre || 'Pareja'}
+          </div>
+          <p style="color:#ddd; font-size:0.9rem; margin-top:8px;">${esc(p.descripcion)}</p>
+          ${p.ultimo_mensaje ? `<div style="margin-top:8px; padding:8px; background:rgba(255,255,255,0.05); border-radius:5px; font-size:0.85rem; font-style:italic;">💬 Nota: ${esc(p.ultimo_mensaje)}</div>` : ''}
+          
+          <div style="margin-top:12px; display:flex; gap:8px;">
+            <button class="btn btn-sm" style="background:#4ade80; color:#000;" onclick="responderPropuesta(${p.id}, 'aceptada')">Aceptar</button>
+            <button class="btn btn-sm" style="background:#60a5fa; color:#000;" onclick="responderPropuesta(${p.id}, 'reagendada')">Reagendar</button>
+            <button class="btn btn-sm" style="background:#f87171; color:#000;" onclick="responderPropuesta(${p.id}, 'rechazada')">Rechazar</button>
+          </div>
+        </div>
+      `;
+    });
+
+    html += `</div>`;
+    container.innerHTML += html; // Lo pegamos debajo de las citas normales
+
+  } catch (e) {
+    console.error("Error al cargar buzón", e);
+  }
+}
+
+// Interceptamos la carga de Citas para inyectar el buzón debajo
+const loadCitasOriginal = loadCitas;
+window.loadCitas = async function() {
+  await loadCitasOriginal(); 
+  await cargarBuzonCitas(); 
+};
+
+// Crear nueva propuesta
+function abrirModalPropuesta() {
+  const titulo = prompt("¿Qué quieres hacer en la cita? (Ej: Ir al cine)");
+  if(!titulo) return;
+  const descripcion = prompt("Detalles de la cita:");
+  const fecha = prompt("¿Qué fecha sugieres? (Formato AAAA-MM-DD)");
+  const hora = prompt("¿A qué hora? (Formato HH:MM)");
+
+  if(titulo && fecha && hora) {
+    api('POST', '/api/citas/propuestas/nueva', { titulo, descripcion, fecha, hora }).then(() => {
+      toast("Propuesta enviada ♡");
+      loadCitas();
+    });
+  }
+}
+
+// Responder propuesta
+function responderPropuesta(id, estado) {
+  let mensaje = prompt("Puedes dejar un mensaje opcional:");
+  let body = { estado, mensaje };
+
+  if (estado === 'reagendada') {
+    body.fecha = prompt("Nueva fecha sugerida (AAAA-MM-DD):");
+    body.hora = prompt("Nueva hora sugerida (HH:MM):");
+    if(!body.fecha || !body.hora) return toast("Debes ingresar fecha y hora para reagendar.");
+  }
+
+  api('PUT', `/api/citas/propuestas/${id}/responder`, body).then(() => {
+    toast(`Propuesta ${estado}`);
+    loadCitas();
+  });
+}
+
