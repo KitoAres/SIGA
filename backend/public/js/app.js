@@ -55,7 +55,6 @@ async function api(method, url, body) {
     data = text ? JSON.parse(text) : {};
   } catch (err) {
     console.error('RESPUESTA NO JSON DEL SERVIDOR:', text);
-
     throw new Error(
       'Servidor respondió HTML/texto. Status ' + res.status + '. Respuesta: ' + text.slice(0, 120)
     );
@@ -75,15 +74,12 @@ async function api(method, url, body) {
 
 function normalizarFecha(fecha) {
   if (!fecha) return '';
-
   if (typeof fecha === 'string' && fecha.includes('T')) {
     return fecha.split('T')[0];
   }
-
   if (typeof fecha === 'string') {
     return fecha.substring(0, 10);
   }
-
   return '';
 }
 
@@ -103,17 +99,13 @@ function formatDate(d) {
 
 function formatFechaCorta(d) {
   const fecha = normalizarFecha(d);
-
   if (!fecha) {
     return { dia: '♡', mes: 'MATCH', texto: 'Fecha por revisar' };
   }
-
   const date = new Date(fecha + 'T12:00:00');
-
   if (isNaN(date.getTime())) {
     return { dia: '♡', mes: 'MATCH', texto: 'Fecha por revisar' };
   }
-
   return {
     dia: date.getDate(),
     mes: date.toLocaleDateString('es-BO', { month: 'short' }).toUpperCase(),
@@ -123,13 +115,9 @@ function formatFechaCorta(d) {
 
 function formatFechaLarga(d) {
   const fecha = normalizarFecha(d);
-
   if (!fecha) return 'Fecha por revisar';
-
   const date = new Date(fecha + 'T12:00:00');
-
   if (isNaN(date.getTime())) return 'Fecha por revisar';
-
   return date.toLocaleDateString('es-BO', {
     weekday: 'long',
     year: 'numeric',
@@ -176,7 +164,6 @@ async function doLogin() {
     }
   } catch (err) {
     console.error('ERROR LOGIN FRONTEND:', err);
-
     $('login-error').textContent =
       'Error real: ' + (err.message || 'No se pudo conectar con el servidor.');
   }
@@ -597,39 +584,38 @@ async function loadRecuerdos() {
       container.innerHTML = emptyState('🌸', 'Aún no hay recuerdos guardados.');
       return;
     }
-     window.recuerdosCache = items;
-container.innerHTML = items.map(r => `
-  <div class="item-card recuerdo-card">
-    ${r.imagen_url ? `
-      <div class="recuerdo-img-wrap">
-        <img src="${esc(r.imagen_url)}" alt="${esc(r.titulo)}" class="recuerdo-img">
+    window.recuerdosCache = items;
+    container.innerHTML = items.map(r => `
+      <div class="item-card recuerdo-card">
+        ${r.imagen_url ? `
+          <div class="recuerdo-img-wrap">
+            <img src="${esc(r.imagen_url)}" alt="${esc(r.titulo)}" class="recuerdo-img">
+          </div>
+        ` : ''}
+
+        <div class="item-header">
+          <div class="item-title">${esc(r.titulo)}</div>
+          <div class="item-meta">${formatDate(r.fecha)}</div>
+        </div>
+
+        <p class="item-desc">${esc(r.descripcion)}</p>
+
+        ${r.enlace_url ? `
+          <a class="btn-link-recuerdo" href="${esc(r.enlace_url)}" target="_blank" rel="noopener">
+            Abrir algo especial ♡
+          </a>
+        ` : ''}
+
+        <button class="btn btn-sm btn-edit" onclick="editarRecuerdoSeguro(${r.id})">Editar</button>
+        <button class="btn btn-sm btn-delete" onclick="deleteItem('recuerdos', ${r.id})">Eliminar</button>
       </div>
-    ` : ''}
-
-    <div class="item-header">
-      <div class="item-title">${esc(r.titulo)}</div>
-      <div class="item-meta">${formatDate(r.fecha)}</div>
-    </div>
-
-    <p class="item-desc">${esc(r.descripcion)}</p>
-
-    ${r.enlace_url ? `
-      <a class="btn-link-recuerdo" href="${esc(r.enlace_url)}" target="_blank" rel="noopener">
-        Abrir algo especial ♡
-      </a>
-    ` : ''}
-
-<button class="btn btn-sm btn-edit" onclick="editarRecuerdoSeguro(${r.id})">Editar</button>
-      <button class="btn btn-sm btn-delete" onclick="deleteItem('recuerdos', ${r.id})">Eliminar</button>
-    </div>
-  </div>
-`).join('');
+    `).join('');
   } catch {
     container.innerHTML = '<div style="color:var(--danger);padding:20px;">Error al cargar recuerdos.</div>';
   }
 }
 
-// ── CITAS ─────────────────────────────────────────────────────
+// ── CITAS (CON BUZÓN INTEGRADO) ────────────────────────────────────────────────
 async function loadCitas() {
   const container = $('list-citas');
   container.innerHTML = '<div style="color:var(--text-muted);padding:20px;">Cargando...</div>';
@@ -637,28 +623,25 @@ async function loadCitas() {
     const items = await api('GET', '/api/citas');
     if (!items.length) {
       container.innerHTML = emptyState('📅', 'Aún no hay citas planeadas.');
-      return;
-    }
-    container.innerHTML = items.map(c => `
-      <div class="item-card">
-        <div class="item-header">
-          <div>
-            <div class="item-title">${esc(c.titulo)}</div>
-            <div class="item-meta">📍 ${esc(c.lugar || '')} · ${formatDate(c.fecha)}</div>
+    } else {
+      container.innerHTML = items.map(c => `
+        <div class="item-card">
+          <div class="item-header">
+            <div>
+              <div class="item-title">${esc(c.titulo)}</div>
+              <div class="item-meta">📍 ${esc(c.lugar || '')} · ${formatDate(c.fecha)}</div>
+            </div>
+            <span class="badge ${(c.estado === 'cumplida') ? 'badge-cumplida' : (c.estado === 'cancelada') ? 'badge-cancelada' : 'badge-pendiente'}">${(c.estado || 'pendiente').toUpperCase()}</span>
           </div>
-          <span class="badge ${badgeClass(c.estado)}">${estadoLabel(c.estado)}</span>
+          <p class="item-desc">${esc(c.descripcion || '')}</p>
+          <div class="item-actions">
+            <button class="btn btn-sm btn-edit" onclick="openModal('citas', ${c.id}, '${esc(c.titulo)}', '${esc(c.lugar||'')}', '${esc(c.descripcion||'')}', '${c.fecha ? c.fecha.split('T')[0] : ''}', '${c.estado}')">Editar</button>
+            <button class="btn btn-sm btn-delete" onclick="deleteItem('citas', ${c.id})">Eliminar</button>
+          </div>
         </div>
-        <p class="item-desc">${esc(c.descripcion || '')}</p>
-        <div class="item-actions">
-          <button class="btn btn-sm btn-edit" onclick="openModal('citas', ${c.id}, '${esc(c.titulo)}', '${esc(c.lugar||'')}', '${esc(c.descripcion||'')}', '${c.fecha ? c.fecha.split('T')[0] : ''}', '${c.estado}')">Editar</button>
-          <button class="btn btn-sm btn-delete" onclick="deleteItem('citas', ${c.id})">Eliminar</button>
-        </div>
-      </div>
-    `).join('');
-  } catch {
-    container.innerHTML = '<div style="color:var(--danger);padding:20px;">Error al cargar citas.</div>';
-  }
-}
+      `).join('');
+    }
+    
     // MAGIA: Aquí inyectamos el nuevo buzón directamente debajo de las citas
     if (typeof cargarBuzonCitas === 'function') {
       await cargarBuzonCitas();
@@ -758,6 +741,7 @@ async function loadPlaylist() {
     container.innerHTML = '<div style="color:var(--danger);padding:20px;">Error al cargar playlist.</div>';
   }
 }
+
 // ── RAZONES ───────────────────────────────────────────────────
 async function loadRazones() {
   const container = $('list-razones');
@@ -809,7 +793,6 @@ async function loadPromesas() {
 }
 
 // ── LOAD Carta ───────────────────────────────────────────────────
-
 async function loadCarta() {
   const contenedor = document.getElementById('carta-lista');
   if (!contenedor) return;
@@ -860,23 +843,19 @@ async function abrirCarta(id) {
     const carta = await api('GET', '/api/cartas/' + id);
     if (!carta) return;
 
-    // Guardar id para editar después
     document.getElementById('carta-vista').dataset.id = carta.id;
     document.getElementById('carta-vista').dataset.fecha = carta.fecha ? carta.fecha.split('T')[0] : '';
     
-    // Llenar la vista bonita
     document.getElementById('carta-vista-titulo').textContent = carta.titulo || '';
     document.getElementById('carta-vista-fecha').textContent = carta.fecha ? formatDate(carta.fecha) : '';
     document.getElementById('carta-vista-contenido').textContent = carta.contenido || '';
 
-    // Mostrar botón editar solo si corresponde
     const rol = state?.currentUser?.rol || '';
     const btnEditar = document.getElementById('carta-btn-editar-vista');
     if (btnEditar) {
       btnEditar.style.display = (rol === 'yo' || rol === 'admin') ? 'inline-flex' : 'none';
     }
 
-    // Siempre mostrar vista bonita primero
     document.getElementById('carta-lista').style.display = 'none';
     document.getElementById('carta-editor').style.display = 'none';
     document.getElementById('carta-vista').style.display = 'block';
@@ -888,14 +867,13 @@ async function abrirCarta(id) {
 
 function pasarAEditar() {
   const id = document.getElementById('carta-vista').dataset.id;
-  if (id) abrirCarta(parseInt(id)); // Recarga los datos en vista
+  if (id) abrirCarta(parseInt(id));
 }
 
 function pasarAEditorCarta() {
   const id = document.getElementById('carta-vista').dataset.id;
   if (!id) return;
 
-  // Tomar los datos que ya están en la vista
   const titulo    = document.getElementById('carta-vista-titulo').textContent;
   const contenido = document.getElementById('carta-vista-contenido').textContent;
   const fechaRaw  = document.getElementById('carta-vista').dataset.fecha || '';
@@ -1133,7 +1111,7 @@ async function saveModal() {
       lugar: val('f-lugar'),
       descripcion: val('f-descripcion'),
       fecha: val('f-fecha'),
-      estado: val('f-estado')
+      estado: val('f-estado') || 'pendiente'
     };
 
     if (!body.titulo) {
@@ -1373,7 +1351,6 @@ async function abrirModalPerfil() {
   }
 }
 
-// Nueva función para ejecutar la vinculación activa desde el perfil abierto
 async function vincularDesdePerfil() {
   const codigo = $('perfil-input-codigo').value.trim().toUpperCase();
   const msgEl  = $('perfil-vincular-message');
@@ -1436,15 +1413,15 @@ function escapeNo(e) {
   const margen = 40;
 
   const posiciones = [
-    { x: 0, y: 0 },                                                // arriba izquierda
-    { x: zonaW - noW, y: 0 },                                      // arriba derecha
-    { x: 0, y: zonaH - noH },                                      // abajo izquierda
-    { x: zonaW - noW, y: zonaH - noH },                            // abajo derecha
-    { x: Math.floor((zonaW - noW) / 2), y: 0 },                    // arriba centro
-    { x: Math.floor((zonaW - noW) / 2), y: zonaH - noH },          // abajo centro
-    { x: 0, y: Math.floor((zonaH - noH) / 2) },                    // medio izquierda
-    { x: zonaW - noW, y: Math.floor((zonaH - noH) / 2) },          // medio derecha
-    { x: Math.floor((zonaW - noW) / 2), y: Math.floor((zonaH - noH) / 2) } // centro
+    { x: 0, y: 0 },
+    { x: zonaW - noW, y: 0 },
+    { x: 0, y: zonaH - noH },
+    { x: zonaW - noW, y: zonaH - noH },
+    { x: Math.floor((zonaW - noW) / 2), y: 0 },
+    { x: Math.floor((zonaW - noW) / 2), y: zonaH - noH },
+    { x: 0, y: Math.floor((zonaH - noH) / 2) },
+    { x: zonaW - noW, y: Math.floor((zonaH - noH) / 2) },
+    { x: Math.floor((zonaW - noW) / 2), y: Math.floor((zonaH - noH) / 2) }
   ];
 
   const posicionesSeguras = posiciones.filter(pos => {
@@ -1453,7 +1430,6 @@ function escapeNo(e) {
       pos.x + noW > siX - margen &&
       pos.y < siY + siH + margen &&
       pos.y + noH > siY - margen;
-
     return !choca;
   });
 
@@ -1615,16 +1591,14 @@ function mostrarAvisoMatch(coincidencias) {
   }, 4200);
 }
 
-// Estado del módulo tiempo (separado del estado global de SIGA)
 const tiempoState = {
   usuarioId:   null,
   nombre:      null,
-  usuarioSlug: null,  // 'yo' | 'ella'
+  usuarioSlug: null,
   editandoId:  null,
   tabActual:   'mis',
 };
 
-// ── Selección de usuario en el mini-login ──────────────────────
 function seleccionarTiempoUser(slug) {
   tiempoState.usuarioSlug = slug;
   document.querySelectorAll('.tiempo-user-btn').forEach(b => b.classList.remove('selected'));
@@ -1634,7 +1608,6 @@ function seleccionarTiempoUser(slug) {
   if (passEl) { passEl.focus(); }
 }
 
-// ── Login del módulo ───────────────────────────────────────────
 async function loginTiempo() {
   const slug     = tiempoState.usuarioSlug;
   const contrasena = $('t-pass') ? $('t-pass').value.trim() : '';
@@ -1657,27 +1630,23 @@ async function loginTiempo() {
       if (errEl) errEl.textContent = data.error || 'Credenciales incorrectas.';
       return;
     }
-    // Login exitoso
+    
     sessionStorage.setItem('siga_token', data.token);
 
     tiempoState.usuarioId   = data.usuario_id;
     tiempoState.nombre      = data.nombre;
     tiempoState.usuarioSlug = slug;
 
-    // Mostrar panel, ocultar login
     const loginWrap = $('tiempo-login-wrap');
     const panel     = $('tiempo-panel');
     if (loginWrap) loginWrap.style.display = 'none';
     if (panel)     panel.classList.add('active');
 
-    // Actualizar badge
     const badge = $('tiempo-badge-nombre');
     if (badge) badge.textContent = data.nombre || slug;
 
-    // Limpiar contraseña
     if ($('t-pass')) $('t-pass').value = '';
 
-    // Cargar datos
     await loadDisponibilidades();
     await loadCoincidencias();
   } catch {
@@ -1686,7 +1655,6 @@ async function loginTiempo() {
 }
 
 function logoutTiempo() {
-  // Ya no usamos mini-login. Salir de "¿Nos vemos?" vuelve al dashboard.
   navigateTo('dashboard');
 }
 
@@ -1734,7 +1702,6 @@ function initTiempoPage() {
 
 window.initTiempoPage = initTiempoPage;
 
-// ── Tabs ───────────────────────────────────────────────────────
 function switchTiempoTab(tab) {
   tiempoState.tabActual = tab;
 
@@ -1749,7 +1716,6 @@ function switchTiempoTab(tab) {
   if (tab === 'coincidencias') loadCoincidencias();
 }
 
-// ── Cargar mis disponibilidades ────────────────────────────────
 async function loadDisponibilidades() {
   const container = $('list-disponibilidades');
   if (!container || !tiempoState.usuarioId) return;
@@ -1798,7 +1764,6 @@ async function loadDisponibilidades() {
   }
 }
 
-// ── Cargar coincidencias ───────────────────────────────────────
 async function loadCoincidencias() {
   const container = $('list-coincidencias');
   if (!container || !tiempoState.usuarioId) return;
@@ -1834,7 +1799,6 @@ async function loadCoincidencias() {
       return;
     }
 
-    // Si hay al menos un match, avisar con sonido y mensaje.
     mostrarAvisoMatch(coincidencias);
 
     container.innerHTML = coincidencias.map(c => {
@@ -1923,7 +1887,6 @@ async function loadCoincidencias() {
   }
 }
 
-// ── Modal disponibilidad ───────────────────────────────────────
 function openModalTiempo() {
   tiempoState.editandoId = null;
   const titleEl = $('modal-tiempo-title');
@@ -2003,22 +1966,15 @@ async function eliminarDisponibilidad(id) {
   }
 }
 
-// ── Formatear hora HH:MM:SS → HH:MM ───────────────────────────
 function formatHora(h) {
   if (!h) return '';
   return String(h).substring(0, 5);
 }
 
-// ── Enter en login de tiempo ───────────────────────────────────
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Enter') {
     const passEl = $('t-pass');
     if (passEl && document.activeElement === passEl) loginTiempo();
-    if ($('modal-tiempo') && $('modal-tiempo').classList.contains('open')) {
-      const active = document.activeElement;
-      if (active && active.id !== 't-mensaje') return;
-      // guardarDisponibilidad(); // no disparar en textarea
-    }
   }
 });
 
@@ -2029,10 +1985,7 @@ if (mTiempo) {
   });
 }
 
-/* ======================================================
-   FIX DEFINITIVO SIGA - MOSTRAR SECCIONES
-   ====================================================== */
-
+// ── NAVEGACIÓN GLOBAL ──────────────────────────────────────────
 function forzarSeccion(page) {
   const pagina = document.getElementById('page-' + page);
 
@@ -2116,15 +2069,9 @@ document.addEventListener('click', function(e) {
   else if (texto.includes('Modo avión') || texto.includes('Modo calma')) forzarSeccion('calma');
 });
 
-/* ======================================================
-   FIX FINAAAL: ¿NOS VEMOS? SIN MINI-LOGIN
-   ====================================================== */
-
-window.initTiempoPage = initTiempoPage;
-
+// Refuerzos de tiempo
 setTimeout(function() {
   const btnsTiempo = document.querySelectorAll('.nav-item');
-
   btnsTiempo.forEach(btn => {
     if (btn.textContent.includes('¿Nos vemos?')) {
       btn.onclick = function() {
@@ -2135,94 +2082,22 @@ setTimeout(function() {
   });
 }, 300);
 
-/* ======================================================
-   FIX: ¿NOS VEMOS? 
-   Usa la sesión principal de SIGA
-   ====================================================== */
-
-var initTiempoPage = function() {
-  const loginWrap = document.getElementById('tiempo-login-wrap');
-  const panel = document.getElementById('tiempo-panel');
-
-  if (!state.currentUser || !state.currentUser.id) {
-    if (loginWrap) loginWrap.style.display = 'none';
-
-    if (panel) {
-      panel.classList.remove('active');
-      panel.style.display = 'none';
-    }
-
-    return;
-  }
-
-  tiempoState.usuarioId = state.currentUser.id;
-  tiempoState.nombre =
-    state.currentUser.display_name ||
-    state.currentUser.nombre ||
-    state.currentUser.usuario;
-
-  tiempoState.usuarioSlug = state.currentUser.usuario;
-
-  // Ocultar pantalla Yo/Ella/Contraseña
-  if (loginWrap) {
-    loginWrap.style.setProperty('display', 'none', 'important');
-    loginWrap.style.setProperty('visibility', 'hidden', 'important');
-    loginWrap.style.setProperty('opacity', '0', 'important');
-  }
-
-  // Mostrar panel real
-  if (panel) {
-    panel.classList.add('active');
-    panel.style.setProperty('display', 'block', 'important');
-    panel.style.setProperty('visibility', 'visible', 'important');
-    panel.style.setProperty('opacity', '1', 'important');
-  }
-
-  const badge = document.getElementById('tiempo-badge-nombre');
-  if (badge) {
-    badge.textContent = tiempoState.nombre;
-  }
-
-  if (typeof loadDisponibilidades === 'function') {
-    loadDisponibilidades();
-  }
-
-  if (typeof loadCoincidencias === 'function') {
-    loadCoincidencias();
-  }
-};
-
-window.initTiempoPage = initTiempoPage;
-
-window.logoutTiempo = function() {
-  navigateTo('dashboard');
-};
-
-// Refuerzo: cada vez que se haga click en ¿Nos vemos?
 document.addEventListener('click', function(e) {
   const btn = e.target.closest('.nav-item');
   if (!btn) return;
-
   if (btn.textContent.includes('¿Nos vemos?')) {
-    setTimeout(function() {
-      initTiempoPage();
-    }, 80);
+    setTimeout(function() { initTiempoPage(); }, 80);
   }
 });
 
-// Refuerzo: si ya estás en la página tiempo al cargar
 setTimeout(function() {
   const pageTiempo = document.getElementById('page-tiempo');
-
   if (pageTiempo && pageTiempo.classList.contains('active')) {
     initTiempoPage();
   }
 }, 500);
 
-/* ======================================================
-   MODO AVIÓN
-   ====================================================== */
-
+// ── MODO AVIÓN ──────────────────────────────────────────────────
 let calmaActual = null;
 
 async function loadCalma() {
@@ -2343,164 +2218,78 @@ async function loadCalma() {
 }
 
 async function activarModoAvion() {
-  if (!state.currentUser || !state.currentUser.id) {
-    toast('Primero inicia sesión.');
-    return;
-  }
-
-  if (state.currentUser.rol === 'admin') {
-    toast('El admin no puede activar Modo avión.');
-    return;
-  }
+  if (!state.currentUser || !state.currentUser.id) { toast('Primero inicia sesión.'); return; }
+  if (state.currentUser.rol === 'admin') { toast('El admin no puede activar Modo avión.'); return; }
 
   try {
     const data = await api('POST', '/api/calma/activar', {
       usuario_id: state.currentUser.id,
       mensaje: 'Estoy en modo avión. No estoy disponible por ahora.'
     });
-
-    if (!data.ok) {
-      toast(data.error || 'No se pudo activar Modo avión.');
-      return;
-    }
-
+    if (!data.ok) { toast(data.error || 'No se pudo activar Modo avión.'); return; }
     toast(data.mensaje_bonito || 'Modo avión activado.');
     loadCalma();
   } catch (err) {
-    console.error('Error activando Modo avión:', err);
     toast('Error al activar Modo avión.');
   }
 }
 
 async function desactivarModoAvion() {
-  if (!state.currentUser || !state.currentUser.id) {
-    toast('Primero inicia sesión.');
-    return;
-  }
-
+  if (!state.currentUser || !state.currentUser.id) { toast('Primero inicia sesión.'); return; }
   try {
-    const data = await api('POST', '/api/calma/desactivar', {
-      usuario_id: state.currentUser.id
-    });
-
-    if (!data.ok) {
-      toast(data.error || 'No se pudo desactivar Modo avión.');
-      return;
-    }
-
+    const data = await api('POST', '/api/calma/desactivar', { usuario_id: state.currentUser.id });
+    if (!data.ok) { toast(data.error || 'No se pudo desactivar Modo avión.'); return; }
     toast(data.mensaje_bonito || 'Modo avión desactivado.');
     loadCalma();
   } catch (err) {
-    console.error('Error desactivando Modo avión:', err);
     toast('Error al desactivar Modo avión.');
   }
 }
-
-/* Refuerzo para que el menú cargue Modo avión */
-document.addEventListener('click', function(e) {
-  const btn = e.target.closest('.nav-item');
-  if (!btn) return;
-
-  if (btn.textContent.includes('Modo avión') || btn.textContent.includes('Modo calma')) {
-    setTimeout(() => {
-      if (typeof loadCalma === 'function') loadCalma();
-    }, 100);
-  }
-});
 
 window.loadCalma = loadCalma;
 window.activarModoAvion = activarModoAvion;
 window.desactivarModoAvion = desactivarModoAvion;
 
-function editarRecuerdoSeguro(id) {
-  const r = (window.recuerdosCache || []).find(x => Number(x.id) === Number(id));
-
-  if (!r) {
-    toast('No se encontró el recuerdo.');
-    return;
-  }
-
-  openModal(
-    'recuerdos',
-    r.id,
-    r.titulo || '',
-    r.descripcion || '',
-    r.fecha ? normalizarFecha(r.fecha) : '',
-    r.imagen_url || '',
-    r.enlace_url || ''
-  );
-}
-
-/* SIGA — loader para admin.js y puntos.js. Pegar al FINAL de backend/public/js/app.js */
+// ── SCRIPTS EXTRA Y PANEL ADMIN ─────────────────────────────────
 (function cargarModulosExtraSIGA(){
   function cargarScript(src, id, callback){
-    if(document.getElementById(id)) {
-      if (callback) callback();
-      return;
-    }
+    if(document.getElementById(id)) { if (callback) callback(); return; }
     const s = document.createElement('script');
     s.src = src + '?v=puntos-globales-2';
     s.id = id;
     s.async = true;
-    if (callback) {
-      s.onload = callback;
-    }
+    if (callback) s.onload = callback;
     document.body.appendChild(s);
   }
 
-  // Cargamos puntos.js y, en cuanto termine de bajarse, forzamos la actualización de los marcadores
   cargarScript('/js/puntos.js', 'siga-puntos-js', function() {
-    console.log('✓ [SIGA] puntos.js cargado con éxito. Sincronizando marcador...');
-    if (typeof cargarProgresoGlobal === 'function') {
-      cargarProgresoGlobal();
-    }
+    if (typeof cargarProgresoGlobal === 'function') cargarProgresoGlobal();
   });
-
   cargarScript('/js/admin.js', 'siga-admin-js');
 })();
 
-// ======================================================
-// FIX PANEL ADMIN VISIBLE SOLO PARA ADMIN
-// ======================================================
 (function () {
   function mostrarPanelAdminSiCorresponde() {
     try {
       const user = JSON.parse(sessionStorage.getItem('siga_user') || 'null');
       const navAdmin = document.getElementById('nav-admin-panel');
-
       if (!navAdmin) return;
-
-      if (user && user.rol === 'admin') {
-        navAdmin.style.display = 'flex';
-      } else {
-        navAdmin.style.display = 'none';
-      }
-    } catch (err) {
-      console.warn('No se pudo validar panel admin:', err);
-    }
+      if (user && user.rol === 'admin') { navAdmin.style.display = 'flex'; } else { navAdmin.style.display = 'none'; }
+    } catch (err) { console.warn('No se pudo validar panel admin:', err); }
   }
 
   document.addEventListener('DOMContentLoaded', mostrarPanelAdminSiCorresponde);
-
   const viejoDoLoginAdminFix = window.doLogin;
   window.doLogin = async function () {
-    if (typeof viejoDoLoginAdminFix === 'function') {
-      await viejoDoLoginAdminFix();
-    }
-
+    if (typeof viejoDoLoginAdminFix === 'function') await viejoDoLoginAdminFix();
     setTimeout(mostrarPanelAdminSiCorresponde, 300);
   };
-
   window.mostrarPanelAdminSiCorresponde = mostrarPanelAdminSiCorresponde;
 })();
 
-
-/* ============================================================
-   NUEVO MÓDULO: SOLICITUDES Y PROPUESTAS DE CITAS
-   ============================================================ */
-
+// ── BUZÓN DE SOLICITUDES Y PROPUESTAS DE CITAS ─────────────────────
 async function cargarBuzonCitas() {
-  const container = document.getElementById('list-citas'); // Reutilizamos tu contenedor de citas
+  const container = document.getElementById('list-citas'); 
   if (!container) return;
 
   try {
@@ -2522,7 +2311,6 @@ async function cargarBuzonCitas() {
 
     req.forEach(p => {
       let colorEstado = p.estado === 'pendiente' ? '#ffca28' : p.estado === 'aceptada' ? '#4ade80' : p.estado === 'rechazada' ? '#f87171' : '#60a5fa';
-      
       html += `
         <div style="background:rgba(0,0,0,0.3); border-left:4px solid ${colorEstado}; padding:15px; border-radius:8px; margin-bottom:10px;">
           <div style="display:flex; justify-content:space-between;">
@@ -2531,14 +2319,10 @@ async function cargarBuzonCitas() {
           </div>
           <div style="color:#aaa; font-size:0.85rem; margin-top:5px;">
             📅 ${p.fecha ? p.fecha.split('T')[0] : 'Sin fecha'} a las ⏰ ${p.hora ? p.hora.substring(0,5) : ''}<br>
-            👤 Propuesto por: ${p.remitente_nombre || 'Pareja'}
           </div>
           <p style="color:#ddd; font-size:0.9rem; margin-top:8px;">${esc(p.descripcion)}</p>
-          ${p.ultimo_mensaje ? `<div style="margin-top:8px; padding:8px; background:rgba(255,255,255,0.05); border-radius:5px; font-size:0.85rem; font-style:italic;">💬 Nota: ${esc(p.ultimo_mensaje)}</div>` : ''}
-          
           <div style="margin-top:12px; display:flex; gap:8px;">
             <button class="btn btn-sm" style="background:#4ade80; color:#000;" onclick="responderPropuesta(${p.id}, 'aceptada')">Aceptar</button>
-            <button class="btn btn-sm" style="background:#60a5fa; color:#000;" onclick="responderPropuesta(${p.id}, 'reagendada')">Reagendar</button>
             <button class="btn btn-sm" style="background:#f87171; color:#000;" onclick="responderPropuesta(${p.id}, 'rechazada')">Rechazar</button>
           </div>
         </div>
@@ -2546,17 +2330,12 @@ async function cargarBuzonCitas() {
     });
 
     html += `</div>`;
-    container.innerHTML += html; // Lo pegamos debajo de las citas normales
-
+    container.innerHTML += html; 
   } catch (e) {
     console.error("Error al cargar buzón", e);
   }
 }
 
-// Interceptamos la carga de Citas para inyectar el buzón debajo
-
-
-// Crear nueva propuesta
 function abrirModalPropuesta() {
   const titulo = prompt("¿Qué quieres hacer en la cita? (Ej: Ir al cine)");
   if(!titulo) return;
@@ -2572,20 +2351,10 @@ function abrirModalPropuesta() {
   }
 }
 
-// Responder propuesta
 function responderPropuesta(id, estado) {
   let mensaje = prompt("Puedes dejar un mensaje opcional:");
-  let body = { estado, mensaje };
-
-  if (estado === 'reagendada') {
-    body.fecha = prompt("Nueva fecha sugerida (AAAA-MM-DD):");
-    body.hora = prompt("Nueva hora sugerida (HH:MM):");
-    if(!body.fecha || !body.hora) return toast("Debes ingresar fecha y hora para reagendar.");
-  }
-
-  api('PUT', `/api/citas/propuestas/${id}/responder`, body).then(() => {
+  api('PUT', `/api/citas/propuestas/${id}/responder`, { estado, mensaje }).then(() => {
     toast(`Propuesta ${estado}`);
     loadCitas();
   });
 }
-
