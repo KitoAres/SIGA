@@ -417,6 +417,7 @@ function cargarFraseDelDia() {
     'A veces un “estoy aquí” vale más que mil explicaciones.',
 
     'Que lo nuestro no se mida por la prisa, sino por el cuidado.',
+    'SIGY cree que tuviste un mal dia. SIGY te ofrece una chocolatada.',
     'Hoy también se puede empezar con calma.',
     'Si algo pesa, que no pese solo.',
     'Lo que importa también necesita pausas.',
