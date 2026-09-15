@@ -100,7 +100,6 @@
     <nav class="sidebar-nav">
       
       <!-- INICIO DE BOTONES OCULTOS TEMPORALMENTE -->
-      <!-- Para volver a activarlos, solo borra este bloque de comentarios (<!- - y - ->) -->
       <!--
       <button class="nav-item" onclick="navigateTo('dashboard')">
         <span class="nav-icon">✦</span> Dashboard
@@ -152,27 +151,25 @@
         <span class="nav-icon">🌿</span>
         <span>Mi espacio</span>
       </button>
+      
+      <button class="nav-item nav-sigy" onclick="navigateTo('sigy-intro')">
+        <span class="nav-icon">✨</span>
+        <span>SIGy</span>
+      </button>
       -->
       <!-- FIN DE BOTONES OCULTOS TEMPORALMENTE -->
 
-      <!-- ÚNICO BOTÓN VISIBLE -->
+      <!-- ÚNICO BOTÓN VISIBLE PARA TODOS -->
       <button class="nav-item active" onclick="navigateTo('calma')">
         <span class="nav-icon">✈️</span>
         <span>Modo avión</span>
       </button>
 
-      <!-- MÁS BOTONES OCULTOS -->
-      <!--
-      <button class="nav-item nav-sigy" onclick="navigateTo('sigy-intro')">
-        <span class="nav-icon">✨</span>
-        <span>SIGy</span>
-      </button>
-
+      <!-- BOTÓN DE PANEL ADMIN (Invisible por defecto, tu JS lo activa para el rol admin) -->
       <button class="nav-item nav-admin-only" id="nav-admin-panel" style="display:none;" onclick="navigateTo('admin')">
         <span class="nav-icon">📊</span>
         <span>Panel admin</span>
       </button>
-      -->
 
     </nav>
 
@@ -699,7 +696,7 @@
   <div class="admin-hero-card">
     <div class="admin-hero-icon">📊</div>
     <div>
-      <h3>Centro de control SIGA</h3>
+      <h3>Centro de control PAUSE</h3>
       <p>Este módulo solo aparece para el rol <strong>admin</strong>. Sirve para revisar actividad, detectar errores y administrar misiones marcadas por accidente.</p>
     </div>
   </div>
@@ -761,7 +758,7 @@
 
     <div class="admin-grid-two">
       <div class="admin-box">
-        <div class="admin-box-title">Historial Clínico y Psicometría (SIGA)</div>
+        <div class="admin-box-title">Historial Clínico y Psicometría (PAUSE)</div>
         <div id="admin-lista-psicometria" class="admin-list-mini">Cargando registros...</div>
       </div>
       <div class="admin-box">
@@ -934,7 +931,7 @@
 
 <script>
 /* ======================================================
-   FIX DEFINITIVO DE NAVEGACIÓN SIGA / PAUSE
+   FIX DEFINITIVO DE NAVEGACIÓN PAUSE
    Fuerza que cada sección se muestre al hacer clic
    ====================================================== */
 
@@ -1003,7 +1000,7 @@
       eventos: window.loadEventos,
       espacio: window.loadEspacio,
       admin: window.loadAdminPanel,
-      calma: window.loadCalma // Añadido por si tu script externo usa esta función
+      calma: window.loadCalma
     };
 
     if (typeof loaders[page] === 'function') {
@@ -1077,8 +1074,6 @@
       const app = document.getElementById('app');
       const login = document.getElementById('login-screen');
 
-      // CORRECCIÓN AQUÍ: Inicializamos Dashboard para que Supabase cargue bien
-      // y luego inmediatamente pasamos a la pantalla de Calma (Modo Avión).
       if (app && app.classList.contains('visible')) {
         window.mostrarSeccionSIGA('dashboard'); 
         window.mostrarSeccionSIGA('calma');
@@ -1209,7 +1204,7 @@
 
       if (data.ok) {
         msgEl.style.color = '#4ade80';
-        msgEl.textContent = '✅ ¡Vinculados! Ya pueden usar Pause juntos.';
+        msgEl.textContent = '✅ ¡Vinculados! Ya pueden usar PAUSE juntos.';
         setTimeout(() => switchToLogin(), 2000);
       } else {
         msgEl.style.color = '#f87171';
