@@ -98,7 +98,11 @@
     </div>
 
     <nav class="sidebar-nav">
-      <button class="nav-item active" onclick="navigateTo('dashboard')">
+      
+      <!-- INICIO DE BOTONES OCULTOS TEMPORALMENTE -->
+      <!-- Para volver a activarlos, solo borra este bloque de comentarios (<!- - y - ->) -->
+      <!--
+      <button class="nav-item" onclick="navigateTo('dashboard')">
         <span class="nav-icon">✦</span> Dashboard
       </button>
 
@@ -144,25 +148,32 @@
       
       <div class="nav-divider"></div>
 
-<button class="nav-item" onclick="navigateTo('espacio')">
-  <span class="nav-icon">🌿</span>
-  <span>Mi espacio</span>
-</button>
+      <button class="nav-item" onclick="navigateTo('espacio')">
+        <span class="nav-icon">🌿</span>
+        <span>Mi espacio</span>
+      </button>
+      -->
+      <!-- FIN DE BOTONES OCULTOS TEMPORALMENTE -->
 
-<button class="nav-item" onclick="navigateTo('calma')">
-  <span class="nav-icon">✈️</span>
-  <span>Modo avión</span>
-</button>
+      <!-- ÚNICO BOTÓN VISIBLE -->
+      <button class="nav-item active" onclick="navigateTo('calma')">
+        <span class="nav-icon">✈️</span>
+        <span>Modo avión</span>
+      </button>
 
-<button class="nav-item nav-sigy" onclick="navigateTo('sigy-intro')">
-  <span class="nav-icon">✨</span>
-  <span>SIGy</span>
-</button>
+      <!-- MÁS BOTONES OCULTOS -->
+      <!--
+      <button class="nav-item nav-sigy" onclick="navigateTo('sigy-intro')">
+        <span class="nav-icon">✨</span>
+        <span>SIGy</span>
+      </button>
 
-<button class="nav-item nav-admin-only" id="nav-admin-panel" style="display:none;" onclick="navigateTo('admin')">
-  <span class="nav-icon">📊</span>
-  <span>Panel admin</span>
-</button>
+      <button class="nav-item nav-admin-only" id="nav-admin-panel" style="display:none;" onclick="navigateTo('admin')">
+        <span class="nav-icon">📊</span>
+        <span>Panel admin</span>
+      </button>
+      -->
+
     </nav>
 
 <div class="sidebar-footer">
@@ -179,7 +190,7 @@
 <main class="main-content">
 
     <!-- DASHBOARD -->
-    <section class="page active" id="page-dashboard">
+    <section class="page" id="page-dashboard">
       <div class="page-header">
         <div>
           <h1 class="page-title">Panel <span>de amor</span></h1>
@@ -652,8 +663,8 @@
   </div>
 </section>
 
-<!-- MODO AVIÓN -->
-<section class="page" id="page-calma">
+<!-- MODO AVIÓN (AHORA ESTA ES LA PÁGINA ACTIVA POR DEFECTO) -->
+<section class="page active" id="page-calma">
   <div class="page-header">
     <div>
       <h1 class="page-title">Modo <span>avión</span></h1>
@@ -1065,12 +1076,13 @@
       const app = document.getElementById('app');
       const login = document.getElementById('login-screen');
 
+      // ACTUALIZADO: Para que al cargar inicie directamente en "Modo avión" ('calma')
       if (app && app.classList.contains('visible')) {
-        window.mostrarSeccionSIGA('dashboard');
+        window.mostrarSeccionSIGA('calma');
       }
 
       if (login && login.style.display === 'none') {
-        window.mostrarSeccionSIGA('dashboard');
+        window.mostrarSeccionSIGA('calma');
       }
     }, 500);
   });
@@ -1086,12 +1098,13 @@
       const app = document.getElementById('app');
       const login = document.getElementById('login-screen');
 
+      // ACTUALIZADO: Para que al logear inicie directamente en "Modo avión" ('calma')
       if (app && app.classList.contains('visible')) {
-        window.mostrarSeccionSIGA('dashboard');
+        window.mostrarSeccionSIGA('calma');
       }
 
       if (login && login.style.display === 'none') {
-        window.mostrarSeccionSIGA('dashboard');
+        window.mostrarSeccionSIGA('calma');
       }
     }, 300);
   };
