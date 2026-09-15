@@ -6,7 +6,7 @@
   <title>PAUSE</title>
   <link rel="stylesheet" href="/css/style.css"/>
   <link rel="stylesheet" href="/css/sigy.css?v=sigy-11"/>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤍</text></svg>"/>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'> </text></svg>"/>
 </head>
 <body>
 
@@ -663,8 +663,8 @@
   </div>
 </section>
 
-<!-- MODO AVIÓN (AHORA ESTA ES LA PÁGINA ACTIVA POR DEFECTO) -->
-<section class="page active" id="page-calma">
+<!-- MODO AVIÓN -->
+<section class="page" id="page-calma">
   <div class="page-header">
     <div>
       <h1 class="page-title">Modo <span>avión</span></h1>
@@ -785,10 +785,10 @@
     </div>
 
     <div class="sigy-intro-content">
-      <div class="sigy-intro-badge">Asistente emocional de SIGA</div>
+      <div class="sigy-intro-badge">Asistente emocional de PAUSE</div>
       <h1 class="sigy-intro-titulo">Hola, soy <span>SIGy</span></h1>
       <p class="sigy-intro-desc">
-        Soy la inteligencia artificial privada de SIGA. Estoy aquí para ayudarte a
+        Soy la inteligencia artificial privada de este espacio. Estoy aquí para ayudarte a
         ordenar lo que sientes, convertir una emoción intensa en palabras más claras,
         y cuidar el vínculo cuando hablar se sienta difícil.
       </p>
@@ -1002,7 +1002,8 @@
       cajita: window.loadCajita,
       eventos: window.loadEventos,
       espacio: window.loadEspacio,
-      admin: window.loadAdminPanel
+      admin: window.loadAdminPanel,
+      calma: window.loadCalma // Añadido por si tu script externo usa esta función
     };
 
     if (typeof loaders[page] === 'function') {
@@ -1076,12 +1077,15 @@
       const app = document.getElementById('app');
       const login = document.getElementById('login-screen');
 
-      // ACTUALIZADO: Para que al cargar inicie directamente en "Modo avión" ('calma')
+      // CORRECCIÓN AQUÍ: Inicializamos Dashboard para que Supabase cargue bien
+      // y luego inmediatamente pasamos a la pantalla de Calma (Modo Avión).
       if (app && app.classList.contains('visible')) {
+        window.mostrarSeccionSIGA('dashboard'); 
         window.mostrarSeccionSIGA('calma');
       }
 
       if (login && login.style.display === 'none') {
+        window.mostrarSeccionSIGA('dashboard');
         window.mostrarSeccionSIGA('calma');
       }
     }, 500);
@@ -1098,12 +1102,13 @@
       const app = document.getElementById('app');
       const login = document.getElementById('login-screen');
 
-      // ACTUALIZADO: Para que al logear inicie directamente en "Modo avión" ('calma')
       if (app && app.classList.contains('visible')) {
+        window.mostrarSeccionSIGA('dashboard');
         window.mostrarSeccionSIGA('calma');
       }
 
       if (login && login.style.display === 'none') {
+        window.mostrarSeccionSIGA('dashboard');
         window.mostrarSeccionSIGA('calma');
       }
     }, 300);
@@ -1112,13 +1117,11 @@
 
   // ====================== REGISTRO ======================
 
-  // Variable temporal para guardar el usuario recién creado durante el registro
   let _regNuevoUsuario = null;
 
   function showRegisterScreen() {
     document.getElementById('login-screen').style.display    = 'none';
     document.getElementById('register-screen').style.display = 'flex';
-    // Resetear al paso 1 por si venía del paso 2
     document.getElementById('reg-paso-1').style.display = 'block';
     document.getElementById('reg-paso-2').style.display = 'none';
   }
@@ -1129,7 +1132,6 @@
     _regNuevoUsuario = null;
   }
 
-  // Paso 1: crear cuenta
   document.getElementById('registerForm').addEventListener('submit', async function(e) {
     e.preventDefault();
 
@@ -1139,7 +1141,6 @@
     const password = document.getElementById('reg-password').value;
     const msgEl    = document.getElementById('register-message');
 
-    // Validación actualizada
     if (!nombre || !usuario || !email || !password) {
       msgEl.style.color   = '#f87171';
       msgEl.textContent   = 'Completa todos los campos.';
@@ -1158,10 +1159,8 @@
       const data = await res.json();
 
       if (data.ok) {
-        _regNuevoUsuario = data; // guarda id y codigo_pareja
-        // Mostrar el código de pareja generado
+        _regNuevoUsuario = data; 
         document.getElementById('mi-codigo-pareja').textContent = data.codigo_pareja || '—';
-        // Pasar al paso 2
         document.getElementById('reg-paso-1').style.display = 'none';
         document.getElementById('reg-paso-2').style.display = 'block';
       } else {
@@ -1174,7 +1173,6 @@
     }
   });
 
-  // Copiar código al portapapeles
   function copiarCodigoPareja() {
     const codigo = document.getElementById('mi-codigo-pareja').textContent;
     navigator.clipboard.writeText(codigo).then(() => {
@@ -1182,7 +1180,6 @@
     });
   }
 
-  // Paso 2 opción B: vincular con código de la pareja
   async function vincularConCodigo() {
     const codigo  = document.getElementById('input-codigo-pareja').value.trim().toUpperCase();
     const msgEl   = document.getElementById('vincular-message');
@@ -1224,7 +1221,6 @@
     }
   }
 
-  // Saltar la vinculación por ahora (la cuenta queda sin pareja, puede vincular desde perfil)
   function saltarVinculacion() {
     toast('Puedes vincular tu pareja desde "Mi cuenta" cuando quieras.');
     switchToLogin();
