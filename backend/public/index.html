@@ -3,20 +3,18 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>PAUSA </title>
+  <title>PAUSE</title>
   <link rel="stylesheet" href="/css/style.css"/>
   <link rel="stylesheet" href="/css/sigy.css?v=sigy-11"/>
-  <!--Copia y pega esto en lugar de la fila de abajo:<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💜</text></svg>"/>  -->
-
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'> </text></svg>"/>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤍</text></svg>"/>
 </head>
 <body>
 
 <!-- ── LOGIN ─────────────────────────────────── -->
 <div id="login-screen">
   <div class="login-card">
-    <div class="login-logo">S<span>I</span>GA</div>
-    <div class="login-sub">Sistema Integral de Gestión de Amor</div>
+    <div class="login-logo">P<span>A</span>USE</div>
+    <div class="login-sub">Un espacio para respirar</div>
     <input type="text" id="login-user" placeholder="Usuario o Email" autocomplete="off"/>
     <input type="password" id="login-pass" placeholder="Contraseña"/>
     <button class="btn-primary" onclick="doLogin()">Entrar ♡</button>
@@ -29,7 +27,7 @@
 <!-- ====================== REGISTRO ====================== -->
 <div id="register-screen" style="display:none;">
   <div class="login-card" style="max-width:460px;">
-    <div class="login-logo">S<span>I</span>GA</div>
+    <div class="login-logo">P<span>A</span>USE</div>
     <div class="login-sub">Crear nueva cuenta</div>
 
     <!-- Paso 1: datos básicos -->
@@ -95,7 +93,7 @@
   <!-- SIDEBAR -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
-      <div class="sidebar-logo">S<span>I</span>GA</div>
+      <div class="sidebar-logo">P<span>A</span>USE</div>
       <div class="sidebar-tagline">v2.0 · Edición especial</div>
     </div>
 
@@ -936,7 +934,7 @@
 
 <script>
 /* ======================================================
-   FIX DEFINITIVO DE NAVEGACIÓN SIGA
+   FIX DEFINITIVO DE NAVEGACIÓN SIGA / PAUSE
    Fuerza que cada sección se muestre al hacer clic
    ====================================================== */
 
@@ -1180,7 +1178,7 @@
   function copiarCodigoPareja() {
     const codigo = document.getElementById('mi-codigo-pareja').textContent;
     navigator.clipboard.writeText(codigo).then(() => {
-      toast('Código copiado 💜');
+      toast('Código copiado 🤍');
     });
   }
 
@@ -1214,7 +1212,7 @@
 
       if (data.ok) {
         msgEl.style.color = '#4ade80';
-        msgEl.textContent = '✅ ¡Vinculados! Ya pueden usar SIGA juntos.';
+        msgEl.textContent = '✅ ¡Vinculados! Ya pueden usar Pause juntos.';
         setTimeout(() => switchToLogin(), 2000);
       } else {
         msgEl.style.color = '#f87171';
